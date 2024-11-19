@@ -55,11 +55,6 @@ To run this project, you will need the following:
    git clone https://github.com/your-repo-url/automatic-recalibration-wrrf.git
    cd automatic-recalibration-wrrf
    ```
-2. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
 ---
 
 ## Usage
