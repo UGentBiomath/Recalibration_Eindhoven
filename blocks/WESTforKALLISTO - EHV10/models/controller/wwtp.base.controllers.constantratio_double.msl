@@ -1,0 +1,56 @@
+/*******************************************************************************
+ *
+ * Developped by BIOMATH and Lorenzo Benedetti for Kallisto
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_CONTROLLERS_CONSTANTRATIO_DOUBLE
+#define WWTP_BASE_CONTROLLERS_CONSTANTRATIO_DOUBLE
+
+CLASS ConstantRatio_double
+    (* icon = "controller_ratio" ; is_default = "" *)
+    "Ratio controller with two ratios for two input ranges"
+  
+    SPECIALISES
+    PhysicalDAEModelType :=
+    {:
+      comments <- "A model for a ratio controller";
+      interface <-
+      {
+        OBJ y_M (* terminal = "in_1" *) "Sensor measured output" :
+                 Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+        OBJ u (* terminal = "out_1" *) "Controlled variable" :
+                 Real := {: causality <- "COUT" ; group <- "Control action" :};
+      };
+  
+      parameters <-
+      {
+      OBJ ConstantRatio1 "Ratio between measured value and controller output, first input range" :
+           Real := {: value <- 1 ; group <- "Operational" :};
+      OBJ ConstantRatio2 "Ratio between measured value and controller output, second input range" :
+           Real := {: value <- 1 ; group <- "Operational" :};
+  	  OBJ y_M_min "Minimumum measured value for first input range" :
+           Real := {: value <- 1 ; group <- "Operational" :};
+  	  OBJ y_M_max "Maximum measured value for first input range" :
+           Real := {: value <- 1 ; group <- "Operational" :};
+      OBJ u_min "Minimum output, calculated as y_M_min*ConstantRatio1" :
+           Real := {: value <- 1 ; group <- "Operational" :};
+	    OBJ u_max "Maximum output, calculated as y_M_min*ConstantRatio1" :
+           Real := {: value <- 1 ; group <- "Operational" :};
+      };
+  
+      equations <-
+      {
+  
+      interface.u = IF (interface.y_M < parameters.y_M_min)
+  				  				THEN parameters.u_min
+  				  				ELSE IF (interface.y_M < parameters.y_M_max)
+  				  	   				THEN interface.y_M * parameters.ConstantRatio1
+  					   					ELSE IF ((parameters.ConstantRatio2 * interface.y_M) < parameters.u_max)
+															THEN parameters.ConstantRatio2 * interface.y_M
+															ELSE parameters.u_max;
+  
+      };
+  :};
+  
+  #endif // WWTP_BASE_CONTROLLERS_CONSTANTRATIO_DOUBLE

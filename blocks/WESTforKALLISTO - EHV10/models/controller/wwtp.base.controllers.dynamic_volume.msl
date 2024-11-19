@@ -1,0 +1,560 @@
+/*******************************************************************************
+ *
+ * Developped by BIOMATH in the frame of the Kallisto project
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_CONTROLLERS_DYNAMICVOLUMES
+#define WWTP_BASE_CONTROLLERS_DYNAMICVOLUMES
+
+   CLASS volume_controller
+   (* icon = "controller" *)
+   "Controller to adjust tank volumes according to influent flow (Compartmental Model)"
+ 
+ 
+   SPECIALISES
+   PhysicalDAEModelType :=
+   {:
+     comments <- "A model for a controller";
+     interface <-
+     {
+       OBJ influent_flow (* terminal = "in_1" *) "Influent flow to tank in m3/d" :
+                Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+	     OBJ airflow_rate (* terminal = "in_1" *) "Air flow rate" :
+                Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+	     
+	     // Parameters necessary for calculating the relative volume of the tanks of a compartmental model (currently max 15 tanks).
+	     // To go from relative volume to the actual volume, of course the total volume is also required (see parameters).
+	     // Supported functions include a maximum of three parameters (A, B and C)
+	   OBJ tank1_x (* terminal = "in_2" *) "A-factor in equation to calculate relative volume" : 
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank1_y (* terminal = "in_2" *) "B-factor in equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank1_C (* terminal = "in_2" *) "C-Constant in the equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     
+     OBJ tank2_x (* terminal = "in_2" *) "A-factor in equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank2_y (* terminal = "in_2" *) "Value to multiply airflow rate with" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank2_C (* terminal = "in_2" *) "Constant in the linear equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     
+     OBJ tank3_x (* terminal = "in_2" *) "A-factor in equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank3_y (* terminal = "in_2" *) "Value to multiply airflow rate with" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank3_C (* terminal = "in_2" *) "Constant in the linear equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     
+     OBJ tank4_x (* terminal = "in_2" *) "A-factor in equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank4_y (* terminal = "in_2" *) "Value to multiply airflow rate with" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank4_C (* terminal = "in_2" *) "Constant in the linear equation to calculate relative volume" : 
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     
+     OBJ tank5_x (* terminal = "in_2" *) "A-factor in equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank5_y (* terminal = "in_2" *) "Value to multiply airflow rate with" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank5_C (* terminal = "in_2" *) "Constant in the linear equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     
+     OBJ tank6_x (* terminal = "in_2" *) "A-factor in equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank6_y (* terminal = "in_2" *) "Value to multiply airflow rate with" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank6_C (* terminal = "in_2" *) "Constant in the linear equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     
+     OBJ tank7_x (* terminal = "in_2" *) "A-factor in equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank7_y (* terminal = "in_2" *) "Value to multiply airflow rate with" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank7_C (* terminal = "in_2" *) "Constant in the linear equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     
+     OBJ tank8_x (* terminal = "in_2" *) "A-factor in equation to calculate relative volume" : 
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank8_y (* terminal = "in_2" *) "Value to multiply airflow rate with" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank8_C (* terminal = "in_2" *) "Constant in the linear equation to calculate relative volume" : 
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+	               
+     OBJ tank9_x (* terminal = "in_2" *) "A-factor in equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank9_y (* terminal = "in_2" *) "Value to multiply airflow rate with" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank9_C (* terminal = "in_2" *) "Constant in the linear equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     
+     OBJ tank10_x (* terminal = "in_2" *) "A-factor in equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank10_y (* terminal = "in_2" *) "Value to multiply airflow rate with" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank10_C (* terminal = "in_2" *) "Constant in the linear equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+    
+     OBJ tank11_x (* terminal = "in_2" *) "A-factor in equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank11_y (* terminal = "in_2" *) "Value to multiply airflow rate with" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank11_C (* terminal = "in_2" *) "Constant in the linear equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     
+     OBJ tank12_x (* terminal = "in_2" *) "A-factor in equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank12_y (* terminal = "in_2" *) "Value to multiply airflow rate with" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank12_C (* terminal = "in_2" *) "Constant in the linear equation to calculate relative volume" : 
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+    
+     OBJ tank13_x (* terminal = "in_2" *) "A-factor in equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank13_y (* terminal = "in_2" *) "Value to multiply airflow rate with" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank13_C (* terminal = "in_2" *) "Constant in the linear equation to calculate relative volume" : 
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+	               
+     OBJ tank14_x (* terminal = "in_2" *) "A-factor in equation to calculate relative volume" : 
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank14_y (* terminal = "in_2" *) "Value to multiply airflow rate with" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank14_C (* terminal = "in_2" *) "Constant in the linear equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     
+     OBJ tank15_x (* terminal = "in_2" *) "A-factor in equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank15_y (* terminal = "in_2" *) "Value to multiply airflow rate with" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     OBJ tank15_C (* terminal = "in_2" *) "Constant in the linear equation to calculate relative volume" :  
+	               Real := {: causality <- "CIN" ; group <- "Dimension" :};
+     
+       OBJ Volume_tank1 (* terminal = "out_1" *) "Volume of tank 1" :
+                Real := {: causality <- "COUT" ; group <- "Dimension" :};
+       OBJ Volume_tank2 (* terminal = "out_1" *) "Volume of tank 2" :
+                Real := {: causality <- "COUT" ; group <- "Dimension" :};
+       OBJ Volume_tank3 (* terminal = "out_1" *) "Volume of tank 3" :
+                Real := {: causality <- "COUT" ; group <- "Dimension" :};
+       OBJ Volume_tank4 (* terminal = "out_1" *) "Volume of tank 4" :
+                Real := {: causality <- "COUT" ; group <- "Dimension" :};
+       OBJ Volume_tank5 (* terminal = "out_1" *) "Volume of tank 5" :
+                Real := {: causality <- "COUT" ; group <- "Dimension" :};
+       OBJ Volume_tank6 (* terminal = "out_1" *) "Volume of tank 6" :
+                Real := {: causality <- "COUT" ; group <- "Dimension" :};
+       OBJ Volume_tank7 (* terminal = "out_1" *) "Volume of tank 7" :
+                Real := {: causality <- "COUT" ; group <- "Dimension" :};
+       OBJ Volume_tank8 (* terminal = "out_1" *) "Volume of tank 8" :
+                Real := {: causality <- "COUT" ; group <- "Dimension" :};
+       OBJ Volume_tank9 (* terminal = "out_1" *) "Volume of tank 9" :
+                Real := {: causality <- "COUT" ; group <- "Dimension" :};
+       OBJ Volume_tank10 (* terminal = "out_1" *) "Volume of tank 10" :
+                Real := {: causality <- "COUT" ; group <- "Dimension" :};
+       OBJ Volume_tank11 (* terminal = "out_1" *) "Volume of tank 11" :
+                Real := {: causality <- "COUT" ; group <- "Dimension" :};
+       OBJ Volume_tank12 (* terminal = "out_1" *) "Volume of tank 12" :
+                Real := {: causality <- "COUT" ; group <- "Dimension" :};
+       OBJ Volume_tank13 (* terminal = "out_1" *) "Volume of tank 13" :
+                Real := {: causality <- "COUT" ; group <- "Dimension" :};
+       OBJ Volume_tank14 (* terminal = "out_1" *) "Volume of tank 14" :
+                Real := {: causality <- "COUT" ; group <- "Dimension" :};
+       OBJ Volume_tank15 (* terminal = "out_1" *) "Volume of tank 15" :
+                Real := {: causality <- "COUT" ; group <- "Dimension" :};                
+};
+      state <-
+     { 
+       OBJ Volume_tank1_help (* hidden = "1" *) "Volume of tank 1" : Real := {: group <- "Dimension" :};
+       OBJ Volume_tank2_help (* hidden = "1" *) "Volume of tank 2" : Real := {: group <- "Dimension" :};
+       OBJ Volume_tank3_help (* hidden = "1" *) "Volume of tank 3" : Real := {: group <- "Dimension" :};
+       OBJ Volume_tank4_help (* hidden = "1" *) "Volume of tank 4" : Real := {: group <- "Dimension" :};
+       OBJ Volume_tank5_help (* hidden = "1" *) "Volume of tank 5" : Real := {: group <- "Dimension" :};
+       OBJ Volume_tank6_help (* hidden = "1" *) "Volume of tank 6" : Real := {: group <- "Dimension" :};
+       OBJ Volume_tank7_help (* hidden = "1" *) "Volume of tank 7" : Real := {: group <- "Dimension" :};
+       OBJ Volume_tank8_help (* hidden = "1" *) "Volume of tank 8" : Real := {: group <- "Dimension" :};
+       OBJ Volume_tank9_help (* hidden = "1" *) "Volume of tank 9" : Real := {: group <- "Dimension" :};
+       OBJ Volume_tank10_help (* hidden = "1" *) "Volume of tank 10" : Real := {: group <- "Dimension" :};
+       OBJ Volume_tank11_help (* hidden = "1" *) "Volume of tank 11" : Real := {: group <- "Dimension" :};
+       OBJ Volume_tank12_help (* hidden = "1" *) "Volume of tank 12" : Real := {: group <- "Dimension" :};
+       OBJ Volume_tank13_help (* hidden = "1" *) "Volume of tank 13" : Real := {: group <- "Dimension" :};
+       OBJ Volume_tank14_help (* hidden = "1" *) "Volume of tank 14" : Real := {: group <- "Dimension" :};
+       OBJ Volume_tank15_help (* hidden = "1" *) "Volume of tank 15" : Real := {: group <- "Dimension" :};
+};
+     parameters <-
+     {    
+     //values of these parameters indicate what function to use for the relation between air flow, influent flow and relative volume:
+     // 0=linear
+     // 1=paraboloid with maximum
+     // 2=paraboloid with minimum
+     // 3=parabolic-linear increasing; parabolic relation of volume with air flow rate, linear relation of volume with inflow rate
+     // 4=parabolic-linear decreasing; parabolic relation of volume with air flow rate, linear relation of volume with inflow rate
+     OBJ Total_volume "Total volume of the compartmental model under consideration" : Real := {: value <- 1000 ; group <- "Dimension" :};
+     OBJ Relation_tank1 "Function determining the relation between airflow, influent flow and relative volume; " : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_tank2 "Function determining the relation between airflow, influent flow and relative volume; 0=linear,1=paraboloid with maximum,2=paraboloid with minimum" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_tank3 "Function determining the relation between airflow, influent flow and relative volume; 0=linear,1=paraboloid with maximum,2=paraboloid with minimum" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_tank4 "Function determining the relation between airflow, influent flow and relative volume; 0=linear,1=paraboloid with maximum,2=paraboloid with minimum" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_tank5 "Function determining the relation between airflow, influent flow and relative volume; 0=linear,1=paraboloid with maximum,2=paraboloid with minimum" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_tank6 "Function determining the relation between airflow, influent flow and relative volume; 0=linear,1=paraboloid with maximum,2=paraboloid with minimum" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_tank7 "Function determining the relation between airflow, influent flow and relative volume; 0=linear,1=paraboloid with maximum,2=paraboloid with minimum" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_tank8 "Function determining the relation between airflow, influent flow and relative volume; 0=linear,1=paraboloid with maximum,2=paraboloid with minimum" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_tank9 "Function determining the relation between airflow, influent flow and relative volume; 0=linear,1=paraboloid with maximum,2=paraboloid with minimum" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_tank10 "Function determining the relation between airflow, influent flow and relative volume; 0=linear,1=paraboloid with maximum,2=paraboloid with minimum" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_tank11 "Function determining the relation between airflow, influent flow and relative volume; 0=linear,1=paraboloid with maximum,2=paraboloid with minimum" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_tank12 "Function determining the relation between airflow, influent flow and relative volume; 0=linear,1=paraboloid with maximum,2=paraboloid with minimum" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_tank13 "Function determining the relation between airflow, influent flow and relative volume; 0=linear,1=paraboloid with maximum,2=paraboloid with minimum" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_tank14 "Function determining the relation between airflow, influent flow and relative volume; 0=linear,1=paraboloid with maximum,2=paraboloid with minimum" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_tank15 "Function determining the relation between airflow, influent flow and relative volume; 0=linear,1=paraboloid with maximum,2=paraboloid with minimum" : Real := {:value <- 0 ; group <- "Relations" :};
+};
+ 
+     equations <-
+     {
+     state.Volume_tank1_help = IF (parameters.Relation_tank1 == 0)
+                              THEN parameters.Total_volume*(interface.tank1_x*interface.influent_flow + interface.tank1_y*previous(interface.airflow_rate) + interface.tank1_C)
+                              ELSE
+                              IF (parameters.Relation_tank1 == 1)
+                              THEN parameters.Total_volume*(pow(interface.influent_flow,2)/pow(interface.tank1_x,2) + pow(previous(interface.airflow_rate),2)/pow(interface.tank1_y,2) + 
+                                   interface.tank1_C)
+                              ELSE
+                              IF (parameters.Relation_tank1 == 2)
+                              THEN parameters.Total_volume*(-pow(interface.influent_flow,2)/pow(interface.tank1_x,2) - pow(previous(interface.airflow_rate),2)/pow(interface.tank1_y,2) + 
+                                   interface.tank1_C)
+                              ELSE
+                              IF (parameters.Relation_tank1 == 3)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank1_x + pow(previous(interface.airflow_rate),2)*interface.tank1_y + 
+                                   interface.tank1_C)
+                              ELSE
+                              IF (parameters.Relation_tank1 == 4)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank1_x - pow(previous(interface.airflow_rate),2)*interface.tank1_y + 
+                                   interface.tank1_C)
+                              ELSE 0;
+     interface.Volume_tank1 = IF (state.Volume_tank1_help < 0)
+                              THEN 1
+                              ELSE state.Volume_tank1_help;
+                            
+     state.Volume_tank2_help = IF (parameters.Relation_tank2 == 0)
+                              THEN parameters.Total_volume*(interface.tank2_x*interface.influent_flow + interface.tank2_y*previous(interface.airflow_rate) + interface.tank2_C)
+                              ELSE
+                              IF (parameters.Relation_tank2 == 1)
+                              THEN parameters.Total_volume*(pow(interface.influent_flow,2)/pow(interface.tank2_x,2) + pow(previous(interface.airflow_rate),2)/pow(interface.tank2_y,2) + 
+                                   interface.tank2_C)
+                              ELSE
+                              IF (parameters.Relation_tank2 == 2)
+                              THEN parameters.Total_volume*(-pow(interface.influent_flow,2)/pow(interface.tank2_x,2) - pow(previous(interface.airflow_rate),2)/pow(interface.tank2_y,2) + 
+                                   interface.tank2_C)
+                              ELSE
+                              IF (parameters.Relation_tank2 == 3)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank2_x + pow(previous(interface.airflow_rate),2)*interface.tank2_y + 
+                                   interface.tank2_C)
+                              ELSE
+                              IF (parameters.Relation_tank2 == 4)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank2_x - pow(previous(interface.airflow_rate),2)*interface.tank2_y + 
+                                   interface.tank2_C)
+                              ELSE 0;
+     interface.Volume_tank2 = IF (state.Volume_tank2_help < 0)
+                              THEN 1
+                              ELSE state.Volume_tank2_help;
+                              
+     state.Volume_tank3_help = IF (parameters.Relation_tank3 == 0)
+                              THEN parameters.Total_volume*(interface.tank3_x*interface.influent_flow + interface.tank3_y*previous(interface.airflow_rate) + interface.tank3_C)
+                              ELSE
+                              IF (parameters.Relation_tank3 == 1)
+                              THEN parameters.Total_volume*(pow(interface.influent_flow,2)/pow(interface.tank3_x,2) + pow(previous(interface.airflow_rate),2)/pow(interface.tank3_y,2) + 
+                                   interface.tank3_C)
+                              ELSE
+                              IF (parameters.Relation_tank3 == 2)
+                              THEN parameters.Total_volume*(-pow(interface.influent_flow,2)/pow(interface.tank3_x,2) - pow(previous(interface.airflow_rate),2)/pow(interface.tank3_y,2) + 
+                                   interface.tank3_C)
+                              ELSE
+                              IF (parameters.Relation_tank3 == 3)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank3_x + pow(previous(interface.airflow_rate),2)*interface.tank3_y + 
+                                   interface.tank3_C)
+                              ELSE
+                              IF (parameters.Relation_tank3 == 4)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank3_x - pow(previous(interface.airflow_rate),2)*interface.tank3_y + 
+                                   interface.tank3_C)
+                              ELSE 0;
+     interface.Volume_tank3 = IF (state.Volume_tank3_help < 0)
+                              THEN 1
+                              ELSE state.Volume_tank3_help; 
+                              
+     state.Volume_tank4_help = IF (parameters.Relation_tank4 == 0)
+                              THEN parameters.Total_volume*(interface.tank4_x*interface.influent_flow + interface.tank4_y*previous(interface.airflow_rate) + interface.tank4_C)
+                              ELSE
+                              IF (parameters.Relation_tank4 == 1)
+                              THEN parameters.Total_volume*(pow(interface.influent_flow,2)/pow(interface.tank4_x,2) + pow(previous(interface.airflow_rate),2)/pow(interface.tank4_y,2) + 
+                                   interface.tank4_C)
+                              ELSE
+                              IF (parameters.Relation_tank4 == 2)
+                              THEN parameters.Total_volume*(-pow(interface.influent_flow,2)/pow(interface.tank4_x,2) - pow(previous(interface.airflow_rate),2)/pow(interface.tank4_y,2) + 
+                                   interface.tank4_C)
+                              ELSE
+                              IF (parameters.Relation_tank4 == 3)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank4_x + pow(previous(interface.airflow_rate),2)*interface.tank4_y + 
+                                   interface.tank4_C)
+                              ELSE
+                              IF (parameters.Relation_tank4 == 4)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank4_x - pow(previous(interface.airflow_rate),2)*interface.tank4_y + 
+                                   interface.tank4_C)
+                              ELSE 0;
+      interface.Volume_tank4 = IF (state.Volume_tank4_help < 0)
+                              THEN 1
+                              ELSE state.Volume_tank4_help;
+                              
+      state.Volume_tank5_help = IF (parameters.Relation_tank5 == 0)
+                              THEN parameters.Total_volume*(interface.tank5_x*interface.influent_flow + interface.tank5_y*previous(interface.airflow_rate) + interface.tank5_C)
+                              ELSE
+                              IF (parameters.Relation_tank5 == 1)
+                             THEN parameters.Total_volume*(pow(interface.influent_flow,2)/pow(interface.tank5_x,2) + pow(previous(interface.airflow_rate),2)/pow(interface.tank5_y,2) + 
+                                   interface.tank5_C)
+                              ELSE
+                              IF (parameters.Relation_tank5 == 2)
+                              THEN parameters.Total_volume*(-pow(interface.influent_flow,2)/pow(interface.tank5_x,2) - pow(previous(interface.airflow_rate),2)/pow(interface.tank5_y,2) + 
+                                   interface.tank5_C)
+                              ELSE
+                              IF (parameters.Relation_tank5 == 3)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank5_x + pow(previous(interface.airflow_rate),2)*interface.tank5_y + 
+                                   interface.tank5_C)
+                              ELSE
+                              IF (parameters.Relation_tank5 == 4)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank5_x - pow(previous(interface.airflow_rate),2)*interface.tank5_y + 
+                                   interface.tank5_C)
+                              ELSE 0;     
+     interface.Volume_tank5 = IF (state.Volume_tank5_help < 0)
+                              THEN 1
+                              ELSE state.Volume_tank5_help;
+                              
+     state.Volume_tank6_help = IF (parameters.Relation_tank6 == 0)
+                              THEN parameters.Total_volume*(interface.tank6_x*interface.influent_flow + interface.tank6_y*previous(interface.airflow_rate) + interface.tank6_C)
+                              ELSE
+                              IF (parameters.Relation_tank6 == 1)
+                              THEN parameters.Total_volume*(pow(interface.influent_flow,2)/pow(interface.tank6_x,2) + pow(previous(interface.airflow_rate),2)/pow(interface.tank6_y,2) + 
+                                   interface.tank6_C)
+                              ELSE
+                              IF (parameters.Relation_tank6 == 2)
+                              THEN parameters.Total_volume*(-pow(interface.influent_flow,2)/pow(interface.tank6_x,2) - pow(previous(interface.airflow_rate),2)/pow(interface.tank6_y,2) + 
+                                   interface.tank6_C)
+                              ELSE
+                              IF (parameters.Relation_tank6 == 3)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank6_x + pow(previous(interface.airflow_rate),2)*interface.tank6_y + 
+                                   interface.tank6_C)
+                              ELSE
+                              IF (parameters.Relation_tank6 == 4)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank6_x - pow(previous(interface.airflow_rate),2)*interface.tank6_y + 
+                                   interface.tank6_C)
+                              ELSE 0;
+     interface.Volume_tank6 = IF (state.Volume_tank6_help < 0)
+                              THEN 1
+                              ELSE state.Volume_tank6_help;
+                              
+     state.Volume_tank7_help = IF (parameters.Relation_tank7 == 0)
+                              THEN parameters.Total_volume*(interface.tank7_x*interface.influent_flow + interface.tank7_y*previous(interface.airflow_rate) + interface.tank7_C)
+                              ELSE
+                              IF (parameters.Relation_tank7 == 1)
+                              THEN parameters.Total_volume*(pow(interface.influent_flow,2)/pow(interface.tank7_x,2) + pow(previous(interface.airflow_rate),2)/pow(interface.tank7_y,2) + 
+                                   interface.tank8_C)
+                              ELSE
+                              IF (parameters.Relation_tank7 == 2)
+                              THEN parameters.Total_volume*(-pow(interface.influent_flow,2)/pow(interface.tank7_x,2) - pow(previous(interface.airflow_rate),2)/pow(interface.tank7_y,2) + 
+                                   interface.tank7_C)
+                              ELSE
+                              IF (parameters.Relation_tank7 == 3)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank7_x + pow(previous(interface.airflow_rate),2)*interface.tank7_y + 
+                                   interface.tank7_C)
+                              ELSE
+                              IF (parameters.Relation_tank7 == 4)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank7_x - pow(previous(interface.airflow_rate),2)*interface.tank7_y + 
+                                   interface.tank7_C)
+                              ELSE 0;     
+     interface.Volume_tank7 = IF (state.Volume_tank7_help < 0)
+                              THEN 1
+                              ELSE state.Volume_tank7_help;
+                              
+     state.Volume_tank8_help = IF (parameters.Relation_tank8 == 0)
+                              THEN parameters.Total_volume*(interface.tank8_x*interface.influent_flow + interface.tank8_y*previous(interface.airflow_rate) + interface.tank8_C)
+                              ELSE
+                              IF (parameters.Relation_tank8 == 1)
+                              THEN parameters.Total_volume*(pow(interface.influent_flow,2)/pow(interface.tank8_x,2) + pow(previous(interface.airflow_rate),2)/pow(interface.tank8_y,2) + 
+                                   interface.tank8_C)
+                              ELSE
+                              IF (parameters.Relation_tank8 == 2)
+                              THEN parameters.Total_volume*(-pow(interface.influent_flow,2)/pow(interface.tank8_x,2) - pow(previous(interface.airflow_rate),2)/pow(interface.tank8_y,2) + 
+                                   interface.tank8_C)
+                              ELSE
+                              IF (parameters.Relation_tank8 == 3)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank8_x + pow(previous(interface.airflow_rate),2)*interface.tank8_y + 
+                                   interface.tank8_C)
+                              ELSE
+                              IF (parameters.Relation_tank8 == 4)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank8_x - pow(previous(interface.airflow_rate),2)*interface.tank8_y + 
+                                   interface.tank8_C)
+                              ELSE 0;     
+     interface.Volume_tank8 = IF (state.Volume_tank8_help < 0)
+                              THEN 1
+                              ELSE state.Volume_tank8_help;
+                              
+     state.Volume_tank9_help = IF (parameters.Relation_tank9 == 0)
+                              THEN parameters.Total_volume*(interface.tank9_x*interface.influent_flow + interface.tank9_y*previous(interface.airflow_rate) + interface.tank9_C)
+                              ELSE
+                              IF (parameters.Relation_tank9 == 1)
+                              THEN parameters.Total_volume*(pow(interface.influent_flow,2)/pow(interface.tank9_x,2) + pow(previous(interface.airflow_rate),2)/pow(interface.tank9_y,2) + 
+                                   interface.tank9_C)
+                              ELSE
+                              IF (parameters.Relation_tank9 == 2)
+                              THEN parameters.Total_volume*(-pow(interface.influent_flow,2)/pow(interface.tank9_x,2) - pow(previous(interface.airflow_rate),2)/pow(interface.tank9_y,2) + 
+                                   interface.tank9_C)
+                              ELSE
+                              IF (parameters.Relation_tank9 == 3)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank9_x + pow(previous(interface.airflow_rate),2)*interface.tank9_y + 
+                                   interface.tank9_C)
+                              ELSE
+                              IF (parameters.Relation_tank9 == 4)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank9_x - pow(previous(interface.airflow_rate),2)*interface.tank9_y + 
+                                   interface.tank9_C)
+                              ELSE 0;     
+     interface.Volume_tank9 = IF (state.Volume_tank9_help < 0)
+                              THEN 1
+                              ELSE state.Volume_tank9_help;
+                              
+     state.Volume_tank10_help = IF (parameters.Relation_tank10 == 0)
+                              THEN parameters.Total_volume*(interface.tank10_x*interface.influent_flow + interface.tank10_y*previous(interface.airflow_rate) + interface.tank10_C)
+                              ELSE
+                              IF (parameters.Relation_tank10 == 1)
+                              THEN parameters.Total_volume*(pow(interface.influent_flow,2)/pow(interface.tank10_x,2) + pow(previous(interface.airflow_rate),2)/pow(interface.tank10_y,2) + 
+                                   interface.tank10_C)
+                              ELSE
+                              IF (parameters.Relation_tank10 == 2)
+                              THEN parameters.Total_volume*(-pow(interface.influent_flow,2)/pow(interface.tank10_x,2) - pow(previous(interface.airflow_rate),2)/pow(interface.tank10_y,2) + 
+                                   interface.tank10_C)
+                              ELSE
+                              IF (parameters.Relation_tank10 == 3)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank10_x + pow(previous(interface.airflow_rate),2)*interface.tank10_y + 
+                                   interface.tank10_C)
+                              ELSE
+                              IF (parameters.Relation_tank10 == 4)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank10_x - pow(previous(interface.airflow_rate),2)*interface.tank10_y + 
+                                   interface.tank10_C)
+                              ELSE 0;     
+     interface.Volume_tank10 = IF (state.Volume_tank10_help < 0)
+                              THEN 1
+                              ELSE state.Volume_tank10_help;
+                              
+     state.Volume_tank11_help = IF (parameters.Relation_tank11 == 0)
+                              THEN parameters.Total_volume*(interface.tank11_x*interface.influent_flow + interface.tank11_y*previous(interface.airflow_rate) + interface.tank11_C)
+                              ELSE
+                              IF (parameters.Relation_tank11 == 1)
+                              THEN parameters.Total_volume*(pow(interface.influent_flow,2)/pow(interface.tank11_x,2) + pow(previous(interface.airflow_rate),2)/pow(interface.tank11_y,2) + 
+                                   interface.tank11_C)
+                              ELSE
+                              IF (parameters.Relation_tank11 == 2)
+                              THEN parameters.Total_volume*(-pow(interface.influent_flow,2)/pow(interface.tank11_x,2) - pow(previous(interface.airflow_rate),2)/pow(interface.tank11_y,2) + 
+                                   interface.tank11_C)
+                              ELSE
+                              IF (parameters.Relation_tank11 == 3)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank11_x + pow(previous(interface.airflow_rate),2)*interface.tank11_y + 
+                                   interface.tank11_C)
+                              ELSE
+                              IF (parameters.Relation_tank11 == 4)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank11_x - pow(previous(interface.airflow_rate),2)*interface.tank11_y + 
+                                   interface.tank11_C)
+                              ELSE 0;                               
+     interface.Volume_tank11 = IF (state.Volume_tank11_help < 0)
+                              THEN 1
+                              ELSE state.Volume_tank11_help;
+                              
+     state.Volume_tank12_help = IF (parameters.Relation_tank12 == 0)
+                              THEN parameters.Total_volume*(interface.tank12_x*interface.influent_flow + interface.tank12_y*previous(interface.airflow_rate) + interface.tank12_C)
+                              ELSE
+                              IF (parameters.Relation_tank12 == 1)
+                              THEN parameters.Total_volume*(pow(interface.influent_flow,2)/pow(interface.tank12_x,2) + pow(previous(interface.airflow_rate),2)/pow(interface.tank12_y,2) + 
+                                   interface.tank12_C)
+                              ELSE
+                              IF (parameters.Relation_tank12 == 2)
+                              THEN parameters.Total_volume*(-pow(interface.influent_flow,2)/pow(interface.tank12_x,2) - pow(previous(interface.airflow_rate),2)/pow(interface.tank12_y,2) + 
+                                   interface.tank12_C)
+                              ELSE
+                              IF (parameters.Relation_tank12 == 3)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank12_x + pow(previous(interface.airflow_rate),2)*interface.tank12_y + 
+                                   interface.tank12_C)
+                              ELSE
+                              IF (parameters.Relation_tank12 == 4)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank12_x - pow(previous(interface.airflow_rate),2)*interface.tank12_y + 
+                                   interface.tank12_C)
+                              ELSE 0;     
+     interface.Volume_tank12 = IF (state.Volume_tank12_help < 0)
+                              THEN 1
+                              ELSE state.Volume_tank12_help;
+                              
+     state.Volume_tank13_help = IF (parameters.Relation_tank13 == 0)
+                              THEN parameters.Total_volume*(interface.tank13_x*interface.influent_flow + interface.tank13_y*previous(interface.airflow_rate) + interface.tank13_C)
+                              ELSE
+                              IF (parameters.Relation_tank13 == 1)
+                              THEN parameters.Total_volume*(pow(interface.influent_flow,2)/pow(interface.tank13_x,2) + pow(previous(interface.airflow_rate),2)/pow(interface.tank13_y,2) + 
+                                   interface.tank13_C)
+                              ELSE
+                              IF (parameters.Relation_tank13 == 2)
+                              THEN parameters.Total_volume*(-pow(interface.influent_flow,2)/pow(interface.tank13_x,2) - pow(previous(interface.airflow_rate),2)/pow(interface.tank13_y,2) + 
+                                   interface.tank13_C)
+                              ELSE
+                              IF (parameters.Relation_tank13 == 3)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank13_x + pow(previous(interface.airflow_rate),2)*interface.tank13_y + 
+                                   interface.tank13_C)
+                              ELSE
+                              IF (parameters.Relation_tank13 == 4)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank13_x - pow(previous(interface.airflow_rate),2)*interface.tank13_y + 
+                                   interface.tank13_C) 
+                              ELSE 0;     
+     interface.Volume_tank13 = IF (state.Volume_tank13_help < 0)
+                              THEN 1
+                              ELSE state.Volume_tank13_help;
+                              
+     state.Volume_tank14_help = IF (parameters.Relation_tank14 == 0)
+                              THEN parameters.Total_volume*(interface.tank14_x*interface.influent_flow + interface.tank14_y*previous(interface.airflow_rate) + interface.tank14_C)
+                              ELSE
+                              IF (parameters.Relation_tank14 == 1)
+                              THEN parameters.Total_volume*(pow(interface.influent_flow,2)/pow(interface.tank14_x,2) + pow(previous(interface.airflow_rate),2)/pow(interface.tank14_y,2) + 
+                                   interface.tank14_C)
+                              ELSE
+                              IF (parameters.Relation_tank14 == 2)
+                              THEN parameters.Total_volume*(-pow(interface.influent_flow,2)/pow(interface.tank14_x,2) - pow(previous(interface.airflow_rate),2)/pow(interface.tank14_y,2) + 
+                                   interface.tank14_C)
+                              ELSE
+                              IF (parameters.Relation_tank14 == 3)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank14_x + pow(previous(interface.airflow_rate),2)*interface.tank14_y + 
+                                   interface.tank14_C)
+                              ELSE
+                              IF (parameters.Relation_tank14 == 4)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank14_x - pow(previous(interface.airflow_rate),2)*interface.tank14_y + 
+                                   interface.tank14_C)
+                              ELSE 0;    
+     interface.Volume_tank14 = IF (state.Volume_tank14_help < 0)
+                              THEN 1
+                              ELSE state.Volume_tank14_help;
+                              
+     state.Volume_tank15_help = IF (parameters.Relation_tank15 == 0)
+                              THEN parameters.Total_volume*(interface.tank15_x*interface.influent_flow + interface.tank15_y*previous(interface.airflow_rate) + interface.tank15_C)
+                              ELSE
+                              IF (parameters.Relation_tank15 == 1)
+                              THEN parameters.Total_volume*(pow(interface.influent_flow,2)/pow(interface.tank15_x,2) + pow(previous(interface.airflow_rate),2)/pow(interface.tank15_y,2) + 
+                                   interface.tank15_C)
+                              ELSE
+                              IF (parameters.Relation_tank15 == 2)
+                              THEN parameters.Total_volume*(-pow(interface.influent_flow,2)/pow(interface.tank15_x,2) - pow(previous(interface.airflow_rate),2)/pow(interface.tank15_y,2) + 
+                                   interface.tank15_C)
+                              ELSE
+                              IF (parameters.Relation_tank15 == 3)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank15_x + pow(previous(interface.airflow_rate),2)*interface.tank15_y + 
+                                   interface.tank15_C)
+                              ELSE
+                              IF (parameters.Relation_tank15 == 4)
+                              THEN parameters.Total_volume*(interface.influent_flow*previous(interface.airflow_rate)*interface.tank15_x - pow(previous(interface.airflow_rate),2)*interface.tank15_y + 
+                                   interface.tank15_C)                                   
+                              ELSE 0;
+     interface.Volume_tank15 = IF (state.Volume_tank15_help < 0)
+                              THEN 1
+                              ELSE state.Volume_tank15_help;                         
+   };
+  :};
+
+ 
+#endif // WWTP_BASE_CONTROLLERS_DYNAMICVOLUMES
+

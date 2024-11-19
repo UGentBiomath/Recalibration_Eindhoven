@@ -1,0 +1,4 @@
+#include "Effluent_Sludge_disposal.msl"
+
+OBJ _Effluent_Sludge_disposal_ : Effluent_Sludge_disposal;
+

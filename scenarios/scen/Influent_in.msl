@@ -1,0 +1,108 @@
+#ifndef __INFLUENT_IN_MSL__
+#define __INFLUENT_IN_MSL__
+
+#include "wwtp.msl"
+
+CLASS Influent_in (* icon = "influent"; file = ""; *)  SPECIALISES PhysicalDAEModelType := 
+{:
+  comments <- "";
+
+  interface <-
+  {
+    OBJ CODs (*terminal = ""; *) "Input component" : Real := {: causality <- "CIN"; value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ CODt (*terminal = ""; *) "Input component" : Real := {: causality <- "CIN"; value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ NH (*terminal = ""; *) "Input component" : Real := {: causality <- "CIN"; value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ PO (*terminal = ""; *) "Input component" : Real := {: causality <- "CIN"; value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ TSS (*terminal = ""; *) "Input component" : Real := {: causality <- "CIN"; value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ Water (*terminal = ""; *) "Input component" : Real := {: causality <- "CIN"; value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+
+    OBJ Influent_Load (*terminal = "out_1"; *) "Influent load" : OutWWTPTerminal := {: nature <- "THROUGH"; causality <- "COUT"; group <- "Influent"; :};
+  };
+
+  parameters <-
+  {
+    OBJ f_S_A (* *) "Fraction of fermentation procucts (S_A) in the soluble COD" : Fraction := {: unit <- "-"; value <- 0.25; interval <- {: lowerBound <- 0.0; upperBound <- 1.0; :}; group <- "Fractionation"; :};
+    OBJ f_S_F (* *) "Fraction of fermentable readily biodegradable products (S_F) in the soluble COD" : Fraction := {: unit <- "-"; value <- 0.375; interval <- {: lowerBound <- 0.0; upperBound <- 1.0; :}; group <- "Fractionation"; :};
+    OBJ F_VSS_TSS (* *) "VSS to TSS ratio" : Real := {: unit <- "-"; value <- 0.74; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Fractionation"; :};
+    OBJ f_X_S (* *) "Fraction slowly biodegradable substrate (X_S) in the particulate COD" : Fraction := {: unit <- "-"; value <- 0.69; interval <- {: lowerBound <- 0.0; upperBound <- 1.0; :}; group <- "Fractionation"; :};
+    OBJ S_ALK_In (* *) "Influent concentration of alkalinity" : Fraction := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ S_Al_In (* *) "Influent concentration of soluble aluminium salts" : Fraction := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ S_N2_In (* *) "Influent concentration of dinitrogen" : Fraction := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ S_NO_In (* *) "Influent concentration of nitrate" : Fraction := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ S_O_In (* *) "Influent concentration of oxygen" : Fraction := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ X_AUT_In (* *) "Influent concentration of autotrophs" : Fraction := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ X_H_In (* *) "Influent concentration of heterotrophs" : Fraction := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ X_MEOH_In (* *) "Influent concentration of metal-hydroxides" : Fraction := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ X_MEP_In (* *) "Influent concentration of metal-phosphates" : Fraction := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ X_PAO_In (* *) "Influent concentration of phosphate accumulating organisms" : Fraction := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ X_PHA_In (* *) "Influent concentration of cell internal organic storage products of the PAO" : Fraction := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ X_PP_In (* *) "Influent concentration of poly-phosphate concentration" : Fraction := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ _1_ (* hidden = "1"; fixed = "1"; *) "" : Real := {: value <- 1.0; :};
+
+    OBJ WWTPSpecificVolume (* hidden = "1"; *) "The specific volumes (= 1/density) of the components" : SpecificVolumeVector;
+  };
+
+  independent <- 
+  {
+    OBJ t (* fixed = "1"; *) "Time" : Time;
+  };
+
+  state <-
+  {
+    OBJ S_COD (* *) "Soluble COD" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ X_COD (* *) "Particulate COD" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ X_I_Help (* *) "Intermediate component for X_I" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+
+    OBJ Inflow (* *) "Temporary variable" : WWTPConcTerminal;
+  };
+
+  initial <-
+  {
+    parameters.WWTPSpecificVolume[IndexOfSolvent] := 0.000001;
+
+  };
+
+  equations <-
+  {
+    // (De-)Fractionation
+
+    state.Inflow[H2O] = interface.Water * (1);
+    state.Inflow[S_A] = state.S_COD * (parameters.f_S_A);
+    state.Inflow[S_ALK] = parameters.S_ALK_In * (1);
+    state.Inflow[S_Al] = parameters.S_Al_In * (1);
+    state.Inflow[S_F] = state.S_COD * (parameters.f_S_F);
+    state.Inflow[S_I] = state.S_COD * (1 - parameters.f_S_A - parameters.f_S_F);
+    state.Inflow[S_N2] = parameters.S_N2_In * (1);
+    state.Inflow[S_NH] = interface.NH * (1);
+    state.Inflow[S_NO] = parameters.S_NO_In * (1);
+    state.Inflow[S_O] = parameters.S_O_In * (1);
+    state.Inflow[S_PO] = interface.PO * (1);
+    state.Inflow[X_AUT] = parameters.X_AUT_In * (1);
+    state.Inflow[X_H] = parameters.X_H_In * (1);
+    state.Inflow[X_I] = state.X_I_Help * (IF (state.X_I_Help <=0)
+THEN 0
+ELSE 1);
+    state.Inflow[X_I_i] = interface.TSS * (1 - parameters.F_VSS_TSS);
+    state.Inflow[X_MEOH] = parameters.X_MEOH_In * (1);
+    state.Inflow[X_MEP] = parameters.X_MEP_In * (1);
+    state.Inflow[X_PAO] = parameters.X_PAO_In * (1);
+    state.Inflow[X_PHA] = parameters.X_PHA_In * (1);
+    state.Inflow[X_PP] = parameters.X_PP_In * (1);
+    state.Inflow[X_S] = state.X_COD * (parameters.f_X_S);
+    state.Inflow[X_TSS] = interface.TSS * (1);
+    state.S_COD = interface.CODs * (1);
+    state.X_COD = interface.CODs * (-1) + interface.CODt * (1);
+    state.X_I_Help = state.Inflow[X_AUT] * (-1) + state.Inflow[X_H] * (-1) + state.Inflow[X_PAO] * (-1) + state.Inflow[X_PHA] * (-1) + state.Inflow[X_S] * (-1) + state.X_COD * (1);
+
+    // C2F conversion
+
+    interface.Influent_Load[IndexOfSolvent] = - state.Inflow[IndexOfSolvent] / parameters.WWTPSpecificVolume[IndexOfSolvent];
+
+    { FOREACH Comp_Index IN {IndexOfFirstSolubleComponent .. NrOfComponents}:
+        interface.Influent_Load[Comp_Index] = - state.Inflow[Comp_Index] * state.Inflow[IndexOfSolvent]; };
+
+  };
+:};
+
+#endif
+

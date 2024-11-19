@@ -1,0 +1,19 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE Reactions "The reactions between the components considered" = 
+ENUM
+{
+  Hydrolysis,
+  AerGrowthXH,
+  AerEndoXH,
+  AnGrowthXHonNO3,
+  AnGrowthXHonNO2,
+  AerGrowthXNH,
+  AerEndoXNH,
+  AerGrowthXNO,
+  AerEndoXNO,
+  AnaerGrowthXAN,
+  AerEndoXAN,
+  Aeration
+};
+

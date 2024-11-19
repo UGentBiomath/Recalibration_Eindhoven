@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Tornado>
+<ModelLib Name="Eindhoven" Version="1.0">
+<Props>
+<Prop Name="TornadoVersion" Value="2023 "/>
+<Prop Name="Author" Value="UGENT\cgomezco"/>
+<Prop Name="Date" Value="Sun Oct  6 13:02:43 2024"/>
+<Prop Name="Desc" Value=""/>
+<Prop Name="FileName" Value="C:\Users\cgomezco\Downloads\EHV_WWTP_WITH_CONTROL_CM_T1\scenarios\scen\Eindhoven.Partial.ModelLib.xml|.Tornado"/>
+<Prop Name="DisplayName" Value=""/>
+<Prop Name="Includes" Value=""/>
+<Prop Name="IncludeNamespaces" Value=""/>
+<Prop Name="Imports" Value=""/>
+</Props>
+<Models>
+<Model Name="Eindhoven" FileName="C:\Users\cgomezco\Downloads\EHV_WWTP_WITH_CONTROL_CM_T1\scenarios\scen\Eindhoven.Layout.xml|.Tornado" Type="Model">
+<Params>
+<Param Name="A" ClassName="Real" DefaultValue="5.717" Desc="dimensionless Aeration model" Group="Aeration model" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="B" ClassName="Real" DefaultValue="6.815" Desc="dimensionaless Aeration model" Group="Aeration model" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="F_BOD_COD" ClassName="Fraction" DefaultValue="0.65" Desc="Conversion factor BOD/COD" Group="Conversion factors" LowerBound="0" Unit="-" UpperBound="1"/>
+<Param Name="K_A" ClassName="SaturationCoefficient" DefaultValue="4" Desc="Saturation coeff for S_A (acetate)" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_ALK" ClassName="SaturationCoefficient" DefaultValue="0.1" Desc="Saturation coeff for alkalinity (HCO3-)" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_ALK_AUT" ClassName="SaturationCoefficient" DefaultValue="0.5" Desc="Saturation coeff of autotrophs for alkalinity" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_F" ClassName="SaturationCoefficient" DefaultValue="4" Desc="Saturation/inhibtion coeff for growth on S_F" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_IPP" ClassName="SaturationCoefficient" DefaultValue="0.02" Desc="Inhibition coeff for X_PP storage" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_MAX" ClassName="SaturationCoefficient" DefaultValue="0.34" Desc="Maximum ratio of X_PP/X_PAO" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_NH" ClassName="SaturationCoefficient" DefaultValue="0.05" Desc="Saturation coeff for ammonium (nutrient)" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_NH_AUT" ClassName="SaturationCoefficient" DefaultValue="1" Desc="Saturation coeff of autotrophs for ammonium" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_NO" ClassName="SaturationCoefficient" DefaultValue="0.5" Desc="Saturation/inhibition coeff fir nitrate" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_O" ClassName="SaturationCoefficient" DefaultValue="0.2" Desc="Saturation/inhibition coeff for oxygen" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_O_AUT" ClassName="SaturationCoefficient" DefaultValue="0.5" Desc="Saturation/inhibition coeff of autotrophs for oxygen" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_P" ClassName="SaturationCoefficient" DefaultValue="0.01" Desc="Saturation coeff for phosphorus (nutrient)" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_PHA" ClassName="SaturationCoefficient" DefaultValue="0.01" Desc="Saturation coeff for PHA" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_PP" ClassName="SaturationCoefficient" DefaultValue="0.01" Desc="Saturation coeff for poly-phosphate" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_PS" ClassName="SaturationCoefficient" DefaultValue="0.2" Desc="Saturation coeff for phosphorus in PP storage" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_X" ClassName="SaturationCoefficient" DefaultValue="0.1" Desc="Saturation coeff for particulate COD" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="K_fe" ClassName="SaturationCoefficient" DefaultValue="4" Desc="Saturation coeff for fermentation on S_F" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="100"/>
+<Param Name="Q_PHA" ClassName="RateConstant" DefaultValue="3" Desc="Rate constant for storage of PHA (base: X_PP)" Group="Kinetic" LowerBound="0" Unit="1/d" UpperBound="20"/>
+<Param Name="Q_PP" ClassName="RateConstant" DefaultValue="1.5" Desc="Rate constant for storage of PP" Group="Kinetic" LowerBound="0" Unit="1/d" UpperBound="20"/>
+<Param Name="Q_fe" ClassName="RateConstant" DefaultValue="3" Desc="Maximum rate for fermentation" Group="Kinetic" LowerBound="0" Unit="1/d" UpperBound="20"/>
+<Param Name="Rho_sludge" ClassName="Real" DefaultValue="988" Desc="Density of sludge (kg/m&#179;)" Group="Characteristic of the sludge and air" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="SOTE" ClassName="Real" DefaultValue="42" Desc="standard oxygen transfer efficiency (%)" Group="Operational" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="Temp_Ref" ClassName="CelsiusTemperature" DefaultValue="20" Desc="Reference temperature of the activated sludge" Group="Kinetic" LowerBound="-273.15" Unit="degC" UpperBound="+INF"/>
+<Param Name="Y_AUT" ClassName="YieldForAutotrophicBiomass" DefaultValue="0.24" Desc="Yield For Autotrophic Biomass" Group="Stoichiometry" LowerBound="0" Unit="gCOD/gN" UpperBound="4.57"/>
+<Param Name="Y_H" ClassName="YieldForHeterotrophicBiomass" DefaultValue="0.625" Desc="Yield For Heterotrophic Biomass" Group="Stoichiometry" LowerBound="0" Unit="gCOD/gCOD" UpperBound="1"/>
+<Param Name="Y_PAO" ClassName="Yield" DefaultValue="0.625" Desc="Yield coeff (biomass/PHA)" Group="Stoichiometry" LowerBound="0" Unit="-" UpperBound="+INF"/>
+<Param Name="Y_PHA" ClassName="Yield" DefaultValue="0.2" Desc="PHA requirement for PP storage" Group="Stoichiometry" LowerBound="0" Unit="-" UpperBound="+INF"/>
+<Param Name="Y_PO" ClassName="Yield" DefaultValue="0.4" Desc="PP requirement (S_PO4 release) per PHA stored" Group="Stoichiometry" LowerBound="0" Unit="-" UpperBound="+INF"/>
+<Param Name="b_AUT" ClassName="DecayCoefficient" DefaultValue="0.15" Desc="Decay rate" Group="Kinetic" LowerBound="0" Unit="1/d" UpperBound="20"/>
+<Param Name="b_H" ClassName="RateConstant" DefaultValue="0.4" Desc="Rate constant for lysis and decay" Group="Kinetic" LowerBound="0" Unit="1/d" UpperBound="20"/>
+<Param Name="b_PAO" ClassName="RateConstant" DefaultValue="0.2" Desc="Rate constant for lysis of X_PAO" Group="Kinetic" LowerBound="0" Unit="1/d" UpperBound="20"/>
+<Param Name="b_PHA" ClassName="RateConstant" DefaultValue="0.2" Desc="Rate constant for lysis of X_PHA" Group="Kinetic" LowerBound="0" Unit="1/d" UpperBound="20"/>
+<Param Name="b_PP" ClassName="RateConstant" DefaultValue="0.2" Desc="Rate constant for lysis of X_PP" Group="Kinetic" LowerBound="0" Unit="1/d" UpperBound="20"/>
+<Param Name="f" ClassName="Real" DefaultValue="0.44" Desc="fraction of the tank" Group="Aeration model" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="f_S_I" ClassName="Fraction" DefaultValue="0" Desc="Fraction of inert COD in particulate substrate" Group="Stoichiometry" LowerBound="0" Unit="-" UpperBound="1"/>
+<Param Name="f_X_I" ClassName="Fraction" DefaultValue="0.1" Desc="Fraction of inert COD generated in biomass lysis" Group="Stoichiometry" LowerBound="0" Unit="-" UpperBound="1"/>
+<Param Name="i_N_BM" ClassName="ConversionFactor" DefaultValue="0.07" Desc="Nitrogen content of biomass X_H, X_PAO, X_AUT" Group="Composition parameters" LowerBound="0" Unit="g/gCOD" UpperBound="1"/>
+<Param Name="i_N_S_F" ClassName="ConversionFactor" DefaultValue="0.03" Desc="Nitrogen content of soluble substrate S_F" Group="Composition parameters" LowerBound="0" Unit="g/gCOD" UpperBound="1"/>
+<Param Name="i_N_S_I" ClassName="ConversionFactor" DefaultValue="0.01" Desc="Nitrogen content of inert soluble COD S_I" Group="Composition parameters" LowerBound="0" Unit="g/gCOD" UpperBound="1"/>
+<Param Name="i_N_X_I" ClassName="ConversionFactor" DefaultValue="0.02" Desc="Nitrogen content of inert particulate COD X_I" Group="Composition parameters" LowerBound="0" Unit="g/gCOD" UpperBound="1"/>
+<Param Name="i_N_X_S" ClassName="ConversionFactor" DefaultValue="0.04" Desc="Nitrogen content of particulate substrate X_S" Group="Composition parameters" LowerBound="0" Unit="g/gCOD" UpperBound="1"/>
+<Param Name="i_P_BM" ClassName="ConversionFactor" DefaultValue="0.02" Desc="Phosphorus content of biomass X_H, X_PAO, X_AUT" Group="Composition parameters" LowerBound="0" Unit="g/gCOD" UpperBound="1"/>
+<Param Name="i_P_S_F" ClassName="ConversionFactor" DefaultValue="0.01" Desc="Phosphorus content of soluble substrate S_F" Group="Composition parameters" LowerBound="0" Unit="g/gCOD" UpperBound="1"/>
+<Param Name="i_P_S_I" ClassName="ConversionFactor" DefaultValue="0" Desc="Phosphorus content of inert soluble COD S_I" Group="Composition parameters" LowerBound="0" Unit="g/gCOD" UpperBound="1"/>
+<Param Name="i_P_X_I" ClassName="ConversionFactor" DefaultValue="0.01" Desc="Phosphorus content of inert particulate COD X_I" Group="Composition parameters" LowerBound="0" Unit="g/gCOD" UpperBound="1"/>
+<Param Name="i_P_X_S" ClassName="ConversionFactor" DefaultValue="0.01" Desc="Phosphorus content of particulate substrate X_S" Group="Composition parameters" LowerBound="0" Unit="g/gCOD" UpperBound="1"/>
+<Param Name="i_TSS_BM" ClassName="ConversionFactor" DefaultValue="0.9" Desc="TSS to biomass ratio for X_H, X_PAO, X_AUT" Group="Composition parameters" LowerBound="0" Unit="g/gCOD" UpperBound="1"/>
+<Param Name="i_TSS_X_I" ClassName="ConversionFactor" DefaultValue="0.75" Desc="TSS to X_I ratio" Group="Composition parameters" LowerBound="0" Unit="g/gCOD" UpperBound="1"/>
+<Param Name="i_TSS_X_S" ClassName="ConversionFactor" DefaultValue="0.75" Desc="TSS to X_S ratio" Group="Composition parameters" LowerBound="0" Unit="g/gCOD" UpperBound="1"/>
+<Param Name="k_PRE" ClassName="RateConstant" DefaultValue="1" Desc="Rate constant for P precipitation" Group="Kinetic" LowerBound="0" Unit="1/d" UpperBound="20"/>
+<Param Name="k_RED" ClassName="RateConstant" DefaultValue="0.6" Desc="Rate constant for P redissolution" Group="Kinetic" LowerBound="0" Unit="1/d" UpperBound="20"/>
+<Param Name="k_h" ClassName="MaxSpecificHydrolysisRate" DefaultValue="3" Desc="Hydrolysis rate constant" Group="Kinetic" LowerBound="0" Unit="gCOD/(gCOD*d)" UpperBound="25"/>
+<Param Name="mu_AUT" ClassName="MaxGrowthRate" DefaultValue="1" Desc="Maximum growth rate" Group="Kinetic" LowerBound="0" Unit="1/d" UpperBound="100"/>
+<Param Name="mu_H" ClassName="MaxGrowthRate" DefaultValue="6" Desc="Maximum growth rate on substrate" Group="Kinetic" LowerBound="0" Unit="1/d" UpperBound="100"/>
+<Param Name="mu_PAO" ClassName="MaxGrowthRate" DefaultValue="1" Desc="Maximum growth rate" Group="Kinetic" LowerBound="0" Unit="1/d" UpperBound="100"/>
+<Param Name="n_NO_AUT_d" ClassName="ReductionFactor" DefaultValue="0.33" Desc="Anoxic reduction factor for decay of autotrophs" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="1"/>
+<Param Name="n_NO_Het" ClassName="ReductionFactor" DefaultValue="0.8" Desc="Reduction factor for denitrification" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="1"/>
+<Param Name="n_NO_Het_d" ClassName="ReductionFactor" DefaultValue="0.5" Desc="Anoxic reduction factor for decay of heterotrophs" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="1"/>
+<Param Name="n_NO_Hyd" ClassName="ReductionFactor" DefaultValue="0.6" Desc="Anoxic hydrolysis reduction factor" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="1"/>
+<Param Name="n_NO_PAO" ClassName="ReductionFactor" DefaultValue="0.6" Desc="Amount of PAO organisms active under anoxic conditions" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="1"/>
+<Param Name="n_NO_P_d" ClassName="ReductionFactor" DefaultValue="0.33" Desc="Anoxic reduction factor for decay of PAO, PP and PHA" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="1"/>
+<Param Name="n_fe" ClassName="ReductionFactor" DefaultValue="0.4" Desc="Anaerobic hydrolysis reduction factor" Group="Kinetic" LowerBound="0" Unit="-" UpperBound="1"/>
+<Param Name="p_site" ClassName="Real" DefaultValue="2334" Desc="Vapour pressure (Pa)" Group="Local conditions of the situ" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="theta_K_X" ClassName="Real" DefaultValue="0.896" Desc="Temperature correction factor for K_X" Group="Kinetic" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="theta_Q_PHA" ClassName="Real" DefaultValue="1.041" Desc="Temperature correction factor for Q_PHA" Group="Kinetic" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="theta_Q_PP" ClassName="Real" DefaultValue="1.041" Desc="Temperature correction factor for Q_PP" Group="Kinetic" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="theta_Q_fe" ClassName="Real" DefaultValue="1.072" Desc="Temperature correction factor for Q_fe" Group="Kinetic" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="theta_b_AUT" ClassName="Real" DefaultValue="1.116" Desc="Temperature correction factor for b_AUT" Group="Kinetic" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="theta_b_H" ClassName="Real" DefaultValue="1.072" Desc="Temperature correction factor for b_H" Group="Kinetic" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="theta_b_PAO" ClassName="Real" DefaultValue="1.072" Desc="Temperature correction factor for b_PAO" Group="Kinetic" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="theta_b_PHA" ClassName="Real" DefaultValue="1.072" Desc="Temperature correction factor for b_PHA" Group="Kinetic" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="theta_b_PP" ClassName="Real" DefaultValue="1.072" Desc="Temperature correction factor for b_PP" Group="Kinetic" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="theta_k_h" ClassName="Real" DefaultValue="1.041" Desc="Temperature correction factor for k_h" Group="Kinetic" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="theta_mu_AUT" ClassName="Real" DefaultValue="1.111" Desc="Temperature correction factor for mu_AUT" Group="Kinetic" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="theta_mu_H" ClassName="Real" DefaultValue="1.072" Desc="Temperature correction factor for mu_H" Group="Kinetic" LowerBound="-INF" UpperBound="+INF"/>
+<Param Name="theta_mu_PAO" ClassName="Real" DefaultValue="1.041" Desc="Temperature correction factor for mu_PAO" Group="Kinetic" LowerBound="-INF" UpperBound="+INF"/>
+</Params>
+<InterfaceVars>
+<InterfaceVar Name="Operator_high" ClassName="Real" DefaultValue="3700" Desc="operator input" Elems="H2O,S_A,S_ALK,S_Al,S_F,S_I,S_N2,S_NH,S_NO,S_O,S_PO,X_AUT,X_H,X_I,X_I_i,X_MEOH,X_MEP,X_PAO,X_PHA,X_PP,X_S,X_TSS" Group="Operational" LowerBound="0" UpperBound="10000"/>
+<InterfaceVar Name="Operator_low" ClassName="Real" DefaultValue="3500" Desc="operator input" Elems="H2O,S_A,S_ALK,S_Al,S_F,S_I,S_N2,S_NH,S_NO,S_O,S_PO,X_AUT,X_H,X_I,X_I_i,X_MEOH,X_MEP,X_PAO,X_PHA,X_PP,X_S,X_TSS" Group="Operational" LowerBound="0" UpperBound="10000"/>
+<InterfaceVar Name="Pressure" ClassName="Real" DefaultValue="0" Desc="Pressure" Elems="H2O,S_A,S_ALK,S_Al,S_F,S_I,S_N2,S_NH,S_NO,S_O,S_PO,X_AUT,X_H,X_I,X_I_i,X_MEOH,X_MEP,X_PAO,X_PHA,X_PP,X_S,X_TSS" Group="Operational" LowerBound="-INF" UpperBound="+INF"/>
+<InterfaceVar Name="Temp" ClassName="CelsiusTemperature" DefaultValue="0" Elems="H2O,S_A,S_ALK,S_Al,S_F,S_I,S_N2,S_NH,S_NO,S_O,S_PO,X_AUT,X_H,X_I,X_I_i,X_MEOH,X_MEP,X_PAO,X_PHA,X_PP,X_S,X_TSS" Group="Operational" LowerBound="-INF" UpperBound="+INF"/>
+<InterfaceVar Name="Temp_air" ClassName="CelsiusTemperature" DefaultValue="0" Desc="temperature of the air" Elems="H2O,S_A,S_ALK,S_Al,S_F,S_I,S_N2,S_NH,S_NO,S_O,S_PO,X_AUT,X_H,X_I,X_I_i,X_MEOH,X_MEP,X_PAO,X_PHA,X_PP,X_S,X_TSS" Group="Operational" LowerBound="-INF" UpperBound="+INF"/>
+</InterfaceVars>
+<SubModels>
+<SubModel Name="ANAEROBIC_1" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="ANAEROBIC_2" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="ANAEROBIC_3" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="ANAEROBIC_4" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="ANOXIC_1" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="ANOXIC_2" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="A_WP" ClassName="Irvine_Aeration_model_Carbon_foot_print" Desc="Controller"/>
+<SubModel Name="A_ZP" ClassName="Irvine_Aeration_model_Carbon_foot_print" Desc="Controller"/>
+<SubModel Name="Airflow_divide" ClassName="ConstantRatio" Desc="Ratio Controller"/>
+<SubModel Name="CHEMICAL_EQ" ClassName="MEChemical" Desc="chemical dosing unit"/>
+<SubModel Name="COMBINER_1" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="COMBINER_2" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="COMBINER_3" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="COMBINER_5" ClassName="ThreeCombiner" Desc="Three combiner"/>
+<SubModel Name="COMBINER_6" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="COMBINER_8" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="C_Al" ClassName="OperatorDelayed" Desc="Controller"/>
+<SubModel Name="C_RAS" ClassName="ConstantRatio_double" Desc="Ratio Controller"/>
+<SubModel Name="C_RB_RECYCLE" ClassName="raintank_Eindhoven" Desc="Controller"/>
+<SubModel Name="C_RecB" ClassName="PI_Saturation_recB_EHV" Desc="Controller"/>
+<SubModel Name="Calculator_1" ClassName="OperationalParameters" Desc="Process calculator"/>
+<SubModel Name="Control_1" ClassName="Operator" Desc="Controller"/>
+<SubModel Name="Control_3" ClassName="OnOff_FF_aer" Desc="Controller"/>
+<SubModel Name="Control_NH4" ClassName="PID_AntiWindup_Saturation" Desc="Controller"/>
+<SubModel Name="Control_Q_Air_WP" ClassName="OnOffBand" Desc="On Off Controller"/>
+<SubModel Name="Control_Q_Air_ZP" ClassName="PID_AntiWindup_Saturation" Desc="Controller"/>
+<SubModel Name="Cost_1" ClassName="OperationalCost" Desc="Cost"/>
+<SubModel Name="DOSAGE_Al" ClassName="Alum" Desc="Alum dosing unit"/>
+<SubModel Name="DOSAGE_Fe" ClassName="IronHydroxide" Desc="Iron dosing unit"/>
+<SubModel Name="FLOW_IN" ClassName="Sensor_Flow" Desc="Flow sensor"/>
+<SubModel Name="FLOW_IN_AER" ClassName="Sensor_Flow" Desc="Flow sensor"/>
+<SubModel Name="FLOW_IN_BIO" ClassName="Sensor_Flow" Desc="Flow sensor"/>
+<SubModel Name="FLOW_RB_IN" ClassName="Sensor_Flow" Desc="Flow sensor"/>
+<SubModel Name="FS_1" ClassName="AbsTwoSplitter" Desc="Two flow splitter"/>
+<SubModel Name="FS_11" ClassName="AbsThreeSplitter" Desc="Three flow splitter"/>
+<SubModel Name="FS_12" ClassName="AbsFourSplitter" Desc="Four flow splitter"/>
+<SubModel Name="FS_2" ClassName="AbsTwoSplitter" Desc="Two flow splitter"/>
+<SubModel Name="FS_4" ClassName="AbsTwoSplitter" Desc="Two flow splitter"/>
+<SubModel Name="FS_5" ClassName="AbsTwoSplitter" Desc="Two flow splitter"/>
+<SubModel Name="FS_6" ClassName="AbsTwoSplitter" Desc="Two flow splitter"/>
+<SubModel Name="FS_7" ClassName="AbsTwoSplitter" Desc="Two flow splitter"/>
+<SubModel Name="FS_8" ClassName="AbsTwoSplitter" Desc="Two flow splitter"/>
+<SubModel Name="FS_9" ClassName="AbsTwoSplitter" Desc="Two flow splitter"/>
+<SubModel Name="INLET_A" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="INLET_B" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="L_RecA" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="L_RecANOX" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="L_RecB" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="L_RecRAS" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="L_RecRB" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="Loop_1" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="Loop_10" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="Loop_11" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="Loop_12" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="Loop_2" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="Loop_3" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="Loop_4" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="Loop_5" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="Loop_6" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="Loop_7" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="Loop_8" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="Loop_9" ClassName="DifferentialLoopBreaker" Desc="Loop breaker"/>
+<SubModel Name="MULTI_EFFL" ClassName="MultiSensor" Desc="Multiprobe sensor"/>
+<SubModel Name="MULTI_IN_BIO" ClassName="MultiSensor" Desc="Multiprobe sensor"/>
+<SubModel Name="MULTI_IN_PST" ClassName="MultiSensor" Desc="Multiprobe sensor"/>
+<SubModel Name="MULTI_OUT_BIO" ClassName="MultiSensor" Desc="Multiprobe sensor"/>
+<SubModel Name="MULTI_WASTE" ClassName="MultiSensor" Desc="Multiprobe sensor"/>
+<SubModel Name="Multi_1" ClassName="MultiSensor" Desc="Multiprobe sensor"/>
+<SubModel Name="Multi_2" ClassName="MultiSensor" Desc="Multiprobe sensor"/>
+<SubModel Name="Municipality_1" ClassName="Influent_Municipality_1" Desc="Municipal wastewater"/>
+<SubModel Name="O2DEMAND" ClassName="OD" Desc="OD sensor"/>
+<SubModel Name="OUT_A" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="OUT_B" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="PO4_OUT_BIO" ClassName="Sensor_PO4" Desc="PO4 sensor"/>
+<SubModel Name="PRE_SUMMER" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="PRE_WINTER" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="PST" ClassName="Tay4" Desc="Primary Clarifier"/>
+<SubModel Name="PST_RB" ClassName="PrimaryPointSettler" Desc="Primary Clarifier"/>
+<SubModel Name="PumpEnergy_WAS" ClassName="EffluentQualityIndex" Desc="Multiprobe sensor"/>
+<SubModel Name="Q_BIOLOGY" ClassName="AbsTwoSplitter" Desc="Two flow splitter"/>
+<SubModel Name="RAIN_BUFFER" ClassName="PumpedVolumeBuffer_Eindhoven" Desc="Buffer tank"/>
+<SubModel Name="RWT_split" ClassName="AbsTwoSplitter" Desc="Two flow splitter"/>
+<SubModel Name="RecA" ClassName="AbsThreeSplitter" Desc="Three flow splitter"/>
+<SubModel Name="SST" ClassName="BurgerDoubleExponential" Desc="Secondary Clarifier"/>
+<SubModel Name="SUMMER_1A" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="SUMMER_1B" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="SUMMER_2A" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="SUMMER_2B" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="SUMMER_3A" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="SUMMER_3B" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="SWITCH_DO" ClassName="sensor_switch" Desc="Controller"/>
+<SubModel Name="SWITCH_NH4" ClassName="sensor_switch" Desc="Controller"/>
+<SubModel Name="Sensor_1" ClassName="Sensor_NH4" Desc="NH4 sensor"/>
+<SubModel Name="Sludge_disposal" ClassName="Effluent_Sludge_disposal" Desc="Effluent"/>
+<SubModel Name="Sludge_waste" ClassName="AbsTwoSplitter" Desc="Two flow splitter"/>
+<SubModel Name="Valve_1" ClassName="RelTwoSplitter" Desc="Two fraction splitter"/>
+<SubModel Name="WATERFALL_POST" ClassName="reaeration_tank" Desc="Activated sludge unit"/>
+<SubModel Name="WATERFALL_PRE" ClassName="reaeration_tank" Desc="Activated sludge unit"/>
+<SubModel Name="WINTER" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="Well_1" ClassName="ModelDataCombiner" Desc="Two combiner"/>
+<SubModel Name="Well_10" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="Well_11" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="Well_12" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="Well_13" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="Well_14" ClassName="ModelDataCombiner" Desc="Two combiner"/>
+<SubModel Name="Well_15" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="Well_2" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="Well_3" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="Well_4" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="Well_5" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="Well_6" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="Well_7" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="Well_8" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="Well_9" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="cP" ClassName="Sensor_COD" Desc="COD sensor"/>
+<SubModel Name="in" ClassName="Influent_in" Desc="Municipal wastewater"/>
+<SubModel Name="out_1" ClassName="Effluent_out_1" Desc="Effluent"/>
+<SubModel Name="rain_line" ClassName="TwoCombiner" Desc="Two combiner"/>
+<SubModel Name="recA_control" ClassName="linear_Saturation" Desc="Controller"/>
+</SubModels>
+</Model>
+</Models>
+</ModelLib>
+</Tornado>

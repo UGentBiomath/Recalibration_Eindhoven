@@ -1,0 +1,75 @@
+/*******************************************************************************
+ *
+ * Developed by BIOMATH in the frame of the SMilE project
+ * Author Chaïm De Mulder
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_SPLITTERS_COMBINERS_MODELDATACOMBINER
+#define WWTP_BASE_SPLITTERS_COMBINERS_MODELDATACOMBINER
+
+ CLASS ModelDataCombiner
+ (* icon = "two_combiner" ; is_default = "false" *)  
+ "two combiner"
+ EXTENDS WWTPAtomicModelWithoutVolume WITH
+ {:
+  comments <- "A model to combine modeled data and measured data";
+  interface <-
+   { 
+    OBJ InflowModel (* terminal = "in_1" *) "InflowModel" : 
+         InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent 1" :};
+    OBJ InflowData (* terminal = "in_2" *) "InflowData" : 
+         InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent 2" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : 
+         OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+   };
+  state <-  
+  {
+    OBJ Q_InModel (* is_favorite = "1" *) "Influent flow rate from Model" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_InData (* is_favorite = "1" *) "Influent flow rate from Data" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Out (* is_favorite = "1" *) "Effluent flow rate" : FlowRate := {: group <- "Operational" :};
+  };
+
+  parameters <-
+  {
+  //{FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}:
+     OBJ Flow_data "Whether flow data is available at this location" : Boolean := {: value <- False; group <- "To replace"; interval <- {: lowerBound <- 0; upperBound <- 1:}; :}; 
+    // };  
+  };
+  
+  equations <-
+    {
+    state.Q_InModel = IF (parameters.Flow_data == 0)
+    THEN interface.InflowModel[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent]
+    ELSE 0;
+    
+    state.Q_InData = IF (parameters.Flow_data == 0)
+    THEN 0
+    ELSE interface.InflowData[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    
+    state.Q_Out = IF (parameters.Flow_data == 0)
+    THEN interface.InflowModel[IndexOfSolvent]
+    ELSE interface.InflowData[IndexOfSolvent];
+    
+    {FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}:  
+      interface.Outflow[Comp_Index] = IF (interface.InflowData[Comp_Index] == 0)
+      THEN - interface.InflowModel[Comp_Index]
+      ELSE - interface.InflowData[Comp_Index] / interface.InflowData[IndexOfSolvent] * interface.InflowModel[IndexOfSolvent];};
+    
+    interface.Outflow[IndexOfSolvent] = IF (parameters.Flow_data == 0)
+    THEN - interface.InflowModel[IndexOfSolvent]
+    ELSE - interface.InflowData[IndexOfSolvent];
+  
+    //state.InFluxPerComponent[IndexOfSolvent] = IF (parameters.Flow_data == 0)
+    //THEN SUMOVER In_Terminal IN {interface.InflowModel}:
+    //         (In_Terminal[IndexOfSolvent])
+    //ELSE SUMOVER In_Terminal IN {interface.InflowData}:
+    //         (In_Terminal[IndexOfSolvent]);
+
+    
+    //{state.Q_Out = (parameters.WWTPSpecificVolume[IndexOfSolvent] 
+    //              * state.InFluxPerComponent[IndexOfSolvent]);};
+   }; 
+ :};
+
+#endif // WWTP_BASE_SPLITTERS_TWOCOMBINER

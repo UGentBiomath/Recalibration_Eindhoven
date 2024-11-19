@@ -1,0 +1,3 @@
+#.t	CODs	CODt	NH	PO	TSS	Water
+#d			g/m3	g/m3		m3/d
+0	0	0	49.2079041839862	5.45890042449637	0	0

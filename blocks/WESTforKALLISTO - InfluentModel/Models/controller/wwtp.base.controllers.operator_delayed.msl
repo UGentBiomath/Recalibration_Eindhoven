@@ -1,0 +1,128 @@
+/*******************************************************************************
+ *
+ * Developped by BIOMATH for Kallisto
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_CONTROLLERS_OPERATORDELAYED
+#define WWTP_BASE_CONTROLLERS_OPERATORDELAYED
+
+CLASS OperatorDelayed 
+  (* icon = "controller" *)
+  "operator control with loop breaker"
+
+// Purpose:	
+// Limit excursion of a signal.	
+// Description:	
+// block mimicking the behaviour of an operator
+// between the set point limits the operator does nothing
+// outside the set point limits the operator acts proportional to the error
+// the actions are limited by the saturation limits (physical constraints)
+// loopbreaker included
+
+
+  SPECIALISES
+  PhysicalDAEModelType :=
+  {:
+    comments <- "A model for a proportional controller with saturation";
+    interface <-
+    {
+      OBJ y_M (* terminal = "in_1" *) "Sensor measured output" : 
+              Concentration := {: causality <- "CIN" ; group <- "Measurement data" :};
+      OBJ u (* terminal = "out_1" *) "Controlled variable" : 
+              FlowRate := {: causality <- "COUT" ; group <- "Control action" :};
+      OBJ y_S_Lower (* terminal = "in_2"; manip = "1" *) "Lower limit setpoint value for controlled variable " : 
+							Concentration := {: causality <- "CIN" ; value <- 3.2 ; group <- "Operational" :};
+      OBJ y_S_Upper (* terminal = "in_2"; manip = "1" *) "Upper limit setpoint value for controlled variable " : 
+							Concentration := {: causality <- "CIN" ; value <- 3.5 ; group <- "Operational" :};
+      OBJ K_P (* terminal = "in_2"; manip = "1" *) " Factor of proportionality" : 
+							Real := {: causality <- "CIN" ; value <- 1 ; group <- "Operational" :};
+      OBJ u0 (* terminal = "in_2"; manip = "1" *) "No error action" : 
+							FlowRate := {: causality <- "CIN" ; value <- 1 ; group <- "Operational" :};
+      OBJ u_Min (* terminal = "in_2"; manip = "1" *) "Minimum control action" : 
+							FlowRate := {: causality <- "CIN" ; value <- 0 ; group <- "Operational" :};
+      OBJ u_Max (* terminal = "in_2"; manip = "1" *) "Maximum control action" : 
+							FlowRate := {: causality <- "CIN" ; value <- 1000 ; group <- "Operational" :};
+     // u_Max >= u_Min
+      OBJ T (* terminal = "in_2"; manip = "1" *) "Control window" : 
+							Time := {: causality <- "CIN" ; value <- 1 ; group <- "Operational" :};
+     // Loopbreaker
+};
+
+    parameters <-
+    {
+//     OBJ y_S_Lower "Lower limit setpoint value for controlled variable " : Concentration := {: value <- 3.2 ; group <- "Operational" :};
+//     OBJ y_S_Upper "Upper limit setpoint value for controlled variable " : Concentration := {: value <- 3.5 ; group <- "Operational" :};
+//     OBJ K_P " Factor of proportionality" : Real := {: value <- 1 ; group <- "Operational" :};
+//     OBJ u0 "No error action" : FlowRate := {: value <- 1 ; group <- "Operational" :};
+//     OBJ u_Min "Minimum control action" : FlowRate := {: value <- 0 ; group <- "Operational" :};
+//     OBJ u_Max "Maximum control action" : FlowRate := {: value <- 1000 ; group <- "Operational" :};
+     // u_Max >= u_Min
+//     OBJ T "Control window" : Time := {: value <- 1 ; group <- "Operational" :};
+     // Loopbreaker
+	 OBJ Tau "Implicit loop breaker time constant, d" : Time := {: value <- 0.0005 ; group <- "Miscellaneous" :};
+    };
+
+    independent <- 
+    { 
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+    };
+
+    state <-
+    {
+     OBJ uhelp (* hidden = "0" *) "Help variable to calculate the proportional control action" : Real;
+     OBJ uhelp_control (* hidden = "0" *) "Help variable: calculated control action" : Real;
+     OBJ uhelp_loopbreaker (* hidden = "0" *) "Help variable: loopbreaker/delay on calculated control action" : Real;
+     OBJ Prev_t (* hidden = "0" *) "Help variable to calculate the begin of each period" : Time ;
+    };
+
+    initial <-  
+    {
+    state.Prev_t = 0;
+//	state.uhelp = parameters.u0;
+    };	
+    equations <-
+    {
+
+    state.Prev_t = 	IF	(independent.t - previous(state.Prev_t) < (interface.T))
+			 	 	THEN	previous(state.Prev_t)
+			 		ELSE	previous(state.Prev_t) + interface.T;
+
+	
+	
+     state.uhelp = IF (independent.t == 0)
+	 			   THEN interface.u0
+				   ELSE
+	 			     IF (independent.t - previous(state.Prev_t) < interface.T)
+	 			   	 THEN	previous(state.uhelp)
+				   	 ELSE
+				       IF(interface.y_M < interface.y_S_Lower)
+                   	   THEN previous(state.uhelp) - interface.K_P * (interface.y_S_Lower - interface.y_M)
+                   	   ELSE
+                         IF (interface.y_M > interface.y_S_Upper)
+                       	 THEN previous(state.uhelp) + interface.K_P * (interface.y_M - interface.y_S_Upper)
+                       	 ELSE previous(state.uhelp);
+
+	 
+     state.uhelp_control = IF(state.uhelp < interface.u_Min)
+                   		   THEN (interface.u_Min)
+                   		   ELSE
+                     	     IF (state.uhelp > interface.u_Max)
+                     		 THEN interface.u_Max
+                     		 ELSE state.uhelp;
+
+
+      DERIV(state.uhelp_loopbreaker,[independent.t]) =
+       - (1 / parameters.Tau) * (state.uhelp_loopbreaker - state.uhelp_control);
+
+      interface.u = state.uhelp_loopbreaker;
+
+
+   };
+
+ :};
+
+
+ 
+#endif // WWTP_BASE_CONTROLLERS_OPERATORDELAYED
+

@@ -1,0 +1,367 @@
+/*******************************************************************************
+ *
+ * Developped by BIOMATH in the frame of the Kallisto project
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_CONTROLLERS_DYNAMICEXCHANGEFLOWS
+#define WWTP_BASE_CONTROLLERS_DYNAMICEXCHANGEFLOWS
+
+   CLASS exchangeflow_controller
+   (* icon = "controller" *)
+   "Controller to adjust exchange flows according to influent flow (Compartmental Model)"
+ 
+ 
+   SPECIALISES
+   PhysicalDAEModelType :=
+   {:
+     comments <- "A model for a controller";
+     interface <-
+     {
+       OBJ influent_flow (* terminal = "in_1" *) "Influent flow to tank in m3/d" :
+                Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+	     OBJ airflow_rate (* terminal = "in_1" *) "Air flow rate" :
+                Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+	     
+	     // Values necessary for a function of the form a.X + b.Y + C, calculating the exchange flows between the tanks
+       // of a compartmental model (currently max 10 flows). 
+  	   OBJ flow1_x (* terminal = "in_2" *) "Value to multiply influent flow with" : 
+  	             Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow1_y (* terminal = "in_2" *) "Value to multiply airflow rate with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow1_C (* terminal = "in_2" *) "Constant in the linear equation to calculate exchange flow" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       
+       OBJ flow2_x (* terminal = "in_2" *) "Value to multiply influent flow with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow2_y (* terminal = "in_2" *) "Value to multiply airflow rate with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow2_C (* terminal = "in_2" *) "Constant in the linear equation to calculate exchange flow" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       
+       OBJ flow3_x (* terminal = "in_2" *) "Value to multiply influent flow with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow3_y (* terminal = "in_2" *) "Value to multiply airflow rate with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow3_C (* terminal = "in_2" *) "Constant in the linear equation to calculate exchange flow" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       
+       OBJ flow4_x (* terminal = "in_2" *) "Value to multiply influent flow with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow4_y (* terminal = "in_2" *) "Value to multiply airflow rate with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow4_C (* terminal = "in_2" *) "Constant in the linear equation to calculate exchange flow" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       
+       OBJ flow5_x (* terminal = "in_2" *) "Value to multiply influent flow with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow5_y (* terminal = "in_2" *) "Value to multiply airflow rate with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow5_C (* terminal = "in_2" *) "Constant in the linear equation to calculate exchange flow" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       
+       OBJ flow6_x (* terminal = "in_2" *) "Value to multiply influent flow with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow6_y (* terminal = "in_2" *) "Value to multiply airflow rate with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow6_C (* terminal = "in_2" *) "Constant in the linear equation to calculate exchange flow" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       
+       OBJ flow7_x (* terminal = "in_2" *) "Value to multiply influent flow with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow7_y (* terminal = "in_2" *) "Value to multiply airflow rate with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow7_C (* terminal = "in_2" *) "Constant in the linear equation to calculate exchange flow" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       
+       OBJ flow8_x (* terminal = "in_2" *) "Value to multiply influent flow with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow8_y (* terminal = "in_2" *) "Value to multiply airflow rate with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow8_C (* terminal = "in_2" *) "Constant in the linear equation to calculate exchange flow" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       
+       OBJ flow9_x (* terminal = "in_2" *) "Value to multiply influent flow with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow9_y (* terminal = "in_2" *) "Value to multiply airflow rate with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow9_C (* terminal = "in_2" *) "Constant in the linear equation to calculate exchange flow" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       
+       OBJ flow10_x (* terminal = "in_2" *) "Value to multiply influent flow with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow10_y (* terminal = "in_2" *) "Value to multiply airflow rate with" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+       OBJ flow10_C (* terminal = "in_2" *) "Constant in the linear equation to calculate exchange flow" : 
+                 Real := {: causality <- "CIN" ; group <- "Operational" :};
+	     
+	     
+       OBJ Exchange_flow1 (* terminal = "out_1" *) "Exchange flow 1" :
+                Real := {: causality <- "COUT" ; group <- "Operational" :};
+       OBJ Exchange_flow2 (* terminal = "out_1" *) "Exchange flow 2" :
+                Real := {: causality <- "COUT" ; group <- "Operational" :};
+       OBJ Exchange_flow3 (* terminal = "out_1" *) "Exchange flow 3" :
+                Real := {: causality <- "COUT" ; group <- "Operational" :};
+       OBJ Exchange_flow4 (* terminal = "out_1" *) "Exchange flow 4" :
+                Real := {: causality <- "COUT" ; group <- "Operational" :};
+       OBJ Exchange_flow5 (* terminal = "out_1" *) "Exchange flow 5" :
+                Real := {: causality <- "COUT" ; group <- "Operational" :};
+       OBJ Exchange_flow6 (* terminal = "out_1" *) "Exchange flow 6" :
+                Real := {: causality <- "COUT" ; group <- "Operational" :};
+       OBJ Exchange_flow7 (* terminal = "out_1" *) "Exchange flow 7" :
+                Real := {: causality <- "COUT" ; group <- "Operational" :};
+       OBJ Exchange_flow8 (* terminal = "out_1" *) "Exchange flow 8" :
+                Real := {: causality <- "COUT" ; group <- "Operational" :};
+       OBJ Exchange_flow9 (* terminal = "out_1" *) "Exchange flow 9" :
+                Real := {: causality <- "COUT" ; group <- "Operational" :};
+       OBJ Exchange_flow10 (* terminal = "out_1" *) "Exchange flow 10" :
+                Real := {: causality <- "COUT" ; group <- "Operational" :};                
+};
+
+      parameters <-
+     {    
+     //values of these parameters indicate what function to use for the relation between air flow, influent flow and relative volume:
+     // 0=linear
+     // 1=paraboloid with maximum; not implemented yet
+     // 2=paraboloid with minimum; not implemented yet
+     // 3=parabolic-linear increasing; parabolic relation of exchange flow with inflow rate, linear relation of volume with air flow rate
+     // 4=parabolic-linear decreasing; parabolic relation of exchange flow with inflow rate, linear relation of volume with air flow rate; not implemented yet
+     OBJ Relation_flow1 "Function determining the relation between airflow, influent flow and exchange flow" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_flow2 "Function determining the relation between airflow, influent flow and exchange flow" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_flow3 "Function determining the relation between airflow, influent flow and exchange flow" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_flow4 "Function determining the relation between airflow, influent flow and exchange flow" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_flow5 "Function determining the relation between airflow, influent flow and exchange flow" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_flow6 "Function determining the relation between airflow, influent flow and exchange flow" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_flow7 "Function determining the relation between airflow, influent flow and exchange flow" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_flow8 "Function determining the relation between airflow, influent flow and exchange flow" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_flow9 "Function determining the relation between airflow, influent flow and exchange flow" : Real := {:value <- 0 ; group <- "Relations" :};
+     OBJ Relation_flow10 "Function determining the relation between airflow, influent flow and exchange flow" : Real := {:value <- 0 ; group <- "Relations" :};
+};
+ 
+     equations <-
+     {
+     interface.Exchange_flow1 = IF (parameters.Relation_flow1 == 0) 
+                                THEN IF (interface.flow1_x*interface.influent_flow + interface.flow1_y*interface.airflow_rate + interface.flow1_C < 0)
+                                     THEN 0
+                                     ELSE interface.flow1_x*interface.influent_flow + interface.flow1_y*interface.airflow_rate + interface.flow1_C
+                                ELSE IF (parameters.Relation_flow1 == 1)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow1_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow1_y,2) + interface.flow1_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow1_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow1_y,2) + interface.flow1_C
+                                ELSE IF (parameters.Relation_flow1 == 2)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow1_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow1_y,2) + interface.flow1_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow1_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow1_y,2) + interface.flow1_C
+                                ELSE IF (parameters.Relation_flow1 == 3)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow1_x + pow(interface.influent_flow,2)*interface.flow1_y + interface.flow1_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow1_x + pow(interface.influent_flow,2)*interface.flow1_y + interface.flow1_C
+                                ELSE IF (parameters.Relation_flow1 == 4)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow1_x - pow(interface.influent_flow,2)*interface.flow1_y + interface.flow1_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow1_x - pow(interface.influent_flow,2)*interface.flow1_y + interface.flow1_C
+                                ELSE 0; 
+     
+     interface.Exchange_flow2 = IF (parameters.Relation_flow2 == 0) 
+                                THEN IF (interface.flow2_x*interface.influent_flow + interface.flow2_y*interface.airflow_rate + interface.flow2_C < 0)
+                                     THEN 0
+                                     ELSE interface.flow2_x*interface.influent_flow + interface.flow2_y*interface.airflow_rate + interface.flow2_C
+                                ELSE IF (parameters.Relation_flow2 == 1)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow2_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow2_y,2) + interface.flow2_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow2_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow2_y,2) + interface.flow2_C
+                                ELSE IF (parameters.Relation_flow2 == 2)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow2_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow2_y,2) + interface.flow2_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow2_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow2_y,2) + interface.flow2_C
+                                ELSE IF (parameters.Relation_flow2 == 3)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow2_x + pow(interface.influent_flow,2)*interface.flow2_y + interface.flow2_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow2_x + pow(interface.influent_flow,2)*interface.flow2_y + interface.flow2_C
+                                ELSE IF (parameters.Relation_flow2 == 4)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow2_x - pow(interface.influent_flow,2)*interface.flow2_y + interface.flow2_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow2_x - pow(interface.influent_flow,2)*interface.flow2_y + interface.flow2_C
+                                ELSE 0;
+                                                     
+     interface.Exchange_flow3 = IF (parameters.Relation_flow3 == 0) 
+                                THEN IF (interface.flow3_x*interface.influent_flow + interface.flow3_y*interface.airflow_rate + interface.flow3_C < 0)
+                                     THEN 0
+                                     ELSE interface.flow3_x*interface.influent_flow + interface.flow3_y*interface.airflow_rate + interface.flow3_C
+                                ELSE IF (parameters.Relation_flow3 == 1)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow3_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow3_y,2) + interface.flow3_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow3_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow3_y,2) + interface.flow3_C
+                                ELSE IF (parameters.Relation_flow3 == 2)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow3_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow3_y,2) + interface.flow3_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow3_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow3_y,2) + interface.flow3_C
+                                ELSE IF (parameters.Relation_flow3 == 3)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow3_x + pow(interface.influent_flow,2)*interface.flow3_y + interface.flow3_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow3_x + pow(interface.influent_flow,2)*interface.flow3_y + interface.flow3_C
+                                ELSE IF (parameters.Relation_flow3 == 4)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow3_x - pow(interface.influent_flow,2)*interface.flow3_y + interface.flow3_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow3_x - pow(interface.influent_flow,2)*interface.flow3_y + interface.flow3_C
+                                ELSE 0;
+                                
+     interface.Exchange_flow4 = IF (parameters.Relation_flow4 == 0) 
+                                THEN IF (interface.flow4_x*interface.influent_flow + interface.flow4_y*interface.airflow_rate + interface.flow4_C < 0)
+                                     THEN 0
+                                     ELSE interface.flow4_x*interface.influent_flow + interface.flow4_y*interface.airflow_rate + interface.flow4_C
+                                ELSE IF (parameters.Relation_flow4 == 1)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow4_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow4_y,2) + interface.flow4_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow4_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow4_y,2) + interface.flow4_C
+                                ELSE IF (parameters.Relation_flow4 == 2)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow4_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow4_y,2) + interface.flow4_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow4_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow4_y,2) + interface.flow4_C
+                                ELSE IF (parameters.Relation_flow4 == 3)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow4_x + pow(interface.influent_flow,2)*interface.flow4_y + interface.flow4_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow4_x + pow(interface.influent_flow,2)*interface.flow4_y + interface.flow4_C
+                                ELSE IF (parameters.Relation_flow4 == 4)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow4_x - pow(interface.influent_flow,2)*interface.flow4_y + interface.flow4_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow4_x - pow(interface.influent_flow,2)*interface.flow4_y + interface.flow4_C
+                                ELSE 0;
+                                
+     interface.Exchange_flow5 = IF (parameters.Relation_flow5 == 0) 
+                                THEN IF (interface.flow5_x*interface.influent_flow + interface.flow5_y*interface.airflow_rate + interface.flow5_C < 0)
+                                     THEN 0
+                                     ELSE interface.flow5_x*interface.influent_flow + interface.flow5_y*interface.airflow_rate + interface.flow5_C
+                                ELSE IF (parameters.Relation_flow5 == 1)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow5_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow5_y,2) + interface.flow5_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow5_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow5_y,2) + interface.flow5_C
+                                ELSE IF (parameters.Relation_flow5 == 2)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow5_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow5_y,2) + interface.flow5_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow5_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow5_y,2) + interface.flow5_C
+                                ELSE IF (parameters.Relation_flow5 == 3)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow5_x + pow(interface.influent_flow,2)*interface.flow5_y + interface.flow5_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow5_x + pow(interface.influent_flow,2)*interface.flow5_y + interface.flow5_C
+                                ELSE IF (parameters.Relation_flow5 == 4)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow5_x - pow(interface.influent_flow,2)*interface.flow5_y + interface.flow5_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow5_x - pow(interface.influent_flow,2)*interface.flow5_y + interface.flow5_C
+                                ELSE 0;
+                                
+     interface.Exchange_flow6 = IF (parameters.Relation_flow6 == 0) 
+                                THEN IF (interface.flow6_x*interface.influent_flow + interface.flow6_y*interface.airflow_rate + interface.flow6_C < 0)
+                                     THEN 0
+                                     ELSE interface.flow6_x*interface.influent_flow + interface.flow6_y*interface.airflow_rate + interface.flow6_C
+                                ELSE IF (parameters.Relation_flow6 == 1)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow6_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow6_y,2) + interface.flow6_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow6_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow6_y,2) + interface.flow6_C
+                                ELSE IF (parameters.Relation_flow6 == 2)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow6_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow6_y,2) + interface.flow6_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow6_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow6_y,2) + interface.flow6_C
+                                ELSE IF (parameters.Relation_flow6 == 3)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow6_x + pow(interface.influent_flow,2)*interface.flow6_y + interface.flow6_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow6_x + pow(interface.influent_flow,2)*interface.flow6_y + interface.flow6_C
+                                ELSE IF (parameters.Relation_flow6 == 4)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow6_x - pow(interface.influent_flow,2)*interface.flow6_y + interface.flow6_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow6_x - pow(interface.influent_flow,2)*interface.flow6_y + interface.flow6_C
+                                ELSE 0;
+                                
+     interface.Exchange_flow7 = IF (parameters.Relation_flow7 == 0) 
+                                THEN IF (interface.flow7_x*interface.influent_flow + interface.flow7_y*interface.airflow_rate + interface.flow7_C < 0)
+                                     THEN 0
+                                     ELSE interface.flow7_x*interface.influent_flow + interface.flow7_y*interface.airflow_rate + interface.flow7_C
+                                ELSE IF (parameters.Relation_flow7 == 1)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow7_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow7_y,2) + interface.flow7_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow7_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow7_y,2) + interface.flow7_C
+                                ELSE IF (parameters.Relation_flow7 == 2)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow7_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow7_y,2) + interface.flow7_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow7_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow7_y,2) + interface.flow7_C
+                                ELSE IF (parameters.Relation_flow7 == 3)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow7_x + pow(interface.influent_flow,2)*interface.flow7_y + interface.flow7_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow7_x + pow(interface.influent_flow,2)*interface.flow7_y + interface.flow7_C
+                                ELSE IF (parameters.Relation_flow7 == 4)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow7_x - pow(interface.influent_flow,2)*interface.flow7_y + interface.flow7_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow7_x - pow(interface.influent_flow,2)*interface.flow7_y + interface.flow7_C
+                                ELSE 0;
+                                
+     interface.Exchange_flow8 = IF (parameters.Relation_flow8 == 0) 
+                                THEN IF (interface.flow8_x*interface.influent_flow + interface.flow8_y*interface.airflow_rate + interface.flow8_C < 0)
+                                     THEN 0
+                                     ELSE interface.flow8_x*interface.influent_flow + interface.flow8_y*interface.airflow_rate + interface.flow8_C
+                                ELSE IF (parameters.Relation_flow8 == 1)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow8_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow8_y,2) + interface.flow8_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow8_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow8_y,2) + interface.flow8_C
+                                ELSE IF (parameters.Relation_flow8 == 2)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow8_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow8_y,2) + interface.flow8_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow8_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow8_y,2) + interface.flow8_C
+                                ELSE IF (parameters.Relation_flow8 == 3)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow8_x + pow(interface.influent_flow,2)*interface.flow8_y + interface.flow8_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow8_x + pow(interface.influent_flow,2)*interface.flow8_y + interface.flow8_C
+                                ELSE IF (parameters.Relation_flow8 == 4)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow8_x - pow(interface.influent_flow,2)*interface.flow8_y + interface.flow8_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow8_x - pow(interface.influent_flow,2)*interface.flow8_y + interface.flow8_C
+                                ELSE 0;
+                                
+     interface.Exchange_flow9 = IF (parameters.Relation_flow9 == 0) 
+                                THEN IF (interface.flow9_x*interface.influent_flow + interface.flow9_y*interface.airflow_rate + interface.flow9_C < 0)
+                                     THEN 0
+                                     ELSE interface.flow9_x*interface.influent_flow + interface.flow9_y*interface.airflow_rate + interface.flow9_C
+                                ELSE IF (parameters.Relation_flow9 == 1)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow9_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow9_y,2) + interface.flow9_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow9_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow9_y,2) + interface.flow9_C
+                                ELSE IF (parameters.Relation_flow9 == 2)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow9_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow9_y,2) + interface.flow9_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow9_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow9_y,2) + interface.flow9_C
+                                ELSE IF (parameters.Relation_flow9 == 3)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow9_x + pow(interface.influent_flow,2)*interface.flow9_y + interface.flow9_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow9_x + pow(interface.influent_flow,2)*interface.flow9_y + interface.flow9_C
+                                ELSE IF (parameters.Relation_flow9 == 4)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow9_x - pow(interface.influent_flow,2)*interface.flow9_y + interface.flow9_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow9_x - pow(interface.influent_flow,2)*interface.flow9_y + interface.flow9_C
+                                ELSE 0;
+                                
+     interface.Exchange_flow10 = IF (parameters.Relation_flow10 == 0) 
+                                THEN IF (interface.flow10_x*interface.influent_flow + interface.flow10_y*interface.airflow_rate + interface.flow10_C < 0)
+                                     THEN 0
+                                     ELSE interface.flow10_x*interface.influent_flow + interface.flow10_y*interface.airflow_rate + interface.flow10_C
+                                ELSE IF (parameters.Relation_flow10 == 1)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow10_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow10_y,2) + interface.flow10_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow10_x,2) + pow(interface.airflow_rate,2)/pow(interface.flow10_y,2) + interface.flow10_C
+                                ELSE IF (parameters.Relation_flow10 == 2)
+                                THEN IF (pow(interface.influent_flow,2)/pow(interface.flow10_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow10_y,2) + interface.flow10_C < 0)
+                                     THEN 0
+                                     ELSE pow(interface.influent_flow,2)/pow(interface.flow10_x,2) - pow(interface.airflow_rate,2)/pow(interface.flow10_y,2) + interface.flow10_C
+                                ELSE IF (parameters.Relation_flow10 == 3)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow10_x + pow(interface.influent_flow,2)*interface.flow10_y + interface.flow10_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow10_x + pow(interface.influent_flow,2)*interface.flow10_y + interface.flow10_C
+                                ELSE IF (parameters.Relation_flow10 == 4)
+                                THEN IF (interface.influent_flow*interface.airflow_rate*interface.flow10_x - pow(interface.influent_flow,2)*interface.flow10_y + interface.flow10_C < 0)
+                                     THEN 0
+                                     ELSE interface.influent_flow*interface.airflow_rate*interface.flow10_x - pow(interface.influent_flow,2)*interface.flow10_y + interface.flow10_C
+                                ELSE 0;
+     };
+  :};
+
+ 
+#endif // WWTP_BASE_CONTROLLERS_DYNAMICEXCHANGEFLOWS
+

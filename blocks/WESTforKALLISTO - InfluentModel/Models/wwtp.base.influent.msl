@@ -1,0 +1,49 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ *
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_INFLUENT
+#define WWTP_BASE_INFLUENT
+
+TYPE SewComponents 
+ "The number of biological components considered in the input of a BODCOD transformer"
+  = ENUM {H2O_sew, COD_part, COD_sol, X_TSS_sew, NH4_sew, PO4_sew};
+
+OBJ NrOfSewComponents
+  "The number of biological components considered in the output of the sewer model"
+  : Integer := Cardinality(SewComponents); 
+
+ CLASS SewTerminal
+ "The parameters calculated by the sewer model"
+ = MassFlux[NrOfSewComponents;];
+
+/*
+ CLASS SewTerminal
+ "The parameters calculated by the sewer model"
+ = Concentration[NrOfSewComponents;];
+*/
+
+TYPE HourlyTimeVector = ENUM {H00, H01, H02, H03, H04, H05, H06, H07,
+                               H08, H09, H10, H11, H12, H13, H14, H15, 
+                               H16, H17, H18, H19, H20, H21, H22, H23};
+ 
+OBJ NrOfHourlyTimeVectorElements : 
+      Integer := Cardinality(HourlyTimeVector);
+
+CLASS HourlyDailyPattern "Daily pattern" = 
+        Real[NrOfHourlyTimeVectorElements;];
+
+
+
+#include "influent/wwtp.base.influent.msl"
+#include "influent/wwtp.base.influent.Qevents.msl"
+#include "influent/wwtp.base.influent.level.msl"	
+#include "influent/wwtp.base.influent.level.modif.msl"	
+	
+#endif // WWTP_BASE_INFLUENT
+

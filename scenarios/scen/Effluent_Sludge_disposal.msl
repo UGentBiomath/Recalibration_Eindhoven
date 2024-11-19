@@ -1,0 +1,62 @@
+#ifndef __EFFLUENT_SLUDGE_DISPOSAL_MSL__
+#define __EFFLUENT_SLUDGE_DISPOSAL_MSL__
+
+#include "wwtp.msl"
+
+CLASS Effluent_Sludge_disposal (* icon = ""; file = "";  *)  SPECIALISES PhysicalDAEModelType := 
+{:
+  comments <- "";
+
+  interface <-
+  {
+
+    OBJ Effluent_Load (*terminal = "in_1"; *) "Effluent load" : InWWTPTerminal := {: nature <- "THROUGH"; causality <- "CIN"; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Effluent"; :};
+  };
+
+  parameters <-
+  {
+
+    OBJ WWTPSpecificVolume (* hidden = "1";  *) "The specific volumes (= 1/density) of the components" : SpecificVolumeVector := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+  };
+
+  independent <- 
+  {
+    OBJ t (* fixed = "1";  *) "Time" : Time := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+  };
+
+  state <-
+  {
+
+    OBJ Outflow (*  *) "Temporary variable" : WWTPConcTerminal := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+    OBJ Q_In (*  *) "Effluent flow rate" : FlowRate := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Operational"; :};
+    OBJ InFluxPerComponent (* hidden = "1";  *) "Vector containing incoming fluxes for all components" : MassFluxVector := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+  };
+
+  initial <-
+  {
+    parameters.WWTPSpecificVolume[IndexOfSolvent] := 0.000001;
+  };
+
+  equations <-
+  {
+    // (De-)Fractionation
+
+
+    // F to C conversion
+
+    state.Outflow[IndexOfSolvent] = interface.Effluent_Load[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+
+    { FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}:
+        state.InFluxPerComponent[Comp_Index] =
+          SUMOVER In_Terminal IN {SelectByType(interface, InWWTPTerminal)}:
+            (In_Terminal[Comp_Index]); };
+
+    state.Q_In = state.InFluxPerComponent[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+
+    { FOREACH Comp_Index IN {IndexOfFirstSolubleComponent .. NrOfComponents}:
+      state.Outflow[Comp_Index] = IF (state.Q_In == 0) THEN 0 ELSE interface.Effluent_Load[Comp_Index] / state.Q_In; };
+  };
+:};
+
+#endif
+

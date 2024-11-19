@@ -1,0 +1,826 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Tornado>
+<Model Name="_Influent_in_" Version="1.0">
+<Props>
+<Prop Name="TornadoVersion" Value="2023 "/>
+<Prop Name="Author" Value="UGENT\cgomezco"/>
+<Prop Name="Date" Value="Tue Oct  1 15:33:26 2024"/>
+<Prop Name="FileName" Value="./_Influent_in_.ExecModel.xml"/>
+</Props>
+<Node Type="CLASS">
+<Children>
+<Node Type="ID" Data="_Influent_in_"/>
+<Node Type="EMPTY">
+<Children>
+</Children>
+</Node>
+<Node Type="EMPTY">
+<Children>
+</Children>
+</Node>
+<Node Type="EMPTY">
+<Children>
+</Children>
+</Node>
+<Node Type="EQUATIONS">
+<Children>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="WWTPSpecificVolume[H2O]"/>
+<Node Type="NUMBER" Data="1e-06"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EMPTY">
+<Children>
+</Children>
+</Node>
+<Node Type="EQUATIONS">
+<Children>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[H2O]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="Water"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[H2O]"/>
+<Node Type="DIV">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="WWTPSpecificVolume[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="S_COD"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="CODs"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[S_I]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="S_COD"/>
+<Node Type="MINUS">
+<Children>
+<Node Type="MINUS">
+<Children>
+<Node Type="NUMBER" Data="1"/>
+<Node Type="ID" Data="f_S_A"/>
+</Children>
+</Node>
+<Node Type="ID" Data="f_S_F"/>
+</Children>
+</Node>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[S_I]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[S_I]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[S_O]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="S_O_In"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[S_O]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[S_O]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[S_N2]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="S_N2_In"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[S_N2]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[S_N2]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[S_F]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="S_COD"/>
+<Node Type="ID" Data="f_S_F"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[S_F]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[S_F]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[S_A]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="S_COD"/>
+<Node Type="ID" Data="f_S_A"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[S_A]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[S_A]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[S_Al]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="S_Al_In"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[S_Al]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[S_Al]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[S_NO]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="S_NO_In"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[S_NO]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[S_NO]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[S_PO]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="PO"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[S_PO]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[S_PO]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[S_NH]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="NH"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[S_NH]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[S_NH]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[S_ALK]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="S_ALK_In"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[S_ALK]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[S_ALK]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[X_AUT]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="X_AUT_In"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[X_H]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="X_H_In"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[X_PAO]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="X_PAO_In"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[X_PHA]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="X_PHA_In"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="X_COD"/>
+<Node Type="PLUS">
+<Children>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="CODs"/>
+<Node Type="UMINUS">
+<Children>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="CODt"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[X_S]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="X_COD"/>
+<Node Type="ID" Data="f_X_S"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="X_I_Help"/>
+<Node Type="PLUS">
+<Children>
+<Node Type="PLUS">
+<Children>
+<Node Type="PLUS">
+<Children>
+<Node Type="PLUS">
+<Children>
+<Node Type="PLUS">
+<Children>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="Inflow[X_AUT]"/>
+<Node Type="UMINUS">
+<Children>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="Inflow[X_H]"/>
+<Node Type="UMINUS">
+<Children>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="Inflow[X_PAO]"/>
+<Node Type="UMINUS">
+<Children>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="Inflow[X_PHA]"/>
+<Node Type="UMINUS">
+<Children>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="Inflow[X_S]"/>
+<Node Type="UMINUS">
+<Children>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="X_COD"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[X_I]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="X_I_Help"/>
+<Node Type="IF">
+<Children>
+<Node Type="LE">
+<Children>
+<Node Type="ID" Data="X_I_Help"/>
+<Node Type="NUMBER" Data="0"/>
+</Children>
+</Node>
+<Node Type="NUMBER" Data="0"/>
+<Node Type="EMPTY"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[X_I]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[X_I]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[X_S]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[X_S]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[X_H]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[X_H]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[X_PAO]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[X_PAO]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[X_PP]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="X_PP_In"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[X_PP]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[X_PP]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[X_PHA]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[X_PHA]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[X_AUT]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[X_AUT]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[X_TSS]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="TSS"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[X_TSS]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[X_TSS]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[X_MEOH]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="X_MEOH_In"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[X_MEOH]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[X_MEOH]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[X_MEP]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="X_MEP_In"/>
+<Node Type="NUMBER" Data="1"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[X_MEP]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[X_MEP]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Inflow[X_I_i]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="ID" Data="TSS"/>
+<Node Type="MINUS">
+<Children>
+<Node Type="NUMBER" Data="1"/>
+<Node Type="ID" Data="F_VSS_TSS"/>
+</Children>
+</Node>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EQUATION">
+<Children>
+<Node Type="BOOLEAN" Data="false"/>
+<Node Type="ID" Data="Influent_Load[X_I_i]"/>
+<Node Type="MUL">
+<Children>
+<Node Type="UMINUS">
+<Children>
+<Node Type="ID" Data="Inflow[X_I_i]"/>
+</Children>
+</Node>
+<Node Type="ID" Data="Inflow[H2O]"/>
+</Children>
+</Node>
+</Children>
+</Node>
+</Children>
+</Node>
+<Node Type="EMPTY">
+<Children>
+</Children>
+</Node>
+<Node Type="EMPTY">
+<Children>
+</Children>
+</Node>
+<Node Type="EMPTY">
+<Children>
+</Children>
+</Node>
+<Node Type="EQUATIONS">
+<Children>
+</Children>
+</Node>
+</Children>
+</Node>
+</Model>
+</Tornado>

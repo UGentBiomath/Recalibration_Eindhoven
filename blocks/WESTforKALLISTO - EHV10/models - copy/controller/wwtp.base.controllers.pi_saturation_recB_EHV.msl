@@ -1,0 +1,133 @@
+/*******************************************************************************
+ *
+ * Developped by BIOMATH in the frame of the Kallisto project
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_CONTROLLERS_PISATURATION_RECB_EHV
+#define WWTP_BASE_CONTROLLERS_PISATURATION_RECB_EHV
+
+  CLASS PI_Saturation_recB_EHV
+  (* icon = "controller" *)
+  "PI controller with saturation"
+  SPECIALISES
+  PhysicalDAEModelType :=
+  {:
+    comments <- "A model for a proportional-integral controller with saturation";
+    interface <-
+    {
+     OBJ y_MA (* terminal = "in_1" *) "Sensor measured output" : 
+               Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+	   OBJ y_MB (* terminal = "in_1" *) "Sensor measured output" : 
+               Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+     OBJ u (* terminal = "out_1" *) "Controlled variable" : 
+               Real := {: causality <- "COUT" ; group <- "Control action" :};
+     OBJ y_SA (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Setpoint value for controlled variable" : 
+				 Real := {: causality <- "CIN" ; value <- 3 ; group <- "Operational" :};
+	   OBJ temp (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Temperature" : 
+				 Real := {: causality <- "CIN" ; value <- 15 ; group <- "Operational" :};
+	   OBJ switch (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "1=A, 2=B, 0=min(A,B)" : 
+				 Real := {: causality <- "CIN" ; value <- 0 ; group <- "Operational" :};
+    };
+
+    parameters <-
+    {
+     OBJ K_PA "Factor of proportionality" : Real := {: value <- 25 ; group <- "Operational" :};
+	   OBJ K_PB "Factor of proportionality" : Real := {: value <- 25 ; group <- "Operational" :};
+     OBJ T_I "Integral time" : Time := {: value <- 0.1 ; group <- "Operational" :};
+     OBJ u0A "No error action" : Real := {: value <- 50 ; group <- "Operational" :};
+	   OBJ u0B "No error action" : Real := {: value <- 50 ; group <- "Operational" :};
+     OBJ u_Min "Minimum control action" : Real := {: value <- 0 ; group <- "Operational" :};
+     OBJ u_Max "Maximum control action" : Real := {: value <- 1000 ; group <- "Operational" :};
+    };
+
+    independent <- 
+    { 
+     OBJ t "Time" : Time := {: group <- "Time" :}; 
+    };
+
+    state <-
+    {
+     OBJ eA "Error" : PhysicalQuantityType := {: group <- "Operational" :};
+     OBJ Integ_eA "Integral of error": PhysicalQuantityType := {: group <- "Operational" :};
+     OBJ uhelpA (* hidden = "1" *) "Help variable to calculate the proportional-integral control action" : Real;
+	   OBJ uA (* hidden = "0" *) "" : Real;
+	 
+	   OBJ eB "Error" : PhysicalQuantityType := {: group <- "Operational" :};
+     OBJ Integ_eB "Integral of error": PhysicalQuantityType := {: group <- "Operational" :};
+     OBJ uhelpB (* hidden = "1" *) "Help variable to calculate the proportional-integral control action" : Real;
+	   OBJ y_SB (* hidden = "0" *) "Setpoint value for controlled variable" : Real;
+	   OBJ uB (* hidden = "0" *) "" : Real;
+	     };
+
+    equations <-
+    {
+     state.eA = interface.y_SA - interface.y_MA;
+
+     DERIV(state.Integ_eA, [independent.t]) = state.eA ;
+
+     state.uhelpA = parameters.u0A + parameters.K_PA 
+	 			  				   * (state.eA + (1 / parameters.T_I) * state.Integ_eA); 
+
+     state.uA = IF(state.uhelpA < parameters.u_Min)
+                   THEN (parameters.u_Min)
+                   ELSE
+                     IF (state.uhelpA > parameters.u_Max)
+                     THEN parameters.u_Max
+                     ELSE state.uhelpA;
+	
+	 state.y_SB = IF(interface.temp < 11)
+	 			  		 THEN 11.8
+				  			ELSE
+				  	  		IF(interface.temp < 12) 
+					  			THEN 11.0
+				      		ELSE
+					  	  		IF(interface.temp < 13) 
+					      		THEN 10.8
+				          	ELSE
+						  	  		IF(interface.temp < 14) 
+					          	THEN 10.5
+				              ELSE
+							  	  		IF(interface.temp < 15) 
+					              THEN 10.2
+				                ELSE
+								  	  		IF(interface.temp < 16) 
+					                THEN 3.3
+				                  ELSE
+									  	  		IF(interface.temp < 17) 
+					                  THEN 2.4
+				                    ELSE
+										  	  		IF(interface.temp < 18) 
+					                    THEN 2.2
+				                      ELSE 2.1;
+					 
+	 state.eB = state.y_SB - interface.y_MB;
+
+   DERIV(state.Integ_eB, [independent.t]) = state.eB ;
+
+   state.uhelpB = parameters.u0B + parameters.K_PB 
+	 			  				   * (state.eB + (1 / parameters.T_I) * state.Integ_eB); 
+
+   state.uB = IF(state.uhelpB < parameters.u_Min)
+              THEN (parameters.u_Min)
+              ELSE
+                IF (state.uhelpB > parameters.u_Max)
+                THEN parameters.u_Max
+                ELSE state.uhelpB;				
+	 
+	 interface.u = IF (interface.switch == 1)
+	 			   		 THEN state.uA
+				   			ELSE
+				   	   	 IF (interface.switch == 2)
+					   			THEN state.uB
+					   			ELSE
+								 		IF (state.uB < state.uA)
+	 			   				 THEN state.uB
+				   				  ELSE state.uA;
+				   
+    };
+  :};
+
+ 
+#endif // WWTP_BASE_CONTROLLERS_PISATURATION_RECB_EHV
+

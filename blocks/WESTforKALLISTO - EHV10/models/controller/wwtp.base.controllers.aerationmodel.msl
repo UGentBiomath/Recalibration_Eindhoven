@@ -1,0 +1,161 @@
+/*******************************************************************************
+ *
+ * Developped by BIOMATH in the frame of the Kallisto project
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_CONTROLLERS_AERATIONMODEL
+#define WWTP_BASE_CONTROLLERS_AERATIONMODEL
+
+	CLASS Irvine_Aeration_model_Carbon_foot_print
+    (* icon = "controller" *)
+    "Irvine Carbon foot print"
+  
+  // This model will calculate the Kla-values that the ASM-models need. The actuator is airflow.
+  // All parameters will be explained further in the code.
+  
+    SPECIALISES
+    PhysicalDAEModelType :=
+    {:
+    comments <- "A model that calculates Kla based on airflow rate, aerator design and other parameters";
+    interface <-
+    {
+   	OBJ TSS_Anaerobic (* terminal = "in_1" *) "TSS concentration in the aeration tank (g/m3)" :
+                 Concentration := {: causality <- "CIN" ; group <- "Measurement data" :};
+	   OBJ TSS_Aerobic (* terminal = "in_1" *) "TSS concentration in the aeration tank (g/m3)" :
+                 Concentration := {: causality <- "CIN" ; group <- "Measurement data" :};
+	   OBJ TSS_Anoxic (* terminal = "in_1" *) "TSS concentration in the aeration tank (g/m3)" :
+                 Concentration := {: causality <- "CIN" ; group <- "Measurement data" :};
+	   OBJ Q_was   (* terminal = "in_1" *) " Load Sludge Flow  (kg/d)" :
+    			 FlowRate := {: causality <- "CIN" ; group <- "Control action" :};
+     OBJ Kla   	 (* terminal = "out_1" *) "Calculated Kla (1/d)" :
+                 OxygenTransferCoefficient := {: causality <- "COUT" ; group <- "Control action" :};
+	   OBJ O2_tank  (* terminal = "in_1" *) "Actual oxygen concentration in the aeration tank (g/m³)" :
+                 Concentration := {: causality <- "CIN" ; group <- "Measurement data" :};
+	   OBJ Volume   (* terminal = "in_1" *) "Aeration tank volume (m³)" :
+                 Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+	   OBJ O2_rsat_average   (* terminal = "out_1" *) "Average oxygen saturation depending on water temperature and tank depth for fine bubble aeration (g/m³)" :
+    			 Concentration := {: causality <- "COUT" ; group <- "Control action" :};
+		 OBJ Q_air (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Air flow rate of the fine bubble aerators under standard conditions (Nm³/d)": 
+			     FlowRate := {: causality <- "CIN" ; value <- 1000 ; group <- "Operational" :};
+	   OBJ Temp (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Temperature (°C)": 
+				   CelsiusTemperature := {: causality <- "CIN" ; value <- 15.0 ; group <- "Local conditions of the situ" :};
+	   OBJ P_atm (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Standard atmospheric pressure (Pa)": 
+			     Real := {: causality <- "CIN" ; value <- 101325; group <- "Local conditions of the situ" :};
+	   OBJ Temp_air (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Temperature (°C)": 
+			     CelsiusTemperature := {: causality <- "CIN" ; value <- 15.0 ; group <- "Local conditions of the situ" :};
+
+	// connect one of these last interfaces (the biggest?) to the O2_sat parameter in an ASM1-ASU if you don't want to run the model with O2_sat equal to 8 mg/L as stated in BSM1
+    };
+  
+ parameters <-
+    {
+	OBJ Depth "Depth of fine bubble aerator below the watersurface (m)": Real := {: value <- 6 ; group <- "Geometry of the tank and aerators" :};
+	OBJ H "altitudine": Real := {: value <- 10 ; group <- "Local conditions of the situ" :};
+	OBJ p_site "Vapour pressure (Pa)": Real := {: value <- 2334; group <- "Local conditions of the situ" :};
+	OBJ P_st_atm "Standard atmospheric pressure (Pa)": Real := {: value <- 101325; group <- "Local conditions of the situ" :};
+	OBJ Rho_sludge "Density of sludge (kg/m³)": Real := {: value <- 988 ; group <- "Characteristic of the sludge and air" :};
+	OBJ Rho_air "Air Density (kg/m³)": Real := {: value <- 1.23 ; group <- "Characteristic of the sludge and air" :};
+	OBJ Beta "Beta factor (-)": Real := {: value <- 0.98 ; group <- "Characteristic of the sludge and air" :};
+	OBJ Phi "Phi factor (-)": Real := {: value <- 1.024 ; group <- "Characteristic of the sludge and air" :};
+	OBJ O2_air "Oxygen concentration in the atmosphere (%)": Real := {: value <- 20.85 ; group <- "Characteristic of the sludge and air" :};
+	OBJ CO2_in "CO2 concentration in the atmosphere (%)": Real := {: value <- 0.03 ; group <- "Characteristic of the sludge and air" :};
+	OBJ O2_sat20 "Oxygen saturation of water under standard conditions (g/m³): 1 atm, 20 °C, no salts": Real := {: value <- 10.50 ; group <- "Characteristic of the sludge and air" :};
+	OBJ g "Strength of the gravitational field (m/s³)": Real := {: value <- 9.82 ; group <- "Characteristic of the sludge and air" :};
+	OBJ a "diffuser specific aerea (m2)": Real := {: value <- 2 ; group <- "Geometry of the tank and aerators" :};
+	OBJ A "dimensionaless Aeration model": Real := {: value <- 5.717 ; group <- "Aeration model" :};
+	OBJ B "dimensionaless Aeration model": Real := {: value <- 6.815 ; group <- "Aeration model" :};
+	OBJ f "fraction of the tank": Real := {: value <- 0.44 ; group <- "Aeration model" :};
+	OBJ Nd "Total diffuser number (-)": Real := {: value <- 504 ; group <- "Geometry of the tank and aerators" :};
+	OBJ SOTE "standard oxygen transfer efficiency (%)": Real := {: value <- 42 ; group <- "Operational" :};
+	OBJ Anaerobic_Volume_biological "anaerobic volume biological reactor  (mc)": Real := {: value <- 11200 ; group <- "Operational" :};
+	OBJ Anoxic_Volume_biological "anoxic volume biological reactor  (mc)": Real := {: value <- 28750 ; group <- "Operational" :};
+	OBJ Aerobic_Volume_biological "aerobic volume biological reactor  (mc)": Real := {: value <- 50100 ; group <- "Operational" :};
+	// Power consumption and Energy FootPrint
+	OBJ P_out "Outut Pressure from the Blower (Pa)": Real := {: value <- 80000; group <- "Power consumption" :};
+	OBJ landa "costant for air (-)": Real := {: value <- 1.395 ; group <- "Power consumption" :};
+	OBJ epsilon "efficiency of the motor (-)": Real := {: value <- 0.58 ; group <- "Power consumption" :};
+	OBJ fCO2 "factor of CO2 production (-)": Real := {: value <- 0.718 ; group <- "Power consumption" :};
+	OBJ Tin "absolute inlet temperature  (K)": Real := {: value <- 293.15 ; group <- "Power consumption" :};
+	};	 
+		
+	independent <- 
+    { 
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+     };
+		
+	state <-
+    {
+	OBJ p_site_variable "Vapour pressure (Pa)": Real := {: group <- "Local conditions of the situ" :};
+	OBJ MCRT "Age slduge(d)": Real := {: group <- "Operational" :};
+	OBJ Alpha "alphafactor ": Real := {: group <- "Operational" :};
+	OBJ AlphaSOTE "Oxygen transfer efficiency for new fine bubble aeration in wastewater ": Real := {: group <- "Aeration" :};
+	OBJ Chi "Characteristic number (-)": Real := {: group <- "Aeration" :};
+	OBJ lgChi "Characteristic number (-)": Real := {: group <- "Aeration":};
+	OBJ Qn "Normalized air flow (-)": Real := {: group <- "Aeration" :};
+    OBJ SOTR "Standard oxygen transfer rate for fine bubble aeration (g/d)": Real := {: group <- "Aeration" :};
+	OBJ AOTR "Actual oxygen transfer rate for fine bubble aeration (g/d)": Real := {: group <- "Aeration" :};
+	OBJ	AOTRspecific "Oxygen transfer for diffuser (kg/d/m2)": Real := {: group <- "Aeration" :};
+	OBJ O2_rsat "Oxygen saturation depending on water temperature (g/m3)": Real := {: group <- "Characteristic of liquid and air" :};
+	OBJ O2sat_std "Oxygen saturation depending on water depth (g/m3)": Real := {: group <- "Characteristic of liquid and air" :};
+	OBJ MRi "mole ratio of oxygen to inters in ambient air and off gas (%)": Real := {: group <- "Aeration" :};
+	OBJ MRe "mole ratio of oxygen to leave from aeration tank (%)": Real := {: group <- "Aeration" :};
+	OBJ P_depth "Pressure at the bottom of the tank (Pa)": Real := {: group <- "Characteristic of liquid and air" :};
+	OBJ OTEf "Oxygen transfer efficiency under field conditions (%)": Real := {: group <- "Aeration" :};
+	//Power consumption and Energy footprint
+	OBJ CO2 "CO2 production (kg/d)": Real := {: group <- "Power consumption" :};
+	OBJ k "costant power factor (kW/(m3/s))": Real := {: group <- "Power consumption" :};
+	OBJ Energy_consume "energy consume (kWh)": Real := {: group <- "Power consumption" :};
+	OBJ Integ_energy_consume "Integral energy consume(kWh)" : Real:= {: group <- "Power consumption" :} ;
+	OBJ Integ_emissione_CO2 "Integral CO2(kg)" : Real:= {: group <- "Power consumption" :} ;
+	OBJ Power_blowers "Power(kW)" : Real:= {: group <- "Power consumption" :};
+	};
+    
+		 
+    equations <-
+    { 
+	// Diego Rosso et al.
+	state.MCRT = (parameters.Anoxic_Volume_biological * interface.TSS_Anoxic + parameters.Anaerobic_Volume_biological * interface.TSS_Anaerobic + parameters.Aerobic_Volume_biological * interface.TSS_Aerobic) / 1000 /(interface.Q_was + 1);
+	state.Qn = interface.Q_air / (24*3600*(parameters.a * parameters.Nd * parameters.Depth));
+//	state.Chi = state.MCRT/state.Qn;
+       state.Chi = IF (state.Qn == 0.0)
+                   THEN 0.0
+                   ELSE state.MCRT/state.Qn;
+	
+//	state.lgChi = log10(state.Chi);
+       state.lgChi = IF (state.Chi == 0.0)
+                     THEN 0.0
+                     ELSE log10(state.Chi);
+//	state.AlphaSOTE = (parameters.A * log10(state.Chi) - parameters.B)/100;
+       state.AlphaSOTE = IF (state.Chi == 0.0)
+                         THEN 0.0
+                         ELSE (parameters.A * log10(state.Chi) - parameters.B)/100;
+
+	state.Alpha = state.AlphaSOTE / parameters.SOTE * 100;	
+	// Off gast test ASCE.
+	state.MRi = parameters.O2_air/100/(1 - parameters.O2_air/100 - parameters.CO2_in/100);
+	state.MRe =  state.MRi*(1-state.OTEf);
+	state.OTEf = state.AlphaSOTE * (parameters.Beta * interface.O2_rsat_average - interface.O2_tank) / ( state.O2sat_std) * pow(parameters.Phi,(interface.Temp-20));
+	// Local conditions.
+	state.P_depth = parameters.Rho_sludge * parameters.g * parameters.Depth;
+	state.p_site_variable = pow(10, 0.6979 + 0.02618* interface.Temp_air)* 133.33;
+	state.O2_rsat = 14.65 - 0.41 * (interface.Temp) + 0.00799 * (interface.Temp) * (interface.Temp) - 0.0000778 * (interface.Temp) * (interface.Temp) * (interface.Temp);
+	interface.O2_rsat_average = state.O2_rsat * (state.P_depth * parameters.f + interface.P_atm - state.p_site_variable)/ (parameters.P_st_atm - parameters.p_site);
+	state.O2sat_std =  parameters.O2_sat20;
+	// Oxygen Transfer and Aeration Efficiency.
+	state.SOTR =  interface.Q_air * parameters.Rho_air  * parameters.SOTE * parameters.O2_air / 10000;
+	state.AOTR = state.Alpha * state.SOTR * (parameters.Beta * interface.O2_rsat_average - interface.O2_tank) /state.O2sat_std * pow(parameters.Phi,(interface.Temp-20));
+	interface.Kla = 1000 * state.AOTR/((parameters.Beta * interface.O2_rsat_average - interface.O2_tank) * interface.Volume);
+	state.AOTRspecific = state.AOTR /(interface.Volume);
+	// Power consumption and Energy footprint
+	state.k = (parameters.P_st_atm * parameters.landa * parameters.Tin) / (2.73 * 100000 * parameters.epsilon * (parameters.landa - 1)) * (pow((parameters.P_out + parameters.P_st_atm)/parameters.P_st_atm,1-1/parameters.landa)-1);
+	state.Power_blowers = state.k * interface.Q_air/(24*3600);
+	state.CO2 = state.Power_blowers * parameters.fCO2;
+	DERIV(state.Integ_energy_consume, [independent.t]) = 24 * state.Power_blowers ;
+	DERIV(state.Integ_emissione_CO2, [independent.t]) = state.CO2 ;
+	};
+    :};
+
+ 
+#endif // WWTP_BASE_CONTROLLERS_AERATIONMODEL
+

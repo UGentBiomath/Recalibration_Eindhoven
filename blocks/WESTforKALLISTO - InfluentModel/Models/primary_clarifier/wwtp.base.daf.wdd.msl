@@ -1,0 +1,215 @@
+/*******************************************************************************
+ *
+ * Developped by BIOMATH in the frame of the Kallisto project
+ * Author Youri Amerlinck
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_DAF_WDD
+#define WWTP_BASE_DAF_WDD
+
+#ifdef ASM2dChemTemp
+ CLASS DAF_WDD
+ (* icon = "primary_clarifier" *)
+ "DAF model based on the pilot tests at WDD"
+
+// The model allows to set a constant PO4 effluent concentration 
+// The model assumes a constant removal efficiency for COD, BOD and TSS.	
+
+
+ EXTENDS WWTPAtomicModelWithoutVolume WITH
+ {:
+   comments <- "A model for a DAF";
+   interface <-
+   { 
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : 
+         InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : 
+         OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+    OBJ Underflow (* terminal = "out_2" *) "Underflow" : 
+         OutWWTPTerminal := {: causality <- "COUT" ; group <- "Underflow" :};
+    OBJ Q_Under (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Underflow rate" : 
+    		 FlowRate := {: causality <- "CIN" ; value <- 500 ; group <- "Operational" :};  
+    OBJ PO4_Out (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Outgoing concentration of ortho-phosphate" : 
+	 		Concentration := {: causality <- "CIN" ; value <- 2; group <- "Flotation" :};
+    OBJ DO_Out (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Outgoing concentration of DO" : 
+	 		Concentration := {: causality <- "CIN" ; value <- 6.50; group <- "Flotation" :};
+    OBJ E_R_XCOD (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Removal efficiency for particulate COD " : 
+	 		Fraction := {: causality <- "CIN" ; value <- 0.76; group <- "Flotation" :};
+    OBJ E_R_SCOD (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Removal efficiency for soluble COD " : 
+	 		Fraction := {: causality <- "CIN" ; value <- 0.18; group <- "Flotation" :};
+    OBJ E_R_XII (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Removal efficiency for inert inorganic particulates" : 
+	 		Fraction := {: causality <- "CIN" ; value <- 0.99; group <- "Flotation" :};
+    OBJ E_R_NH4 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Removal efficiency for ammonium" : 
+	 		Fraction := {: causality <- "CIN" ; value <- 0.02; group <- "Flotation" :};
+    OBJ E_R_NO3 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Removal efficiency for nitrate" : 
+	 		Fraction := {: causality <- "CIN" ; value <- 0.0; group <- "Flotation" :};
+};
+
+  parameters <- 
+   { 
+// Calculation of outflow TSS
+	OBJ i_TSS_X_I	"TSS to X_I ratio"
+	: ConversionFactor	:= {: value <- 0.75 ; group <- "Composition parameters" :}; 
+	OBJ i_TSS_X_S	"TSS to X_S ratio"
+	: ConversionFactor	:= {: value <- 0.75 ; group <- "Composition parameters" :}; 
+	OBJ i_TSS_BM	"TSS to biomass ratio for X_H, X_PAO, X_AUT"
+	: ConversionFactor	:= {: value <- 0.9 ; group <- "Composition parameters" :}; 
+   };
+
+  state <-
+   {
+    OBJ Q_Out "Effluent flow rate" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Under_Actual "Underflow rate" : FlowRate := {: group <- "Operational" :};
+    OBJ Help_X_In (* hidden = "1" *) "" : MassFlux;
+    OBJ Help_X_Out (* hidden = "1" *) "" : MassFlux;
+    OBJ Help_X_Under (* hidden = "1" *) "" : MassFlux;
+    OBJ X_In "Influent suspended solids concentration" : Concentration := {: group <- "Concentration" :};
+    OBJ X_In_Calc "Influent suspended solids concentration" : Concentration := {: group <- "Concentration" :};
+    OBJ X_Out "Effluent suspended solids concentration" : Concentration := {: group <- "Concentration" :};
+    OBJ X_Under "Underflow suspended solids concentration" : Concentration := {: group <- "Concentration" :};
+    OBJ f_Out (* hidden = "0" *) "Fraction of the influent flux going to the overflow" : Fraction ;
+    OBJ COD_In (* hidden = "1" *) "Incoming flux of COD" : MassFlux;
+    OBJ COD_Out (* hidden = "1" *) "Outgoing flux of COD" : MassFlux;
+    OBJ E_R_COD "Removal efficiency for COD" : Fraction := {: group <- "Flotation" :};
+    OBJ E_R_TSS "Removal efficiency for TSS" : Fraction := {: group <- "Flotation" :};
+    OBJ E_R_TSS2 "Removal efficiency for TSS" : Fraction := {: group <- "Flotation" :};
+   };
+
+    initial <-  
+    {
+   };
+   
+  equations <-
+   {
+
+
+    state.Q_Under_Actual = IF (state.Q_In <= interface.Q_Under)
+				   		   THEN 0
+//				   		   THEN state.Q_In
+				   		   ELSE interface.Q_Under; 
+
+    state.Q_Out = state.Q_In - state.Q_Under_Actual;
+
+	
+//    state.f_Out := IF (state.Q_In <= parameters.Q_Under)
+    state.f_Out := IF (state.Q_In <= 0)
+                   THEN 0
+ 			 	   			ELSE (state.Q_In - state.Q_Under_Actual) / state.Q_In ;
+
+
+
+// SOLUBLES
+	  interface.Outflow[IndexOfSolvent] =
+      - state.InFluxPerComponent[IndexOfSolvent] * state.f_Out ;
+	  interface.Outflow[S_I] =
+      - state.InFluxPerComponent[S_I] * state.f_Out * (1.0 - interface.E_R_SCOD) ;
+	  interface.Outflow[S_O] =
+      - state.Q_Out * interface.DO_Out ; // constant concentration for DO
+	  interface.Outflow[S_N2] =
+      - state.InFluxPerComponent[S_N2] * state.f_Out ;
+	  interface.Outflow[S_F] =
+      - state.InFluxPerComponent[S_F] * state.f_Out * (1.0 - interface.E_R_SCOD) ;
+	  interface.Outflow[S_A] =
+      - state.InFluxPerComponent[S_A] * state.f_Out * (1.0 - interface.E_R_SCOD) ;
+	  interface.Outflow[S_Al] =
+      - state.InFluxPerComponent[S_Al] * state.f_Out ;
+	  interface.Outflow[S_NO] =
+      - state.InFluxPerComponent[S_NO] * state.f_Out * (1.0 - interface.E_R_NO3) ;
+	  interface.Outflow[S_NH] =
+      - state.InFluxPerComponent[S_NH] * state.f_Out * (1.0 - interface.E_R_NH4) ;
+	  interface.Outflow[S_PO] =
+      - state.Q_Out * interface.PO4_Out ; // constant concentration for phosphate
+	  interface.Outflow[S_ALK] =
+      - state.InFluxPerComponent[S_ALK] * state.f_Out ;
+
+// Underflow
+    {FOREACH Comp_Index IN {IndexOfSolvent .. IndexOfLastSolubleComponent}:
+     interface.Underflow[Comp_Index] = - (state.InFluxPerComponent[Comp_Index]
+     + interface.Outflow[Comp_Index]) ;};
+
+
+// outflow calculated per component
+// first all the COD components + X_PP as this is an internal storage of phosphate in the biomass.	 
+    {FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. X_AUT}:
+      interface.Outflow[Comp_Index] = - state.InFluxPerComponent[Comp_Index] * state.f_Out * (1.0 - interface.E_R_XCOD) ;
+     };
+
+// then the non-COD components	 
+// At this point X_MEOH and X_MEP get the same removal efficiency as X_I_i
+// this might be OK for X_MEP but is questionable for X_MEOH but at this point we don't model P dosing before the PST
+    {FOREACH Comp_Index IN {X_MEOH .. X_I_i}:
+      interface.Outflow[Comp_Index] = - state.InFluxPerComponent[Comp_Index] * state.f_Out * (1.0 - interface.E_R_XII);
+     };
+
+	interface.Outflow[X_TSS] = interface.Outflow[X_I] * parameters.i_TSS_X_I
+							  + interface.Outflow[X_S] * parameters.i_TSS_X_S
+							  + interface.Outflow[X_H] * parameters.i_TSS_BM
+							  + interface.Outflow[X_PAO] * parameters.i_TSS_BM
+							  + interface.Outflow[X_PP] * 3.23
+							  + interface.Outflow[X_PHA] * 0.6
+							  + interface.Outflow[X_AUT] * parameters.i_TSS_BM
+							  + interface.Outflow[X_MEOH] * 1.0
+							  + interface.Outflow[X_MEP] * 1.0
+							  + interface.Outflow[X_I_i] * 1.0;
+	 
+	 
+	 // Underflow
+    {FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+     interface.Underflow[Comp_Index] = - (state.InFluxPerComponent[Comp_Index] 
+     + interface.Outflow[Comp_Index]);};
+
+     // Calculation of suspended solids concentrations
+     // in the effluent and underflow streams
+
+#ifdef UseTSSComponent
+
+    state.X_In = IF (state.Q_In == 0)
+			   	 THEN 0
+				 ELSE interface.Inflow[IndexOfTSSComponent] / state.Q_In;
+
+    state.X_In_Calc = (interface.Inflow[X_I] * parameters.i_TSS_X_I
+							  + interface.Inflow[X_S] * parameters.i_TSS_X_S
+							  + interface.Inflow[X_H] * parameters.i_TSS_BM
+							  + interface.Inflow[X_PAO] * parameters.i_TSS_BM
+							  + interface.Inflow[X_PP] * 3.23
+							  + interface.Inflow[X_PHA] * 0.6
+							  + interface.Inflow[X_AUT] * parameters.i_TSS_BM
+							  + interface.Inflow[X_MEOH] * 1.0
+							  + interface.Inflow[X_MEP] * 1.0
+							  + interface.Inflow[X_I_i] * 1.0) / state.Q_In;
+				 
+    state.X_Out = IF (state.Q_In <= interface.Q_Under)
+				  THEN - interface.Outflow[IndexOfTSSComponent] / (state.Q_In)
+//				  THEN 0
+				  ELSE - interface.Outflow[IndexOfTSSComponent] / (state.Q_In - interface.Q_Under);
+
+     state.X_Under = 
+    		IF (state.Q_Under_Actual <= 0)
+			THEN 0
+			ELSE - interface.Underflow[IndexOfTSSComponent] / state.Q_Under_Actual;
+     
+#endif // UseTSSComponent
+
+// check for removal efficiencies of TSS and COD
+	   state.E_R_TSS = (1 - state.X_Out / state.X_In);
+	   state.E_R_TSS2 = (1 - state.X_Out / state.X_In_Calc);
+	   
+       state.COD_Out = - interface.Outflow[S_I] - interface.Outflow[S_A] - interface.Outflow[S_F]
+	   				   - interface.Outflow[X_I] - interface.Outflow[X_S] - interface.Outflow[X_H]
+	   				   - interface.Outflow[X_PAO] - interface.Outflow[X_PAO] - interface.Outflow[X_AUT];
+       state.COD_In = interface.Inflow[S_I] + interface.Inflow[S_A] + interface.Inflow[S_F]
+	   				   + interface.Inflow[X_I] + interface.Inflow[X_S] + interface.Inflow[X_H]
+	   				   + interface.Inflow[X_PAO] + interface.Inflow[X_PAO] + interface.Inflow[X_AUT];
+	  
+	   state.E_R_COD = (1 - state.COD_Out / state.COD_In);
+
+
+    }; 
+  :};
+
+
+
+#endif // ASM2dChemTemp
+
+#endif // WWTP_BASE_DAF_WDD

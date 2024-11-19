@@ -1,0 +1,30 @@
+#ifdef ASM2dChemTemp
+
+  interface <-
+  {
+  	#include "wwtp.VolumeASM2dChemTempModel.interface.msl"
+  };
+
+  parameters <-
+  {
+  	#include "wwtp.VolumeASM2dChemTempConversionModel.parameters.msl"
+  };
+
+  state <-
+  {
+  	#include "wwtp.VolumeASM2dChemTempConversionModel.state.msl"
+  };
+
+  initial <-
+  {
+  	#include "wwtp.VolumeASM2dChemTempConversionModel.stoichiometry.msl"
+  };
+
+  equations <-
+  {
+  	#include "wwtp.VolumeASM2dChemTempConversionModel.kinetics.msl"
+  	#include "wwtp.VolumeASM2dChemTempModel.sensors.msl"
+  };
+
+#endif
+
