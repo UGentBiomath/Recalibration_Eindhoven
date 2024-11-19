@@ -1,7 +1,7 @@
-```markdown
+
 # Automatic (Re)Calibration Of Water Resource Recovery Facility Models To Ensure Continuous Model Performance
 
-This repository contains the implementation of the automatic recalibration method **ES-NEAT** for the Water Resource Recovery Facility (WRRF) of Eindhoven (The Netherlands). The approach is described in the scientific paper *"Automatic (Re)Calibration Of Water Resource Recovery Facility Models To Ensure Continuous Model Performance"*. This project is targeted at researchers interested in model calibration, NEAT algorithms, and water resource management.
+This repository, **Recalibration_Eindhoven**, contains the implementation of the automatic recalibration method **ES-NEAT** for the Water Resource Recovery Facility (WRRF) of Eindhoven (The Netherlands). The approach is described in the scientific paper *"Automatic (Re)Calibration Of Water Resource Recovery Facility Models To Ensure Continuous Model Performance"*. This project is targeted at researchers interested in model calibration, NEAT algorithms, and water resource management.
 
 ---
 
@@ -50,9 +50,14 @@ To run this project, you will need the following:
 ### Setup
 1. Clone this repository:
    ```bash
-   git clone https://github.com/your-repo-url/automatic-recalibration-wrrf.git
-   cd automatic-recalibration-wrrf
+   git clone https://github.com/your-repo-url/Recalibration_Eindhoven.git
+   cd Recalibration_Eindhoven
    ```
+2. Install Python dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
 ---
 
 ## Usage
@@ -111,4 +116,3 @@ This project is licensed under the **GPL-3.0 License**. Refer to the `LICENSE` f
 
 ## Contact Information
 For questions or support, please refer to the contact information provided in the paper.
-```
