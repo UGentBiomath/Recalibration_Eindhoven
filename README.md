@@ -1,5 +1,3 @@
-Here’s a detailed and professional draft for your GitHub README file based on the information you provided:
-
 ```markdown
 # Automatic (Re)Calibration Of Water Resource Recovery Facility Models To Ensure Continuous Model Performance
 
