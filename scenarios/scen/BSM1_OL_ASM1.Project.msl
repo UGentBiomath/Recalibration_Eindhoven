@@ -1,7 +1,12 @@
-#ifndef __BSM1_OL_ASM1_PROJECT__
-#define __BSM1_OL_ASM1_PROJECT__
+#ifndef __BSM1_OL_ASM1_PROJECT_MSL__
+#define __BSM1_OL_ASM1_PROJECT_MSL__
 
 #include "west.msl"
+
+#include "Influent_Municipality_1.msl"
+#include "Effluent_out_1.msl"
+#include "Effluent_Waste_1.msl"
+
 #include "_BSM1_OL_ASM1_.msl"
 
 #endif

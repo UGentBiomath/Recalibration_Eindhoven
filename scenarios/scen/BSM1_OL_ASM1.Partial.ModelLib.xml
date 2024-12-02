@@ -4,7 +4,7 @@
 <Props>
 <Prop Name="TornadoVersion" Value="2023 "/>
 <Prop Name="Author" Value="UGENT\cgomezco"/>
-<Prop Name="Date" Value="Mon Dec  2 12:52:58 2024"/>
+<Prop Name="Date" Value="Mon Dec  2 13:10:24 2024"/>
 <Prop Name="Desc" Value=""/>
 <Prop Name="FileName" Value="C:\Users\cgomezco\OneDrive - UGent\Documents\GitHub\AutomaticRecalibration\Recalibration_Eindhoven\scenarios\scen\BSM1_OL_ASM1.Partial.ModelLib.xml|.Tornado"/>
 <Prop Name="DisplayName" Value=""/>
@@ -13,7 +13,22 @@
 <Prop Name="Imports" Value=""/>
 </Props>
 <Models>
-<Model Name="BSM1_OL_ASM1" Type="Model">
+<Model Name="BSM1_OL_ASM1" FileName="C:\Users\cgomezco\OneDrive - UGent\Documents\GitHub\AutomaticRecalibration\Recalibration_Eindhoven\scenarios\scen\BSM1_OL_ASM1.Layout.xml|.Tornado" Type="Model">
+<SubModels>
+<SubModel Name="ASU_1" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="ASU_2" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="ASU_3" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="ASU_4" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="ASU_5" ClassName="FixVolumeASU" Desc="Activated sludge unit"/>
+<SubModel Name="Clarifier" ClassName="Takacs_SVI" Desc="Secondary Clarifier"/>
+<SubModel Name="FS_1" ClassName="AbsTwoSplitter" Desc="Two flow splitter"/>
+<SubModel Name="FS_2" ClassName="AbsTwoSplitter" Desc="Two flow splitter"/>
+<SubModel Name="Municipality_1" ClassName="Influent_Municipality_1" Desc="Municipal wastewater"/>
+<SubModel Name="Waste_1" ClassName="Effluent_Waste_1" Desc="Waste"/>
+<SubModel Name="Well_1" ClassName="ThreeCombiner" Desc="Three combienr"/>
+<SubModel Name="_LoopBreaker_1_" ClassName="DifferentialLoopBreaker"/>
+<SubModel Name="out_1" ClassName="Effluent_out_1" Desc="Effluent"/>
+</SubModels>
 </Model>
 </Models>
 </ModelLib>

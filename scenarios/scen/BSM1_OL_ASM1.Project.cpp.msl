@@ -38047,13 +38047,368 @@ CLASS BaseSettler_AStage SPECIALISES PhysicalDAEModelType :=
 
 # 4 "BSM1_OL_ASM1.Project.msl" 2
 
+
+# 1 "Influent_Municipality_1.msl" 1
+
+
+
+# 1 "C:\\Users\\cgomezco\\OneDrive - UGent\\Documents\\GitHub\\AutomaticRecalibration\\Recalibration_Eindhoven\\blocks\\MSL\\Models\\west.msl" 1
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 27 "C:\\Users\\cgomezco\\OneDrive - UGent\\Documents\\GitHub\\AutomaticRecalibration\\Recalibration_Eindhoven\\blocks\\MSL\\Models\\west.msl"
+
+
+
+
+
+
+
+ 
+ 
+
+
+
+# 4 "Influent_Municipality_1.msl" 2
+
+
+CLASS Influent_Municipality_1 (* icon = "influent"; file = ""; *)  SPECIALISES PhysicalDAEModelType := 
+{:
+  comments <- "";
+
+  interface <-
+  {
+    OBJ H2O (*terminal = ""; *) "" : Real := {: causality <- "CIN"; :};
+    OBJ S_ALK (*terminal = ""; *) "" : Real := {: causality <- "CIN"; :};
+    OBJ S_I (*terminal = ""; *) "" : Real := {: causality <- "CIN"; :};
+    OBJ S_ND (*terminal = ""; *) "" : Real := {: causality <- "CIN"; :};
+    OBJ S_NH (*terminal = ""; *) "" : Real := {: causality <- "CIN"; :};
+    OBJ S_NO (*terminal = ""; *) "" : Real := {: causality <- "CIN"; :};
+    OBJ S_O (*terminal = ""; *) "" : Real := {: causality <- "CIN"; :};
+    OBJ S_S (*terminal = ""; *) "" : Real := {: causality <- "CIN"; :};
+    OBJ X_BA (*terminal = ""; *) "" : Real := {: causality <- "CIN"; :};
+    OBJ X_BH (*terminal = ""; *) "" : Real := {: causality <- "CIN"; :};
+    OBJ X_I (*terminal = ""; *) "" : Real := {: causality <- "CIN"; :};
+    OBJ X_ND (*terminal = ""; *) "" : Real := {: causality <- "CIN"; :};
+    OBJ X_P (*terminal = ""; *) "" : Real := {: causality <- "CIN"; :};
+    OBJ X_S (*terminal = ""; *) "" : Real := {: causality <- "CIN"; :};
+
+    OBJ Influent_Load (*terminal = "out_1"; *) "Influent load" : OutWWTPTerminal := {: nature <- "THROUGH"; causality <- "COUT"; group <- "Influent"; :};
+  };
+
+  parameters <-
+  {
+
+    OBJ WWTPSpecificVolume (* hidden = "1"; *) "The specific volumes (= 1/density) of the components" : SpecificVolumeVector;
+  };
+
+  independent <- 
+  {
+    OBJ t (* fixed = "1"; *) "Time" : Time;
+  };
+
+  state <-
+  {
+
+    OBJ Inflow (* *) "Temporary variable" : WWTPConcTerminal;
+  };
+
+  initial <-
+  {
+    parameters.WWTPSpecificVolume[IndexOfSolvent] := 0.000001;
+
+  };
+
+  equations <-
+  {
+     
+
+    state.Inflow[H2O] = interface.H2O * (1);
+    state.Inflow[S_ALK] = interface.S_ALK * (1);
+    state.Inflow[S_I] = interface.S_I * (1);
+    state.Inflow[S_ND] = interface.S_ND * (1);
+    state.Inflow[S_NH] = interface.S_NH * (1);
+    state.Inflow[S_NO] = interface.S_NO * (1);
+    state.Inflow[S_O] = interface.S_O * (1);
+    state.Inflow[S_S] = interface.S_S * (1);
+    state.Inflow[X_BA] = interface.X_BA * (1);
+    state.Inflow[X_BH] = interface.X_BH * (1);
+    state.Inflow[X_I] = interface.X_I * (1);
+    state.Inflow[X_ND] = interface.X_ND * (1);
+    state.Inflow[X_P] = interface.X_P * (1);
+    state.Inflow[X_S] = interface.X_S * (1);
+
+     
+
+    interface.Influent_Load[IndexOfSolvent] = - state.Inflow[IndexOfSolvent] / parameters.WWTPSpecificVolume[IndexOfSolvent];
+
+    { FOREACH Comp_Index IN {IndexOfFirstSolubleComponent .. NrOfComponents}:
+        interface.Influent_Load[Comp_Index] = - state.Inflow[Comp_Index] * state.Inflow[IndexOfSolvent]; };
+
+  };
+:};
+
+
+
+# 6 "BSM1_OL_ASM1.Project.msl" 2
+
+# 1 "Effluent_out_1.msl" 1
+
+
+
+# 1 "C:\\Users\\cgomezco\\OneDrive - UGent\\Documents\\GitHub\\AutomaticRecalibration\\Recalibration_Eindhoven\\blocks\\MSL\\Models\\west.msl" 1
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 27 "C:\\Users\\cgomezco\\OneDrive - UGent\\Documents\\GitHub\\AutomaticRecalibration\\Recalibration_Eindhoven\\blocks\\MSL\\Models\\west.msl"
+
+
+
+
+
+
+
+ 
+ 
+
+
+
+# 4 "Effluent_out_1.msl" 2
+
+
+CLASS Effluent_out_1 (* icon = "effluent"; file = "";  *)  SPECIALISES PhysicalDAEModelType := 
+{:
+  comments <- "";
+
+  interface <-
+  {
+    OBJ COD (*is_favorite = "1"; terminal = ""; *) "Total COD" : Real := {: causality <- "COUT"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+    OBJ TKN (*is_favorite = "1"; terminal = ""; *) "TKN" : Real := {: causality <- "COUT"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+    OBJ TSS (*is_favorite = "1"; terminal = ""; *) "Total solids" : Real := {: causality <- "COUT"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+    OBJ Water (*terminal = ""; *) "Flow" : Real := {: causality <- "COUT"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+
+    OBJ Effluent_Load (*terminal = "in_1"; *) "Effluent load" : InWWTPTerminal := {: nature <- "THROUGH"; causality <- "CIN"; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Effluent"; :};
+  };
+
+  parameters <-
+  {
+    OBJ F_BOD5_BOD20 (* is_favorite = "1";  *) "Conversion factor BOD5/BOD20" : Fraction := {: unit <- "-"; value <- 0.25; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Conversion factors"; :};
+    OBJ F_TSS_COD (* is_favorite = "1";  *) "Conversion factor TSS/COD" : Real := {: unit <- "-"; value <- 0.75; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Conversion factors"; :};
+    OBJ i_X_P (* is_favorite = "1";  *) "N/COD in product formed" : MassOfNitrogenPerMassOfCODInProdFromBiomass := {: unit <- "-"; value <- 0.06; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Composition parameters"; :};
+    OBJ i_X_B (* is_favorite = "1";  *) "N/COD in biomass" : MassOfNitrogenPerMassOfCODInBiomass := {: unit <- "-"; value <- 0.086; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Composition parameters"; :};
+    OBJ _1_ (* hidden = "1"; fixed = "1";  *) "" : Real := {: value <- 1; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+
+    OBJ WWTPSpecificVolume (* hidden = "1";  *) "The specific volumes (= 1/density) of the components" : SpecificVolumeVector := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+  };
+
+  independent <- 
+  {
+    OBJ t (* fixed = "1";  *) "Time" : Time := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+  };
+
+  state <-
+  {
+    OBJ S_COD (* is_favorite = "1";  *) "Soluble COD" : Concentration := {: unit <- "g/m3"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+    OBJ X_COD (* is_favorite = "1";  *) "Particulate COD" : Concentration := {: unit <- "g/m3"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+    OBJ BOD20 (*  *) "BOD20" : Concentration := {: unit <- "g/m3"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+
+    OBJ Outflow (*  *) "Temporary variable" : WWTPConcTerminal := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+    OBJ Q_In (*  *) "Effluent flow rate" : FlowRate := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Operational"; :};
+    OBJ InFluxPerComponent (* hidden = "1";  *) "Vector containing incoming fluxes for all components" : MassFluxVector := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+  };
+
+  initial <-
+  {
+    parameters.WWTPSpecificVolume[IndexOfSolvent] := 0.000001;
+  };
+
+  equations <-
+  {
+     
+
+    interface.COD = state.S_COD * (1) + state.X_COD * (1);
+    interface.TKN = state.Outflow[X_BH] * (parameters.i_X_B) + state.Outflow[X_I] * (parameters.i_X_P) + state.Outflow[X_ND] * (1) + state.Outflow[X_P] * (parameters.i_X_P) + state.Outflow[S_ND] * (1) + state.Outflow[S_NH] * (1) + state.Outflow[X_BA] * (parameters.i_X_B);
+    interface.TSS = state.X_COD * (parameters.F_TSS_COD);
+    interface.Water = state.Outflow[H2O] * (1);
+    state.S_COD = state.Outflow[S_I] * (1) + state.Outflow[S_S] * (1);
+    state.X_COD = state.Outflow[X_BH] * (1) + state.Outflow[X_I] * (1) + state.Outflow[X_P] * (1) + state.Outflow[X_S] * (1) + state.Outflow[X_BA] * (1);
+    state.BOD20 = state.Outflow[X_BH] * (1) + state.Outflow[X_S] * (1) + state.Outflow[S_S] * (1) + state.Outflow[X_BA] * (1);
+
+     
+
+    state.Outflow[IndexOfSolvent] = interface.Effluent_Load[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+
+    { FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}:
+        state.InFluxPerComponent[Comp_Index] =
+          SUMOVER In_Terminal IN {SelectByType(interface, InWWTPTerminal)}:
+            (In_Terminal[Comp_Index]); };
+
+    state.Q_In = state.InFluxPerComponent[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+
+    { FOREACH Comp_Index IN {IndexOfFirstSolubleComponent .. NrOfComponents}:
+      state.Outflow[Comp_Index] = IF (state.Q_In == 0) THEN 0 ELSE interface.Effluent_Load[Comp_Index] / state.Q_In; };
+  };
+:};
+
+
+
+# 7 "BSM1_OL_ASM1.Project.msl" 2
+
+# 1 "Effluent_Waste_1.msl" 1
+
+
+
+# 1 "C:\\Users\\cgomezco\\OneDrive - UGent\\Documents\\GitHub\\AutomaticRecalibration\\Recalibration_Eindhoven\\blocks\\MSL\\Models\\west.msl" 1
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 27 "C:\\Users\\cgomezco\\OneDrive - UGent\\Documents\\GitHub\\AutomaticRecalibration\\Recalibration_Eindhoven\\blocks\\MSL\\Models\\west.msl"
+
+
+
+
+
+
+
+ 
+ 
+
+
+
+# 4 "Effluent_Waste_1.msl" 2
+
+
+CLASS Effluent_Waste_1 (* icon = "effluent"; file = "";  *)  SPECIALISES PhysicalDAEModelType := 
+{:
+  comments <- "";
+
+  interface <-
+  {
+    OBJ COD (*is_favorite = "1"; terminal = ""; *) "Total COD" : Real := {: causality <- "COUT"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+    OBJ TKN (*is_favorite = "1"; terminal = ""; *) "TKN" : Real := {: causality <- "COUT"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+    OBJ TSS (*is_favorite = "1"; terminal = ""; *) "Total solids" : Real := {: causality <- "COUT"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+    OBJ Water (*terminal = ""; *) "Flow" : Real := {: causality <- "COUT"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+
+    OBJ Effluent_Load (*terminal = "in_1"; *) "Effluent load" : InWWTPTerminal := {: nature <- "THROUGH"; causality <- "CIN"; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Effluent"; :};
+  };
+
+  parameters <-
+  {
+    OBJ F_BOD5_BOD20 (* is_favorite = "1";  *) "Conversion factor BOD5/BOD20" : Fraction := {: unit <- "-"; value <- 0.25; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Conversion factors"; :};
+    OBJ F_TSS_COD (* is_favorite = "1";  *) "Conversion factor TSS/COD" : Real := {: unit <- "-"; value <- 0.75; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Conversion factors"; :};
+    OBJ i_X_P (* is_favorite = "1";  *) "N/COD in product formed" : MassOfNitrogenPerMassOfCODInProdFromBiomass := {: unit <- "-"; value <- 0.06; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Composition parameters"; :};
+    OBJ i_X_B (* is_favorite = "1";  *) "N/COD in biomass" : MassOfNitrogenPerMassOfCODInBiomass := {: unit <- "-"; value <- 0.086; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Composition parameters"; :};
+    OBJ _1_ (* hidden = "1"; fixed = "1";  *) "" : Real := {: value <- 1; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+
+    OBJ WWTPSpecificVolume (* hidden = "1";  *) "The specific volumes (= 1/density) of the components" : SpecificVolumeVector := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+  };
+
+  independent <- 
+  {
+    OBJ t (* fixed = "1";  *) "Time" : Time := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+  };
+
+  state <-
+  {
+    OBJ S_COD (* is_favorite = "1";  *) "Soluble COD" : Concentration := {: unit <- "g/m3"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+    OBJ X_COD (* is_favorite = "1";  *) "Particulate COD" : Concentration := {: unit <- "g/m3"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+    OBJ BOD20 (*  *) "BOD20" : Concentration := {: unit <- "g/m3"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+
+    OBJ Outflow (*  *) "Temporary variable" : WWTPConcTerminal := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+    OBJ Q_In (*  *) "Effluent flow rate" : FlowRate := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Operational"; :};
+    OBJ InFluxPerComponent (* hidden = "1";  *) "Vector containing incoming fluxes for all components" : MassFluxVector := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+  };
+
+  initial <-
+  {
+    parameters.WWTPSpecificVolume[IndexOfSolvent] := 0.000001;
+  };
+
+  equations <-
+  {
+     
+
+    interface.COD = state.S_COD * (1) + state.X_COD * (1);
+    interface.TKN = state.Outflow[X_BH] * (parameters.i_X_B) + state.Outflow[X_I] * (parameters.i_X_P) + state.Outflow[X_ND] * (1) + state.Outflow[X_P] * (parameters.i_X_P) + state.Outflow[S_ND] * (1) + state.Outflow[S_NH] * (1) + state.Outflow[X_BA] * (parameters.i_X_B);
+    interface.TSS = state.X_COD * (parameters.F_TSS_COD);
+    interface.Water = state.Outflow[H2O] * (1);
+    state.S_COD = state.Outflow[S_I] * (1) + state.Outflow[S_S] * (1);
+    state.X_COD = state.Outflow[X_BH] * (1) + state.Outflow[X_I] * (1) + state.Outflow[X_P] * (1) + state.Outflow[X_S] * (1) + state.Outflow[X_BA] * (1);
+    state.BOD20 = state.Outflow[X_BH] * (1) + state.Outflow[X_S] * (1) + state.Outflow[S_S] * (1) + state.Outflow[X_BA] * (1);
+
+     
+
+    state.Outflow[IndexOfSolvent] = interface.Effluent_Load[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+
+    { FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}:
+        state.InFluxPerComponent[Comp_Index] =
+          SUMOVER In_Terminal IN {SelectByType(interface, InWWTPTerminal)}:
+            (In_Terminal[Comp_Index]); };
+
+    state.Q_In = state.InFluxPerComponent[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+
+    { FOREACH Comp_Index IN {IndexOfFirstSolubleComponent .. NrOfComponents}:
+      state.Outflow[Comp_Index] = IF (state.Q_In == 0) THEN 0 ELSE interface.Effluent_Load[Comp_Index] / state.Q_In; };
+  };
+:};
+
+
+
+# 8 "BSM1_OL_ASM1.Project.msl" 2
+
+
 # 1 "_BSM1_OL_ASM1_.msl" 1
 # 1 "BSM1_OL_ASM1.msl" 1
 
 
 
 
-CLASS BSM1_OL_ASM1 (* icon = ""; file = ""; *)  SPECIALISES CoupledModelType := 
+CLASS BSM1_OL_ASM1 (* icon = ""; file = "C:\Users\cgomezco\OneDrive - UGent\Documents\GitHub\AutomaticRecalibration\Recalibration_Eindhoven\scenarios\scen\BSM1_OL_ASM1.Layout.xml|.Tornado"; *)  SPECIALISES CoupledModelType := 
 {:
   comments <- "";
 
@@ -38076,6 +38431,19 @@ CLASS BSM1_OL_ASM1 (* icon = ""; file = ""; *)  SPECIALISES CoupledModelType :=
 
   sub_models <-
   {
+    OBJ ASU_1 "Activated sludge unit" : FixVolumeASU;
+    OBJ ASU_2 "Activated sludge unit" : FixVolumeASU;
+    OBJ ASU_3 "Activated sludge unit" : FixVolumeASU;
+    OBJ ASU_4 "Activated sludge unit" : FixVolumeASU;
+    OBJ ASU_5 "Activated sludge unit" : FixVolumeASU;
+    OBJ out_1 "Effluent" : Effluent_out_1;
+    OBJ Municipality_1 "Municipal wastewater" : Influent_Municipality_1;
+    OBJ Clarifier "Secondary Clarifier" : Takacs_SVI;
+    OBJ Well_1 "Three combienr" : ThreeCombiner;
+    OBJ FS_1 "Two flow splitter" : AbsTwoSplitter;
+    OBJ FS_2 "Two flow splitter" : AbsTwoSplitter;
+    OBJ Waste_1 "Waste" : Effluent_Waste_1;
+    OBJ _LoopBreaker_1_ "" : DifferentialLoopBreaker;
   };
 
   initial <-
@@ -38091,6 +38459,20 @@ CLASS BSM1_OL_ASM1 (* icon = ""; file = ""; *)  SPECIALISES CoupledModelType :=
 
   coupling <-
   {
+    connect(sub_models.ASU_1.interface.Outflow, sub_models.ASU_2.interface.Inflow);
+    connect(sub_models.Clarifier.interface.Underflow, sub_models.FS_2.interface.Inflow);
+    connect(sub_models.Municipality_1.interface.Influent_Load, sub_models.Well_1.interface.Inflow2);
+    connect(sub_models.FS_2.interface.Outflow2, sub_models.Waste_1.interface.Effluent_Load);
+    connect(sub_models.Clarifier.interface.Overflow, sub_models.out_1.interface.Effluent_Load);
+    connect(sub_models.ASU_2.interface.Outflow, sub_models._LoopBreaker_1_.interface.Inflow);
+    connect(sub_models._LoopBreaker_1_.interface.Outflow, sub_models.ASU_3.interface.Inflow);
+    connect(sub_models.ASU_3.interface.Outflow, sub_models.ASU_4.interface.Inflow);
+    connect(sub_models.ASU_4.interface.Outflow, sub_models.ASU_5.interface.Inflow);
+    connect(sub_models.FS_1.interface.Outflow2, sub_models.Well_1.interface.Inflow1);
+    connect(sub_models.ASU_5.interface.Outflow, sub_models.FS_1.interface.Inflow);
+    connect(sub_models.FS_1.interface.Outflow1, sub_models.Clarifier.interface.Inflow);
+    connect(sub_models.Well_1.interface.Outflow, sub_models.ASU_1.interface.Inflow);
+    connect(sub_models.FS_2.interface.Outflow1, sub_models.Well_1.interface.Inflow3);
 
   };
 :};
@@ -38102,7 +38484,7 @@ CLASS BSM1_OL_ASM1 (* icon = ""; file = ""; *)  SPECIALISES CoupledModelType :=
 
 OBJ _BSM1_OL_ASM1_ : BSM1_OL_ASM1;
 
-# 5 "BSM1_OL_ASM1.Project.msl" 2
+# 10 "BSM1_OL_ASM1.Project.msl" 2
 
 
 

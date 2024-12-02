@@ -2,7 +2,7 @@
 #define __BSM1_OL_ASM1_MSL__
 
 
-CLASS BSM1_OL_ASM1 (* icon = ""; file = ""; *)  SPECIALISES CoupledModelType := 
+CLASS BSM1_OL_ASM1 (* icon = ""; file = "C:\Users\cgomezco\OneDrive - UGent\Documents\GitHub\AutomaticRecalibration\Recalibration_Eindhoven\scenarios\scen\BSM1_OL_ASM1.Layout.xml|.Tornado"; *)  SPECIALISES CoupledModelType := 
 {:
   comments <- "";
 
@@ -25,6 +25,19 @@ CLASS BSM1_OL_ASM1 (* icon = ""; file = ""; *)  SPECIALISES CoupledModelType :=
 
   sub_models <-
   {
+    OBJ ASU_1 "Activated sludge unit" : FixVolumeASU;
+    OBJ ASU_2 "Activated sludge unit" : FixVolumeASU;
+    OBJ ASU_3 "Activated sludge unit" : FixVolumeASU;
+    OBJ ASU_4 "Activated sludge unit" : FixVolumeASU;
+    OBJ ASU_5 "Activated sludge unit" : FixVolumeASU;
+    OBJ out_1 "Effluent" : Effluent_out_1;
+    OBJ Municipality_1 "Municipal wastewater" : Influent_Municipality_1;
+    OBJ Clarifier "Secondary Clarifier" : Takacs_SVI;
+    OBJ Well_1 "Three combienr" : ThreeCombiner;
+    OBJ FS_1 "Two flow splitter" : AbsTwoSplitter;
+    OBJ FS_2 "Two flow splitter" : AbsTwoSplitter;
+    OBJ Waste_1 "Waste" : Effluent_Waste_1;
+    OBJ _LoopBreaker_1_ "" : DifferentialLoopBreaker;
   };
 
   initial <-
@@ -40,6 +53,20 @@ CLASS BSM1_OL_ASM1 (* icon = ""; file = ""; *)  SPECIALISES CoupledModelType :=
 
   coupling <-
   {
+    connect(sub_models.ASU_1.interface.Outflow, sub_models.ASU_2.interface.Inflow);
+    connect(sub_models.Clarifier.interface.Underflow, sub_models.FS_2.interface.Inflow);
+    connect(sub_models.Municipality_1.interface.Influent_Load, sub_models.Well_1.interface.Inflow2);
+    connect(sub_models.FS_2.interface.Outflow2, sub_models.Waste_1.interface.Effluent_Load);
+    connect(sub_models.Clarifier.interface.Overflow, sub_models.out_1.interface.Effluent_Load);
+    connect(sub_models.ASU_2.interface.Outflow, sub_models._LoopBreaker_1_.interface.Inflow);
+    connect(sub_models._LoopBreaker_1_.interface.Outflow, sub_models.ASU_3.interface.Inflow);
+    connect(sub_models.ASU_3.interface.Outflow, sub_models.ASU_4.interface.Inflow);
+    connect(sub_models.ASU_4.interface.Outflow, sub_models.ASU_5.interface.Inflow);
+    connect(sub_models.FS_1.interface.Outflow2, sub_models.Well_1.interface.Inflow1);
+    connect(sub_models.ASU_5.interface.Outflow, sub_models.FS_1.interface.Inflow);
+    connect(sub_models.FS_1.interface.Outflow1, sub_models.Clarifier.interface.Inflow);
+    connect(sub_models.Well_1.interface.Outflow, sub_models.ASU_1.interface.Inflow);
+    connect(sub_models.FS_2.interface.Outflow1, sub_models.Well_1.interface.Inflow3);
 
   };
 :};

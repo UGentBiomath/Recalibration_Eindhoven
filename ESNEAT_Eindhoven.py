@@ -114,7 +114,6 @@ def eval_genome(genome, config):
         sim.drop(0, inplace=True, axis=0)
         sim.drop('#.t', inplace=True, axis=1)
         sim = sim.astype(float)
-        sim[".OUT_B.TSS"] = sim[".OUT_B.TSS"].div(1000)
         print(len(sim))
         # Create a common time grid based on the minimum and maximum of all time series
         common_time = np.linspace(start=max(real.index.min(), sim.index.min()),
