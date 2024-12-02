@@ -1,0 +1,85 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 15:21:58$
+ *
+ ******************************************************************************/
+
+ 
+#ifndef IUWS_CONVERTORS_WWTP
+#define IUWS_CONVERTORS_WWTP
+
+
+ CLASS CtoF
+ (* icon = "Connector" *)
+ "Concentration to Flux conversion model"
+ EXTENDS Convertors_WWTP_Base WITH
+ {:
+ 
+  comments <- "Concentration to Flux conversion model" ;
+
+  interface <-
+  {
+   OBJ Inflow (* terminal = "in_1" *) "Inflow" : WWTPConcTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+   OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+  };
+
+  equations <-
+  {
+   interface.Outflow[IndexOfSolvent] = - interface.Inflow[IndexOfSolvent] / parameters.WWTPSpecificVolume[IndexOfSolvent] ;
+   
+   {FOREACH Comp_Index IN {IndexOfFirstSolubleComponent .. NrOfComponents}:
+   		interface.Outflow[Comp_Index] = - interface.Inflow[Comp_Index] * interface.Inflow[IndexOfSolvent] ; };
+  };
+
+ :};
+
+
+ CLASS FtoC
+ (* icon = "Connector" *)
+ "Flux to Concentration conversion model"
+ EXTENDS Convertors_WWTP_Base WITH
+ {:
+ 
+  comments <- "Flux to Concentration conversion model" ;
+
+  interface <-
+  {
+   OBJ Inflow (* terminal = "in_1" *) "Inflow" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+   OBJ Outflow (* terminal = "out_1" *) "Outflow" : WWTPConcTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+  };
+
+  state <-
+  {
+   OBJ Q_In "Influent flow rate" : FlowRate := {: group <- "Operational" :};
+   OBJ InFluxPerComponent (* hidden = "1" *) "Vector containing incoming fluxes for all components" : MassFluxVector;
+  };
+
+  equations <-
+  {
+   interface.Outflow[IndexOfSolvent] = interface.Inflow[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent] ; 
+   
+   {FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}: state.InFluxPerComponent[Comp_Index] = 
+		SUMOVER In_Terminal IN {SelectByType(interface,InWWTPTerminal)}: (In_Terminal[Comp_Index]) ; };
+		
+   state.Q_In = state.InFluxPerComponent[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent] ; 
+   
+   {FOREACH Comp_Index IN {IndexOfFirstSolubleComponent .. NrOfComponents}:
+		interface.Outflow[Comp_Index] = IF (state.Q_In == 0) THEN 0.0
+			ELSE interface.Inflow[Comp_Index] / state.Q_In ;};
+
+  };
+
+ :};
+
+ 
+#endif // IUWS_CONVERTORS_WWTP

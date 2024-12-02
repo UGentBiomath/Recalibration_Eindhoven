@@ -1,0 +1,176 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 5. februar 2019 16:23:15$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_CONTROLLERS_MULTI_PISATURATION
+#define WWTP_CONTROLLERS_MULTI_PISATURATION
+
+
+CLASS MultiPI_Saturation (* icon = "controller_pi" *) "5 PI controllers with saturation"
+EXTENDS BasePIMultiSaturation WITH
+{:
+  comments <- "5 PI controllers with saturation";
+  
+  equations <-
+  {
+    state.u1help = interface.u01 + interface.K1_P * (state.e1 + (1 / interface.T1_I) * state.Integ_e1) ;  
+    state.u2help = interface.u02 + interface.K2_P * (state.e2 + (1 / interface.T2_I) * state.Integ_e2) ;  
+    state.u3help = interface.u03 + interface.K3_P * (state.e3 + (1 / interface.T3_I) * state.Integ_e3) ;  
+    state.u4help = interface.u04 + interface.K4_P * (state.e4 + (1 / interface.T4_I) * state.Integ_e4) ;  
+    state.u5help = interface.u05 + interface.K5_P * (state.e5 + (1 / interface.T5_I) * state.Integ_e5) ;  
+  };
+
+:};
+
+
+CLASS BasePIMultiSaturation "Base class for 5 PI controllers with saturation"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  {
+    OBJ y_M1 (* terminal = "in_1" *) "Probe no.1" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+    OBJ y_M2 (* terminal = "in_1" *) "Probe no.2" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+    OBJ y_M3 (* terminal = "in_1" *) "Probe no.3" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+    OBJ y_M4 (* terminal = "in_1" *) "Probe no.4" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+    OBJ y_M5 (* terminal = "in_1" *) "Probe no.5" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+    //
+    OBJ y_S1  (* terminal = "in_2"; manip = "1" *) "Set-point no.1" : Real := {: causality <- "CIN" ; value <- 2 ; group <- "Set-point" :};
+    OBJ y_S2  (* terminal = "in_2"; manip = "1" *) "Set-point no.2" : Real := {: causality <- "CIN" ; value <- 2 ; group <- "Set-point" :};
+    OBJ y_S3  (* terminal = "in_2"; manip = "1" *) "Set-point no.3" : Real := {: causality <- "CIN" ; value <- 2 ; group <- "Set-point" :};
+    OBJ y_S4  (* terminal = "in_2"; manip = "1" *) "Set-point no.4" : Real := {: causality <- "CIN" ; value <- 2 ; group <- "Set-point" :};
+    OBJ y_S5  (* terminal = "in_2"; manip = "1" *) "Set-point no.5" : Real := {: causality <- "CIN" ; value <- 2 ; group <- "Set-point" :};
+    //
+    OBJ u1_Min  (* terminal = "in_2"; manip = "1" *) "Minimum control action" : Real := {: causality <- "CIN" ;value <- 0 ; group <- "Ctl 1" :};
+    OBJ u1_Max  (* terminal = "in_2"; manip = "1" *) "Maximum control action" : Real := {: causality <- "CIN" ;value <- 1000 ; group <- "Ctl 1" :};
+    OBJ K1_P  (* terminal = "in_2"; manip = "1" *) "Factor of proportionality" :Real := {: causality <- "CIN" ; value <- 25 ; group <- "Ctl 1" :};
+    OBJ T1_I  (* terminal = "in_2"; manip = "1" *) "Integral time" : Time := {: causality <- "CIN" ; value <- 0.1 ; group <- "Ctl 1" :};
+    OBJ u01 (* terminal = "in_2"; manip = "1" *) "No error action" : Real := {: causality <- "CIN" ; value <- 50 ; group <- "Ctl 1" :};
+
+    OBJ u2_Min  (* terminal = "in_2"; manip = "1" *) "Minimum control action" : Real := {: causality <- "CIN" ;value <- 0 ; group <- "Ctl 2" :};
+    OBJ u2_Max  (* terminal = "in_2"; manip = "1" *) "Maximum control action" : Real := {: causality <- "CIN" ;value <- 1000 ; group <- "Ctl 2" :};
+    OBJ K2_P  (* terminal = "in_2"; manip = "1" *) "Factor of proportionality" :Real := {: causality <- "CIN" ; value <- 25 ; group <- "Ctl 2" :};
+    OBJ T2_I  (* terminal = "in_2"; manip = "1" *) "Integral time" : Time := {: causality <- "CIN" ; value <- 0.1 ; group <- "Ctl 2" :};
+    OBJ u02 (* terminal = "in_2"; manip = "1" *) "No error action" : Real := {: causality <- "CIN" ; value <- 50 ; group <- "Ctl 2" :};
+    
+    OBJ u3_Min  (* terminal = "in_2"; manip = "1" *) "Minimum control action" : Real := {: causality <- "CIN" ;value <- 0 ; group <- "Ctl 3" :};
+    OBJ u3_Max  (* terminal = "in_2"; manip = "1" *) "Maximum control action" : Real := {: causality <- "CIN" ;value <- 1000 ; group <- "Ctl 3" :};
+    OBJ K3_P  (* terminal = "in_2"; manip = "1" *) "Factor of proportionality" :Real := {: causality <- "CIN" ; value <- 25 ; group <- "Ctl 3" :};
+    OBJ T3_I  (* terminal = "in_2"; manip = "1" *) "Integral time" : Time := {: causality <- "CIN" ; value <- 0.1 ; group <- "Ctl 3" :};
+    OBJ u03 (* terminal = "in_2"; manip = "1" *) "No error action" : Real := {: causality <- "CIN" ; value <- 50 ; group <- "Ctl 3" :};
+
+    OBJ u4_Min  (* terminal = "in_2"; manip = "1" *) "Minimum control action" : Real := {: causality <- "CIN" ;value <- 0 ; group <- "Ctl 4" :};
+    OBJ u4_Max  (* terminal = "in_2"; manip = "1" *) "Maximum control action" : Real := {: causality <- "CIN" ;value <- 1000 ; group <- "Ctl 4" :};
+    OBJ K4_P  (* terminal = "in_2"; manip = "1" *) "Factor of proportionality" :Real := {: causality <- "CIN" ; value <- 25 ; group <- "Ctl 4" :};
+    OBJ T4_I  (* terminal = "in_2"; manip = "1" *) "Integral time" : Time := {: causality <- "CIN" ; value <- 0.1 ; group <- "Ctl 4" :};
+    OBJ u04 (* terminal = "in_2"; manip = "1" *) "No error action" : Real := {: causality <- "CIN" ; value <- 50 ; group <- "Ctl 4" :};
+
+    OBJ u5_Min  (* terminal = "in_2"; manip = "1" *) "Minimum control action" : Real := {: causality <- "CIN" ;value <- 0 ; group <- "Ctl 5" :};
+    OBJ u5_Max  (* terminal = "in_2"; manip = "1" *) "Maximum control action" : Real := {: causality <- "CIN" ;value <- 1000 ; group <- "Ctl 5" :};
+    OBJ K5_P  (* terminal = "in_2"; manip = "1" *) "Factor of proportionality" :Real := {: causality <- "CIN" ; value <- 25 ; group <- "Ctl 5" :};
+    OBJ T5_I  (* terminal = "in_2"; manip = "1" *) "Integral time" : Time := {: causality <- "CIN" ; value <- 0.1 ; group <- "Ctl 5" :};
+    OBJ u05 (* terminal = "in_2"; manip = "1" *) "No error action" : Real := {: causality <- "CIN" ; value <- 50 ; group <- "Ctl 5" :};
+    //
+    OBJ u1 (* terminal = "out_1" *) "Action no.1" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+    OBJ u2 (* terminal = "out_1" *) "Action no.2" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+    OBJ u3 (* terminal = "out_1" *) "Action no.3" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+    OBJ u4 (* terminal = "out_1" *) "Action no.4" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+    OBJ u5 (* terminal = "out_1" *) "Action no.5" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+  };
+
+  independent <- 
+  { 
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+  };
+
+  state <-
+  {
+    OBJ e1 "Error no.1" : PhysicalQuantityType := {: group <- "Operational" :};
+    OBJ e2 "Error no.2" : PhysicalQuantityType := {: group <- "Operational" :};
+    OBJ e3 "Error no.3" : PhysicalQuantityType := {: group <- "Operational" :};
+    OBJ e4 "Error no.4" : PhysicalQuantityType := {: group <- "Operational" :};
+    OBJ e5 "Error no.5" : PhysicalQuantityType := {: group <- "Operational" :};
+    OBJ Integ_e1 (* hidden = "1" *) "Integral of error no.1": PhysicalQuantityType := {: group <- "Operational" :};
+    OBJ Integ_e2 (* hidden = "1" *) "Integral of error no.2": PhysicalQuantityType := {: group <- "Operational" :};
+    OBJ Integ_e3 (* hidden = "1" *) "Integral of error no.3": PhysicalQuantityType := {: group <- "Operational" :};
+    OBJ Integ_e4 (* hidden = "1" *) "Integral of error no.4": PhysicalQuantityType := {: group <- "Operational" :};
+    OBJ Integ_e5 (* hidden = "1" *) "Integral of error no.5": PhysicalQuantityType := {: group <- "Operational" :};
+    
+    OBJ help (* hidden = "1" *) "Previous time help variable" : Time;
+    
+    OBJ u1help (* hidden = "1" *) "Help variable to calculate the PI control action" : Real;
+    OBJ u2help (* hidden = "1" *) "Help variable to calculate the PI control action" : Real;
+    OBJ u3help (* hidden = "1" *) "Help variable to calculate the PI control action" : Real;
+    OBJ u4help (* hidden = "1" *) "Help variable to calculate the PI control action" : Real;
+    OBJ u5help (* hidden = "1" *) "Help variable to calculate the PI control action" : Real;
+    OBJ uhelp2_1 (* hidden = "1" *) "Help variable to calculate the PI control action after saturation" : Real ;   
+    OBJ uhelp2_2 (* hidden = "1" *) "Help variable to calculate the PI control action after saturation" : Real ;   
+    OBJ uhelp2_3 (* hidden = "1" *) "Help variable to calculate the PI control action after saturation" : Real ;   
+    OBJ uhelp2_4 (* hidden = "1" *) "Help variable to calculate the PI control action after saturation" : Real ;   
+    OBJ uhelp2_5 (* hidden = "1" *) "Help variable to calculate the PI control action after saturation" : Real ;   
+  };
+
+  initial <-
+  {
+    state.Integ_e1 = 0.0 ;
+    state.Integ_e2 = 0.0 ;
+    state.Integ_e3 = 0.0 ;
+    state.Integ_e4 = 0.0 ;
+    state.Integ_e5 = 0.0 ;
+  };
+
+  equations <-
+  {
+    state.e1 = interface.y_S1 - interface.y_M1;
+    state.e2 = interface.y_S2 - interface.y_M2;
+    state.e3 = interface.y_S3 - interface.y_M3;
+    state.e4 = interface.y_S4 - interface.y_M4;
+    state.e5 = interface.y_S5 - interface.y_M5;
+    
+    state.help = independent.t;
+    
+    DERIV(state.Integ_e1, [independent.t]) = state.e1 ;
+    DERIV(state.Integ_e2, [independent.t]) = state.e2 ;
+    DERIV(state.Integ_e3, [independent.t]) = state.e3 ;
+    DERIV(state.Integ_e4, [independent.t]) = state.e4 ;
+    DERIV(state.Integ_e5, [independent.t]) = state.e5 ;
+
+    state.uhelp2_1 = IF(state.u1help < interface.u1_Min) THEN (interface.u1_Min)
+      ELSE IF (state.u1help > interface.u1_Max) THEN interface.u1_Max 
+        ELSE state.u1help ;
+    state.uhelp2_2 = IF(state.u2help < interface.u2_Min) THEN (interface.u2_Min)
+      ELSE IF (state.u2help > interface.u2_Max) THEN interface.u2_Max 
+        ELSE state.u2help ;
+    state.uhelp2_3 = IF(state.u3help < interface.u3_Min) THEN (interface.u3_Min)
+      ELSE IF (state.u3help > interface.u3_Max) THEN interface.u3_Max 
+        ELSE state.u3help ;
+    state.uhelp2_4 = IF(state.u4help < interface.u4_Min) THEN (interface.u4_Min)
+      ELSE IF (state.u4help > interface.u4_Max) THEN interface.u4_Max 
+        ELSE state.u4help ;
+    state.uhelp2_5 = IF(state.u5help < interface.u5_Min) THEN (interface.u5_Min)
+      ELSE IF (state.u5help > interface.u5_Max) THEN interface.u5_Max 
+        ELSE state.u5help ;
+
+    interface.u1 = state.uhelp2_1;
+    interface.u2 = state.uhelp2_2;
+    interface.u3 = state.uhelp2_3;
+    interface.u4 = state.uhelp2_4;
+    interface.u5 = state.uhelp2_5;
+  };
+
+:}; 
+
+ 
+#endif // WWTP_CONTROLLERS_MULTI_PISATURATION

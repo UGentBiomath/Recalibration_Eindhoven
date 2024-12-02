@@ -1,0 +1,8 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ WaterLevel (* *) "Water level" : Length := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Hydraulics"; :};
+    OBJ rate01 (* *) "Removal rate for particulate COD" : Real := {: unit <- "g/(m3.d)"; group <- "Rates"; :};
+    OBJ rate02 (* *) "Removal rate for soluble COD" : Real := {: unit <- "g/(m3.d)"; group <- "Rates"; :};
+    OBJ rate03 (* *) "Removal rate for phosphate" : Real := {: unit <- "g/(m3.d)"; group <- "Rates"; :};
+    OBJ rate04 (* *) "Removal rate for ammonia" : Real := {: unit <- "g/(m3.d)"; group <- "Rates"; :};
+

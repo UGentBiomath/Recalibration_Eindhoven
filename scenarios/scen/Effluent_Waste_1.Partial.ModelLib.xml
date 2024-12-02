@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Tornado>
+<ModelLib Name="Effluent_Waste_1" Version="1.0">
+<Props>
+<Prop Name="TornadoVersion" Value="2016 Development"/>
+<Prop Name="Author" Value="DHI\eure"/>
+<Prop Name="Date" Value="Fri Apr 10 21:09:06 2015"/>
+<Prop Name="Desc" Value=""/>
+<Prop Name="FileName" Value="C:\Dev\Data\WEST\data\samples\BSM1_OL_ASM1\Effluent_Waste_1.Partial.ModelLib.xml|.Tornado"/>
+<Prop Name="DisplayName" Value=""/>
+<Prop Name="Includes" Value=""/>
+<Prop Name="IncludeNamespaces" Value=""/>
+</Props>
+<Models>
+<Model Name="Effluent_Waste_1" Desc="" Elems="" FileName="" IconName="" IsDefault="false" IsLoopBreaker="false" Parent="" SourceFileName="" SourceLineNo="0" Type="Model">
+<Params>
+<Param Name="WWTPSpecificVolume" ClassName="SpecificVolumeVector" DefaultValue="0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0" Desc="The specific volumes (= 1/density) of the components" Elems="H2O,S_ALK,S_I,S_ND,S_NH,S_NO,S_O,S_S,X_BA,X_BH,X_I,X_ND,X_P,X_S" Fixed="false" Group="" Hidden="true" IsFavorite="false" IsInner="false" IsOuter="false" LowerBound="" Manip="false" PDF="" Unit="" UpperBound=""/>
+</Params>
+<InterfaceVars>
+<InterfaceVar Name="Effluent_Load" Causality="Input" ClassName="InWWTPTerminal" DefaultValue="0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0" Desc="Effluent load" Elems="H2O,S_ALK,S_I,S_ND,S_NH,S_NO,S_O,S_S,X_BA,X_BH,X_I,X_ND,X_P,X_S" Fixed="false" Group="Effluent" Hidden="false" IsFavorite="false" IsFlow="true" IsInner="false" IsOuter="false" LowerBound="" Manip="false" PDF="" Terminal="in_1" Unit="" UpperBound=""/>
+</InterfaceVars>
+<StateVars>
+<StateVar Name="InFluxPerComponent" ClassName="MassFluxVector" DefaultValue="0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0" Derived="false" Desc="Vector containing incoming fluxes for all components" Elems="H2O,S_ALK,S_I,S_ND,S_NH,S_NO,S_O,S_S,X_BA,X_BH,X_I,X_ND,X_P,X_S" Fixed="false" Group="" Hidden="true" IsFavorite="false" IsInner="false" IsOuter="false" LowerBound="" Manip="false" PDF="" Unit="" UpperBound=""/>
+<StateVar Name="Outflow" ClassName="WWTPConcTerminal" DefaultValue="0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0" Derived="false" Desc="Temporary variable" Elems="H2O,S_ALK,S_I,S_ND,S_NH,S_NO,S_O,S_S,X_BA,X_BH,X_I,X_ND,X_P,X_S" Fixed="false" Group="" Hidden="false" IsFavorite="false" IsInner="false" IsOuter="false" LowerBound="" Manip="false" PDF="" Unit="" UpperBound=""/>
+<StateVar Name="Q_In" ClassName="FlowRate" DefaultValue="0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0" Derived="false" Desc="Effluent flow rate" Elems="" Fixed="false" Group="" Hidden="false" IsFavorite="false" IsInner="false" IsOuter="false" LowerBound="" Manip="false" PDF="" Unit="" UpperBound=""/>
+</StateVars>
+</Model>
+</Models>
+</ModelLib>
+</Tornado>

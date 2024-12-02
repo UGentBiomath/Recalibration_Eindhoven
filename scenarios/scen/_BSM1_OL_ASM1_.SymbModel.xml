@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Tornado>
+<Model Version="1.0">
+<Props>
+<Prop Name="TornadoVersion" Value="2023 "/>
+<Prop Name="Author" Value="UGENT\cgomezco"/>
+<Prop Name="Date" Value="Mon Dec  2 12:53:00 2024"/>
+<Prop Name="FileName" Value="./_BSM1_OL_ASM1_.SymbModel.xml"/>
+</Props>
+<Exec FileName="_BSM1_OL_ASM1_"/>
+<Symb>
+<Model Name="" Desc="">
+<Params>
+</Params>
+<IndepVars>
+<IndepVar Name="t" Desc="Time" Unit="d" DefaultValue="0.000000" LowerBound="0.000000" UpperBound="+INF" PDF="" Group="Time" Hidden="false" Fixed="false" Manip="false" IsFavorite="false"/>
+</IndepVars>
+<InputVars>
+</InputVars>
+<OutputVars>
+</OutputVars>
+<AlgVars>
+</AlgVars>
+<DerVars>
+</DerVars>
+<Models>
+</Models>
+</Model>
+</Symb>
+<Links>
+<Link Name=".t" ValueType="IndepVars" ValueIndex="0"/>
+</Links>
+</Model>
+</Tornado>

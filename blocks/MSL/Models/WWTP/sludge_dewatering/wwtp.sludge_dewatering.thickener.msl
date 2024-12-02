@@ -1,0 +1,100 @@
+/*******************************************************************************
+ *
+ *
+ ******************************************************************************/
+
+#ifndef SLUDGE_DEWATERING_DS_THICKENER
+#define SLUDGE_DEWATERING_DS_THICKENER
+
+CLASS DS_Thickener
+  (* icon = "dewatering_unit"; is_default = "true" *)
+  "Dewatering unit"
+  EXTENDS DS_DewateringModel WITH
+  {:
+  comments <- "A basic solids separation model for a sludge thickener based on desired DS of the centrate";
+  :};
+
+
+CLASS DS_DewateringModel
+ "Dewatering based on desired DS"
+ EXTENDS SolidSeparationModel WITH
+ {:
+
+  interface <-
+  {
+   	OBJ DS (* terminal = "in_2"; manip = "1" *) "Dry solids" : Real := {: causality <- "CIN"; value <- 5 ; group <- "Operational" :};
+	OBJ Q_Concentrate (* terminal = "in_2"; manip = "1" *) "Desired flow rate of the concentrated sludge" :FlowRate := {: causality <- "CIN" ; value <- 10 ; group <- "Operational" :};
+	OBJ e_X (* terminal = "out_2" *) "Separation efficiency (fraction of solids going to sludge flow)" : Fraction := {: causality <- "COUT" ; group <- "Operational" :}; 
+	OBJ X_In (* terminal = "out_2" *) "TSS in the influent flow" : Concentration := {: causality <- "COUT" ; group <- "Operational" :};
+	OBJ X_Concentrate (* terminal = "out_2" *) "TSS in the centrate flow" : Concentration := {: causality <- "COUT" ; group <- "Operational" :};
+	OBJ X_Permeate (* terminal = "out_2" *) "TSS in the permeate flow" : Concentration := {: causality <- "COUT" ; group <- "Operational" :};
+  };
+
+  state <-
+  {
+	OBJ help_Q_Conc (* hidden = "1" *) "Working variable for flow rate in the centrate flow" : FlowRate ;
+	OBJ help_X_Conc (* hidden = "1" *) "Working variable for TSS in the centrate flow" : MassFlux ;
+	OBJ help_X_In (* hidden = "1" *) "Working variable for TSS in the influent flow" : MassFlux ;
+	OBJ X_Conc (* hidden = "1" *) "Working variable for TSS in the centrate flow" : MassFlux ;
+	//
+//	OBJ help_e_X "Working variable for separation efficiency" : Real ;
+  };
+  
+  equations <-
+  {
+	// the actual sludge extraction cannot exceed the flow going in
+	state.help_Q_Conc = IF (state.Q_In <= interface.Q_Concentrate)
+		THEN state.Q_In
+		ELSE interface.Q_Concentrate ;
+	state.Q_Concentrate_Actual = - state.X_Conc / ((interface.DS / 100) * parameters.rho_sludge) ;
+	//
+	// balance of the FLOWRATES across the point-node
+	state.Q_Permeate = state.Q_In - state.Q_Concentrate_Actual ;
+
+	state.f_Out = IF (state.Q_In <= 0.0) THEN 0.0 ELSE (state.Q_In - state.Q_Concentrate_Actual) / state.Q_In ;
+	
+	state.help_X_Conc = - (interface.DS / 100) * state.help_Q_Conc * parameters.rho_sludge ;
+	state.X_Conc = IF (- state.help_X_Conc >= state.help_X_In)
+		THEN - 0.99 * state.help_X_In
+		ELSE state.help_X_Conc ;
+	//
+	// Mass Balance :: Solubles + water in the PERMEATE
+	{FOREACH Comp_Index IN {IndexOfSolvent .. IndexOfLastSolubleComponent}:
+		interface.OutflowPermeate[Comp_Index] = - state.InFluxPerComponent[Comp_Index] * state.f_Out ; };
+	// Mass Balance :: Solubles + water in the CONCENTRATE
+	{FOREACH Comp_Index IN {IndexOfSolvent .. IndexOfLastSolubleComponent}:
+		interface.OutflowConcentrate[Comp_Index] = - state.InFluxPerComponent[Comp_Index] * (1 - state.f_Out) ; };
+	//
+	// for categories which DO NOT have a TSS state variable, eg ASM1
+	#ifdef CalculateTSSComponent
+	state.help_X_In = (SUMOVER Comp_Index IN {IndexOfFirstTSSComponent .. IndexOfLastTSSComponent}:
+		(interface.Inflow[Comp_Index]) * parameters.F_TSS_COD);
+	#endif // CalculateTSSComponent
+	//
+	// for categories which DO have a TSS state variable, eg ASM2
+	#ifdef UseTSSComponent
+	state.help_X_In = interface.Inflow[IndexOfTSSComponent] ;
+	#endif // UseTSSComponent 
+
+	//
+	// Mass Balance :: Particulates in the PERMEATE
+	{FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+		interface.OutflowPermeate[Comp_Index] = IF (state.Q_Concentrate_Actual == 0.0)
+			THEN - state.InFluxPerComponent[Comp_Index]
+			ELSE - state.InFluxPerComponent[Comp_Index] * (1 - interface.e_X) ; };   
+	//
+	// Mass Balance :: Particulates in the CONCENTRATE
+	{FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+		interface.OutflowConcentrate[Comp_Index] = - state.InFluxPerComponent[Comp_Index] * interface.e_X ; };
+
+	// implementation of the sensors
+  interface.e_X = IF (state.help_X_In <= 0.0) THEN 0.0 ELSE - state.X_Conc / state.help_X_In ; 
+  interface.X_In = state.help_X_In / state.Q_In ; 
+  interface.X_Concentrate = IF (state.Q_Concentrate_Actual <= 0.0) THEN 0.0 ELSE - state.X_Conc / state.Q_Concentrate_Actual ; 
+  interface.X_Permeate = IF (state.Q_Permeate <= 0.0) THEN 0.0 ELSE (state.help_X_In + state.X_Conc) / state.Q_Permeate ;
+  }; 
+ 
+ :};
+
+
+#endif    // SLUDGE_DEWATERING_DS_THICKENER

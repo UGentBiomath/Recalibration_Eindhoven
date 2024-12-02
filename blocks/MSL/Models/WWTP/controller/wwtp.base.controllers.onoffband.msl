@@ -1,0 +1,70 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:47$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_CONTROLLERS_ONOFFBAND
+#define WWTP_BASE_CONTROLLERS_ONOFFBAND
+
+CLASS OnOffBand (* icon = "controller_on_off" ; is_default = "true" *)
+"On-off controller with a band"
+SPECIALISES PhysicalDAEModelType :=
+{:
+  comments <- "A model for an on-off controller";
+
+  interface <-
+  {
+    OBJ y_M (* terminal = "in_1"; is_favorite = "1" *) "Sensor measured output" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+    OBJ u (* terminal = "out_1"; is_favorite = "1" *) "Controlled variable" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+//    OBJ y_S (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Setpoint value for controlled variable" :  Real := {: causality <- "CIN" ; value <- 2  ; group <- "Operational":};
+    OBJ y_Min (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Minimum allowed measured value" :  Real := {: causality <- "CIN" ; value <- 1.8  ; group <- "Operational":};
+    OBJ y_Max (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Maximum allowed measured value" :  Real := {: causality <- "CIN" ; value <- 2.2  ; group <- "Operational":};
+    // u_On -> u_Min, u_Off -> u_Max 
+    OBJ u_Max (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Output when measured value is y_Max" :  Real := {: causality <- "CIN" ; value <- 10 ; group <- "Operational" :};
+    OBJ u_Min  (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Output when measured value is y_Min"  :  Real := {: causality <- "CIN" ; value <- 20 ; group <- "Operational" :};
+  };
+
+  independent <- 
+  { 
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+  };
+
+  state <-
+  {
+    OBJ e (* is_favorite = "1" *) "Error" : PhysicalQuantityType := {: group <- "Operational" :};
+    OBJ help_y_S (* hidden = "1" *) "Set-point (mid point between Min-Max)" : Real := {: group <- "Operational" :};
+    OBJ help_u (* hidden = "1" *) "Previous u help variable" : Real;
+    OBJ help_t (* hidden = "1" *) "Previous t help variable" : Real;
+  };
+
+  equations <-
+  {
+    // (2014) state.e = interface.y_S - interface.y_M;
+    state.e = state.help_y_S - interface.y_M;
+    
+    state.help_y_S = (interface.y_Min + interface.y_Max) / 2.0 ;
+    state.help_u = interface.u;
+    state.help_t = independent.t;
+    
+    interface.u = IF(interface.y_M < interface.y_Min) THEN interface.u_Min
+      ELSE IF (interface.y_M > interface.y_Max) THEN interface.u_Max
+        ELSE IF (previous(state.help_t) >= independent.t) THEN interface.u_Min
+          ELSE previous(state.help_u) ;
+  };
+
+ :};
+
+ 
+#endif // WWTP_BASE_CONTROLLERS_ONOFFBAND
+

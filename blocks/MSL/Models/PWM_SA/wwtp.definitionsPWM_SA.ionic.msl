@@ -1,0 +1,60 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:37$
+ *
+ ******************************************************************************/
+
+TYPE IonicSpecies
+  "The ionic species considered in the PWM_SA model"
+  = ENUM { H, Na, K, Ca, Mg, NH4, Cl, Ac, Pr, HCO3, SO4, HPO4,
+                OH, H2CO3, CaCO3, MgCO3, CaHCO3, MgHCO3, CO3,
+                H2PO4, MgPO4, CaPO4, MgHPO4, CaHPO4, PO4,
+                HAc, HPr, NH3, CaSO4, MgSO4, CaOH, MgOH,
+                NH4SO4, NaHPO4, NaCO3, NaHCO3, MgH2PO4, 
+                CaAc, NaAc, MgAc, CaPr, MgPr, NaSO4,};
+
+TYPE IonicComponents
+  "The ion components considered in the PWM_SA model"
+  = ENUM { H_, Na_, K_, Ca_, Mg_, NH4_, Cl_, Ac_, Pr_, CO3_, 
+           SO4_, PO4_,};
+
+TYPE IonicEquilibria
+  "The ionic equilibrium reactions in the PWM_SA model"
+  = ENUM {h2co3, hco3, h2po4, hpo4, hac, hpr, nh4, h2o, caso4, 
+              mgso4, caco3, mgco3,
+              cahco3, mghco3, caoh, mgoh, capo4, mgpo4, cahpo4, mghpo4,
+              nh4so4, nahpo4, naco3, nahco3, mgh2po4, 
+              caac, naac, mgac, capr, mgpr, naso4,
+              } ;
+   		   
+		   
+OBJ NoIonicComponents "The number of ionic components in the PWM_SA model"
+  : Integer := Cardinality(IonicComponents);
+
+OBJ NoIonicSpecies "The number of ionic species in the PWM_SA model"
+  : Integer := Cardinality(IonicSpecies);
+
+OBJ NoIonicEquilibria "The number of ionic reactions in the PWM_SA model"
+  : Integer := Cardinality(IonicEquilibria);
+  
+TYPE IonicComponentMolalities
+  "The variables which are passed to the speciation routine"
+ = Real[NoIonicComponents;];
+ 
+ TYPE IonicSpeciesMolalities
+  "The variables which are received from the speciation routine"
+ = Real[NoIonicSpecies;];
+
+ TYPE IonEquilibriumConstants
+   " The equilibrium constants which are usied in the speciation routine"
+= Real[NoIonicEquilibria;];

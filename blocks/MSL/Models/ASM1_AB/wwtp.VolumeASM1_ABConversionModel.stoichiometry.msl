@@ -1,0 +1,45 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    state.Stoichiometry[AerGrowthOHOfast][S_O] := - (1 - parameters.Y_OHO) / parameters.Y_OHO;
+    state.Stoichiometry[AerGrowthOHOfast][S_NHx] := - parameters.i_X_B;
+    state.Stoichiometry[AerGrowthOHOfast][S_Alk] := - parameters.i_X_B / 14;
+    state.Stoichiometry[AerGrowthOHOfast][X_OHO] := 1;
+    state.Stoichiometry[AerGrowthOHOslow][S_O] := - (1 - parameters.Y_OHO) / parameters.Y_OHO;
+    state.Stoichiometry[AerGrowthOHOslow][S_NHx] := - parameters.i_X_B;
+    state.Stoichiometry[AerGrowthOHOslow][S_Alk] := - parameters.i_X_B / 14;
+    state.Stoichiometry[AerGrowthOHOslow][X_OHO] := 1;
+    state.Stoichiometry[AnGrowthOHO][S_Bf] := - 1 / parameters.Y_OHO;
+    state.Stoichiometry[AnGrowthOHO][S_NOx] := - (1 - parameters.Y_OHO) / (2.86 * parameters.Y_OHO);
+    state.Stoichiometry[AnGrowthOHO][S_NHx] := - parameters.i_X_B;
+    state.Stoichiometry[AnGrowthOHO][S_Alk] := ((1 - parameters.Y_OHO) / (14 * 2.86 * parameters.Y_OHO)) - (parameters.i_X_B / 14);
+    state.Stoichiometry[AnGrowthOHO][X_OHO] := 1;
+    state.Stoichiometry[AerGrowthANO][S_O] := - (4.57 - parameters.Y_ANO) / parameters.Y_ANO;
+    state.Stoichiometry[AerGrowthANO][S_NOx] := 1 / parameters.Y_ANO;
+    state.Stoichiometry[AerGrowthANO][S_NHx] := - parameters.i_X_B - 1 / parameters.Y_ANO;
+    state.Stoichiometry[AerGrowthANO][S_Alk] := - (parameters.i_X_B / 14) - (1 / (7 * parameters.Y_ANO));
+    state.Stoichiometry[AerGrowthANO][X_ANO] := 1;
+    state.Stoichiometry[DecayOHO][X_B] := 1 - parameters.f_U;
+    state.Stoichiometry[DecayOHO][X_OHO] := - 1;
+    state.Stoichiometry[DecayOHO][X_E] := parameters.f_U;
+    state.Stoichiometry[DecayOHO][X_NB] := parameters.i_X_B - parameters.f_U * parameters.i_X_U;
+    state.Stoichiometry[DecayANO][X_B] := 1 - parameters.f_U;
+    state.Stoichiometry[DecayANO][X_ANO] := - 1;
+    state.Stoichiometry[DecayANO][X_E] := parameters.f_U;
+    state.Stoichiometry[DecayANO][X_NB] := parameters.i_X_B - parameters.f_U * parameters.i_X_U;
+    state.Stoichiometry[AmmonifSolOrgN][S_NHx] := 1;
+    state.Stoichiometry[AmmonifSolOrgN][S_NB] := - 1;
+    state.Stoichiometry[AmmonifSolOrgN][S_Alk] := 1 / 14;
+    state.Stoichiometry[HydrolEntrapOrg][S_Bs] := 1;
+    state.Stoichiometry[HydrolEntrapOrg][X_B] := - 1;
+    state.Stoichiometry[HydrolEntrapOrgN][S_NB] := 1;
+    state.Stoichiometry[HydrolEntrapOrgN][X_NB] := - 1;
+    state.Stoichiometry[FlocculatCB][C_B] := -1;
+    state.Stoichiometry[FlocculatCB][X_B] := 1;
+    state.Stoichiometry[FlocculatCU][C_U] := -1;
+    state.Stoichiometry[FlocculatCU][X_U] := 1;
+    state.Stoichiometry[HydrolXSTO][S_Bs] := 1;
+    state.Stoichiometry[HydrolXSTO][X_STO] := -1;
+    state.Stoichiometry[HydrolXEPS][S_Bs] := 1;
+    state.Stoichiometry[HydrolXEPS][X_EPS] := -1;
+    state.Stoichiometry[Aerat][S_O] := 1;
+

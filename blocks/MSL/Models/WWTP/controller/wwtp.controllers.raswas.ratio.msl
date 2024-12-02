@@ -1,0 +1,48 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:56$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_CONTROLLERS_RASWAS_RATIO
+#define WWTP_CONTROLLERS_RASWAS_RATIO
+
+
+//CLASS RAS_WAS_Ratio (* icon = "controller_ratio" *)
+CLASS Ctl_Qas_Ratio (* icon = "controller_ratio" *)
+"Ratio-based controller for ML, RAS and WAS in an AS system"
+//EXTENDS RAS_WAS_Base WITH
+EXTENDS Ctl_Qas_Base WITH
+{:
+  comments <- "Ratio-based controller for ML, RAS and WAS in an AS system";
+  
+  interface <-
+  {
+    OBJ R_ML (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Q ML / Q-in ratio" : Real := {: causality <- "CIN" ; value <- 3.0 ; group <- "Operation" :};
+    OBJ R_RAS (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Q RAS / Q-in ratio" : Real := {: causality <- "CIN" ; value <- 1.0 ; group <- "Operation" :};
+    OBJ R_WAS (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Q WAS / Q-in ratio" : Real := {: causality <- "CIN" ; value <- 0.015 ; group <- "Operation" :};
+  };
+  
+  equations <-
+  {
+    interface.Q_ML = interface.R_ML * interface.y_Q ;
+    interface.Q_Under = (interface.R_RAS + interface.R_WAS) * interface.y_Q ;
+    interface.Q_RAS = interface.R_RAS * interface.y_Q ;    
+    interface.Q_WAS = interface.R_WAS * interface.y_Q ;
+  };
+  
+:};
+
+
+#endif // WWTP_CONTROLLERS_RASWAS_RATIO

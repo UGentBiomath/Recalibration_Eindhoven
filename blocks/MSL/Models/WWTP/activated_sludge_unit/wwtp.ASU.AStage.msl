@@ -1,0 +1,222 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:55$
+ *
+ ******************************************************************************/
+ 
+ 
+#ifndef WWTP_ASU_ASTAGE
+#define WWTP_ASU_ASTAGE
+
+#ifdef ASM1Temp
+
+#include "WWTP/activated_sludge_unit/wwtp.ASU.AStage.fixvolumeasu.msl"
+#include "WWTP/transformers/wwtp.transformers.AStage.msl"
+
+
+CLASS FixVolumeASU_AStage (* icon = "activated_sludge_unit" *)
+SPECIALISES CoupledModelType :=
+{:
+
+  comments <- "Constant volume Activated Sludge tank for A-stage, incl. in- and out transformers from/to ASM1";
+
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+    OBJ f_S_Bs (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Slowly- to total biodegradable soluble organics" : Fraction := {: causality <- "CIN" ; value <- 0.589 ; group <- "Influent" :};
+    OBJ f_C_B (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Colloidal biodegradable to total suspended biodegradable organics" : Fraction := {: causality <- "CIN" ; value <- 0.124 ; group <- "Influent" :};
+    OBJ f_C_U (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Colloidal non-biodegradable to total suspended non-biodegradable organics" : Fraction := {: causality <- "CIN" ; value <- 0.114 ; group <- "Influent" :};
+//vers.#2    OBJ C_U (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Colloidal non-biodegradable organics" : Concentration := {: causality <- "CIN" ; value <- 4.0 ; group <- "Influent" :};
+    OBJ f_X_STO (* terminal = "in_2"; manip = "1" *) "Fraction of intracellular storage polymeric substances" : Fraction := {: causality <- "CIN" ; value <- 0.0005 ; group <- "Influent" :};
+    OBJ f_X_EPS (* terminal = "in_2"; manip = "1" *) "Fraction of extracellular polymeric substances" : Fraction := {: causality <- "CIN" ; value <- 0.00003 ; group <- "Influent" :};
+    OBJ Temp (* terminal = "in_2"; manip = "1"; *) "Temperature of the activated sludge" : CelsiusTemperature := {: causality <- "CIN"; value <- 15 ; group <- "Operational" :};
+    OBJ Kla (* terminal = "in_2"; manip = "1" *) "Oxygen transfer coefficient" : OxygenTransferCoefficient := {: causality <- "CIN"; value <- 0 ; group <- "Operational" :};
+    // ASM1 sensors
+    OBJ AUR (* terminal = "out_2" *) "Ammonium Uptake Rate" : AmmoniumUptakeRate := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ DO (* is_favorite = "1"; terminal = "out_2" *) "Dissolved oxygen concentration" : DissolvedOxygen := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ Kla_ASU (* terminal = "out_2" *) "Kla" : OxygenTransferCoefficient := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ NH4 (* terminal = "out_2" *) "Ammonium concentration" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ NO3 (* terminal = "out_2" *) "Nitrate+Nitrite concentration" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ NPR (* terminal = "out_2" *) "Nitrate Production Rate" : NitrateProductionRate := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ NUR (* terminal = "out_2" *) "Nitrate Uptake Rate" : NitrateUptakeRate := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ OUR_ASU (* terminal = "out_2" *) "Oxygen Uptake Rate" : OxygenUptakeRate := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ BOD (* terminal = "out_2" *) "Biological Oxygen Demand" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ TKN (* terminal = "out_2" *) "Total Kjeldal nitrogen concentration" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ COD (* terminal = "out_2" *) "Chemical Oxygen Demand" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ TN (* terminal = "out_2" *) "Total nitrogen concentration" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ TSS (* is_favorite = "1"; terminal = "out_2" *) "Total suspended solids" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ V_ASU (* terminal = "out_2" *) "Volume" : Volume := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ AerationEnergy (* terminal = "out_2" *) "Aeration energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ AerationPower (* terminal = "out_2" *) "Aeration power" : Power := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ MixingEnergy (* terminal = "out_2" *) "Mixing energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ MixingPower (* terminal = "out_2" *) "Mixing power" : Power := {: causality <- "COUT"; group <- "Energy" :};
+  };
+
+  parameters <-
+  {
+   //PERA 15.08.2019
+    OBJ F_BOD_COD "Conversion factor BOD/COD" : Fraction := {: unit <- "-"; value <- 0.65; group <- "Conversion factors"; :};
+    OBJ F_TSS_COD "Fraction TSS/COD" : Fraction := {: unit <- "-"; value <- 0.75; group <- "Conversion factors"; :};
+    OBJ i_CB (* *) "Biomass COD to VSS ratio (for X_OHO)" : Ratio := {: value <- 1.42; group <- "Composition parameters"; :};
+//    OBJ i_CV (* *) "Particulate COD to VSS ratio" : Ratio := {: value <- 1.86; group <- "Composition parameters"; :};
+    OBJ i_X_B (* *) "Nitrogen content of biomass" : MassOfNitrogenPerMassOfCODInBiomass := {: unit <- "gN/gCOD"; value <- 0.086; group <- "Composition parameters"; :};
+    OBJ i_X_U (* *) "Nitrogen content of product from biomass" : MassOfNitrogenPerMassOfCODInProdFromBiomass := {: unit <- "gN/gCOD"; value <- 0.06; group <- "Composition parameters"; :};
+    OBJ f_U (* *) "Fraction of X_U generated in biomass decay" : FractOfBiomassLeadingToPartProd := {: value <- 0.08; group <- "Stoichiometry"; :};
+    OBJ f_dia (* *) "Dual substrate (0) vs. diauxic (1) model for S_Bs uptake" : Integer := {: value <- 0; interval <- {: lowerBound <- 0; upperBound <- 1; :}; group <- "Kinetics"; :};
+    OBJ f_Shunt_max (* *) "Fraction of X_STO in the active biomass" : Real := {: unit <- "-"; value <- 0.30; group <- "Kinetics"; :};
+    OBJ Y_ANO "Yield for ANOs growth per S_NO3" : YieldForAutotrophicBiomass := {: value <- 0.24; group <- "Stoichiometry"; :};
+//    OBJ Y_OHO_Aer "Yield for aerobic OHOs growth" : YieldForHeterotrophicBiomass := {: value <- 0.67; group <- "Stoichiometry"; :};
+//    OBJ Y_OHO_Anox "Yield for anoxic OHOs growth" : YieldForHeterotrophicBiomass := {: value <- 0.54; group <- "Stoichiometry"; :};
+    OBJ Y_OHO "Yield for OHOs growth" : YieldForHeterotrophicBiomass := {: value <- 0.67; group <- "Stoichiometry"; :};
+//    OBJ Y_STO "Yield for S_B storage and enmeshment" : YieldForHeterotrophicBiomass := {: value <- 0.9; group <- "Stoichiometry"; :};
+    OBJ mu_ANO (* *) "Max specific growth rate of ANOs" : MaxSpecifGrowthRateAutotr := {: value <- 0.8; group <- "Kinetics - ANO growth and decay"; :};
+    OBJ mu_OHO (* *) "Max specific growth rate of OHOs" : MaxSpecifGrowthRateHetero := {: value <- 7; group <- "Kinetics - OHO growth and decay"; :};
+    OBJ mu_OHOs (* *) "Max specific growth rate of OHOs on S_Bs" : MaxSpecifGrowthRateHetero := {: value <- 3; group <- "Kinetics - OHO growth and decay"; :};
+    OBJ b_ANO (* *) "Decay rate for ANO" : DecayCoeffAutotr := {: value <- 0.15; group <- "Kinetics - ANO growth and decay"; :};
+    OBJ b_OHO (* *) "Decay rate for OHO" : DecayCoeffHeterotr := {: value <- 0.62; group <- "Kinetics - OHO growth and decay"; :};
+//    OBJ q_EPS_hyd (* *) "Rate constant for EPS hydrolysis" : RateConstant := {: value <- 0.16; group <- "Kinetics - hydrolysis"; :};
+//    OBJ q_STO (* *) "Rate constant for growth on X_STO" : RateConstant := {: value <- 2; group <- "Kinetics - OHO growth and decay"; :};
+    OBJ q_STO_hyd (* *) "Rate constant for storage hydrolysis" : RateConstant := {: value <- 3.0; group <- "Kinetics - hydrolysis"; :};
+//    OBJ q_XB_hyd (* *) "Maximum specific hydrolysis rate" : MaxSpecificHydrolysisRate := {: value <- 2.75; group <- "Kinetics - hydrolysis"; :};
+    OBJ q_XB_hyd (* *) "Maximum specific hydrolysis rate" : MaxSpecificHydrolysisRate := {: value <- 3.5; group <- "Kinetics - hydrolysis"; :};
+//  OBJ q_ads (* *) "Rate constant for adsorption" : RateConstant := {: value <- 0.06; group <- "Kinetics - adsorption"; :};
+    OBJ q_ads (* *) "Rate constant for adsorption" : RateConstant := {: value <- 0.07; group <- "Kinetics - adsorption"; :};
+//    OBJ K_B_STO (* *) "Half-saturation coefficient for storage of S_B" : HalfSatCoeffForHetero := {: value <- 5; group <- "Kinetics - OHO growth and decay"; :};
+    OBJ K_B_hyd (* *) "Half saturation coefficient for hydrolysis of slowly biodegradable substrate" : HalfSatCoeffForHydrolysis := {: value <- 0.03; group <- "Kinetics - hydrolysis"; :};
+//    OBJ K_Bf (* *) "S_Bf half-saturation coeff for OHO" : HalfSatCoeffForHetero := {: value <- 20; group <- "Kinetics - OHO growth and decay"; :};
+    OBJ K_Bf (* *) "S_Bf half-saturation coeff for OHO" : HalfSatCoeffForHetero := {: value <- 5; group <- "Kinetics - OHO growth and decay"; :};
+    OBJ K_Bs (* *) "S_Bs half-saturation coeff for OHO" : HalfSatCoeffForHetero := {: value <- 40; group <- "Kinetics - OHO growth and decay"; :};
+//    OBJ K_EPS (* *) "Half-saturation coefficient for EPS (X_OHO)" : HalfSatCoeffForHetero := {: value <- 100; group <- "Kinetics - hydrolysis"; :};
+    OBJ K_EPS (* *) "Half-saturation coefficient for EPS (X_OHO)" : HalfSatCoeffForHetero := {: value <- 50; group <- "Kinetics - hydrolysis"; :};
+    OBJ K_NHx_ANO (* *) "Half-saturation coefficient of ANOx for ammonium" : AmmonHalfSatCoeffForAutotr := {: value <- 1; group <- "Kinetics - ANO growth and decay"; :};
+    OBJ K_NHx_OHO (* *) "Saturation coeff of heterotrophs for ammonium" : SaturationCoefficient := {: value <- 0.05; group <- "Kinetics - OHO growth and decay"; :};
+    OBJ K_NOx_OHO (* *) "Nitrate half-saturation coefficient for denitrifying OHO" : NitrateHalfSatCoeffForDenitrifHetero := {: value <- 0.5; group <- "Kinetics - OHO growth and decay"; :};
+    OBJ K_O_ANO (* *) "Oxygen half-saturation coeff for ANO" : OxygenHalfSatCoeffForAutotr := {: value <- 0.4; group <- "Kinetics - ANO growth and decay"; :};
+    OBJ K_O_EPS (* *) "Oxygen half-saturation coefficient" : OxygenHalfSatCoeffForHetero := {: value <- 1.5; group <- "Kinetics - EPS"; :};
+//    OBJ K_O_OHO (* *) "Oxygen half-saturation coeff for OHO" : OxygenHalfSatCoeffForHetero := {: value <- 0.015; group <- "Kinetics - OHO growth and decay"; :};
+    OBJ K_O_OHO (* *) "Oxygen half-saturation coeff for OHO" : OxygenHalfSatCoeffForHetero := {: value <- 0.1; group <- "Kinetics - OHO growth and decay"; :};
+//    OBJ K_O_STO (* *) "Oxygen half-saturation coefficient for storage" : OxygenHalfSatCoeffForHetero := {: value <- 0.7; group <- "Kinetics - OHO growth and decay"; :};
+    OBJ K_O_STO (* *) "Oxygen half-saturation coefficient for storage" : OxygenHalfSatCoeffForHetero := {: value <- 1; group <- "Kinetics - OHO growth and decay"; :};
+   // OBJ K_SL (* *) "Half saturation coefficient for surface limitation" : HalfSatCoeffForHetero := {: value <- 0.009; group <- "Kinetics - adsorption"; :};
+    OBJ K_SL (* *) "Half saturation coefficient for surface limitation" : HalfSatCoeffForHetero := {: value <- 0.002; group <- "Kinetics - adsorption"; :};
+    OBJ K_STO_hyd (* *) "Hydrolysis half-saturation coefficient for X_STO (X_OHO)" : HalfSatCoeffForHydrolysis := {: value <- 0.15; group <- "Kinetics - hydrolysis"; :};
+//    OBJ k_EPS_max (* *) "EPS formation coefficient" : Ratio := {: value <- 0.2; group <- "Kinetics - EPS"; :};
+    OBJ k_EPS_max (* *) "EPS formation coefficient" : Ratio := {: value <- 0.25; group <- "Kinetics - EPS"; :};
+    OBJ k_a (* *) "Maximum specific ammonification rate" : AmmonificationRate := {: value <- 0.08; group <- "Kinetics - ammonification"; :};
+    OBJ n_g (* *) "Reduction factor for anoxic growth of OHOs" : CorrectionFactor := {: value <- 0.8; group <- "Kinetics - OHO growth and decay"; :};
+    OBJ n_hyd (* *) "Correction factor for anoxic hydrolysis" : CorrectionFactor := {: value <- 0.4; group <- "Kinetics - hydrolysis"; :};
+    OBJ OTR_Energy  "Oxygen transfer rate per energy input" : TransferRateEnergy := {: value <- 1800 ; group <- "Aeration" :}; 
+    OBJ Vol (* is_favorite = "1" *) "Volume of the tank" : Volume := {: value <- 1000; group <- "Dimension" :};
+  };
+
+  sub_models <-
+  {
+    OBJ Trans_In : ASM1toASM1_AB ;
+    OBJ Tank : FixVolumeASU_AStage_Single ;
+    OBJ Trans_Out : ASM1_ABtoASM1 ;
+  };
+
+   coupling <-
+  {
+    connect(interface.Inflow, sub_models.Trans_In.interface.Inflow),
+    connect(sub_models.Trans_In.interface.Outflow, sub_models.Tank.interface.Inflow),
+    connect(sub_models.Tank.interface.Outflow, sub_models.Trans_Out.interface.Inflow),
+    connect(sub_models.Trans_Out.interface.Outflow, interface.Outflow),
+
+    sub_models.Tank.parameters.F_BOD_COD.value := parameters.F_BOD_COD.value,
+    sub_models.Tank.parameters.F_TSS_COD.value := parameters.F_TSS_COD.value,
+    sub_models.Tank.parameters.i_CB.value := parameters.i_CB.value,
+//    sub_models.Tank.parameters.i_CV.value := parameters.i_CV.value,
+    sub_models.Tank.parameters.i_X_B.value := parameters.i_X_B.value,
+    sub_models.Tank.parameters.i_X_U.value := parameters.i_X_U.value,
+//    sub_models.Tank.parameters.Y_OHO_Aer.value := parameters.Y_OHO_Aer.value,
+//    sub_models.Tank.parameters.Y_OHO_Anox.value := parameters.Y_OHO_Anox.value,
+    sub_models.Tank.parameters.Y_OHO.value := parameters.Y_OHO.value,
+    sub_models.Tank.parameters.Y_ANO.value := parameters.Y_ANO.value,
+//    sub_models.Tank.parameters.Y_STO.value := parameters.Y_STO.value,
+    sub_models.Tank.parameters.mu_OHO.value := parameters.mu_OHO.value,
+    sub_models.Tank.parameters.mu_OHOs.value := parameters.mu_OHOs.value,
+    sub_models.Tank.parameters.mu_ANO.value := parameters.mu_ANO.value,
+    sub_models.Tank.parameters.b_OHO.value := parameters.b_OHO.value,
+    sub_models.Tank.parameters.b_ANO.value := parameters.b_ANO.value,
+//    sub_models.Tank.parameters.q_EPS_hyd.value := parameters.q_EPS_hyd.value,
+//    sub_models.Tank.parameters.q_STO.value := parameters.q_STO.value,
+    sub_models.Tank.parameters.q_STO_hyd.value := parameters.q_STO_hyd.value,
+    sub_models.Tank.parameters.q_XB_hyd.value := parameters.q_XB_hyd.value,
+    sub_models.Tank.parameters.q_ads.value := parameters.q_ads.value,
+//    sub_models.Tank.parameters.K_B_STO.value := parameters.K_B_STO.value,
+    sub_models.Tank.parameters.K_B_hyd.value := parameters.K_B_hyd.value,
+    sub_models.Tank.parameters.K_Bs.value := parameters.K_Bs.value,
+    sub_models.Tank.parameters.K_Bf.value := parameters.K_Bf.value,
+    sub_models.Tank.parameters.K_EPS.value := parameters.K_EPS.value,
+    sub_models.Tank.parameters.K_NHx_ANO.value := parameters.K_NHx_ANO.value,
+    sub_models.Tank.parameters.K_NHx_OHO.value := parameters.K_NHx_OHO.value,
+    sub_models.Tank.parameters.K_NOx_OHO.value := parameters.K_NOx_OHO.value,
+    sub_models.Tank.parameters.K_O_EPS.value := parameters.K_O_EPS.value,
+    sub_models.Tank.parameters.K_O_ANO.value := parameters.K_O_ANO.value,
+    sub_models.Tank.parameters.K_O_OHO.value := parameters.K_O_OHO.value,
+    sub_models.Tank.parameters.K_O_STO.value := parameters.K_O_STO.value,
+    sub_models.Tank.parameters.K_SL.value := parameters.K_SL.value,
+    sub_models.Tank.parameters.K_STO_hyd.value := parameters.K_STO_hyd.value,
+    sub_models.Tank.parameters.f_U.value := parameters.f_U.value,
+    sub_models.Tank.parameters.f_dia.value := parameters.f_dia.value,
+    sub_models.Tank.parameters.f_Shunt_max.value := parameters.f_Shunt_max.value,
+    sub_models.Tank.parameters.k_EPS_max.value := parameters.k_EPS_max.value,
+    sub_models.Tank.parameters.k_a.value := parameters.k_a.value,
+    sub_models.Tank.parameters.n_g.value := parameters.n_g.value,
+    sub_models.Tank.parameters.n_hyd.value := parameters.n_hyd.value,
+    sub_models.Tank.parameters.OTR_Energy.value := parameters.OTR_Energy.value,
+    sub_models.Tank.parameters.Vol.value := parameters.Vol.value,
+
+    // ASM1 -> ASM1_A
+    connect(interface.f_S_Bs, sub_models.Trans_In.interface.f_S_Bs),
+    connect(interface.f_C_B, sub_models.Trans_In.interface.f_C_B),
+    connect(interface.f_C_U, sub_models.Trans_In.interface.f_C_U),
+    connect(interface.f_X_STO, sub_models.Trans_In.interface.f_X_STO),
+    connect(interface.f_X_EPS, sub_models.Trans_In.interface.f_X_EPS),
+    // Tank
+    connect(interface.Temp, sub_models.Tank.interface.Temp),
+    connect(interface.Kla, sub_models.Tank.interface.Kla),
+    // ASM1 sensors
+    connect(sub_models.Tank.interface.AUR, interface.AUR),
+    connect(sub_models.Tank.interface.DO, interface.DO),
+    connect(sub_models.Tank.interface.Kla_ASU, interface.Kla_ASU),
+    connect(sub_models.Tank.interface.NH4, interface.NH4),
+    connect(sub_models.Tank.interface.NO3, interface.NO3),
+    connect(sub_models.Tank.interface.NPR, interface.NPR),
+    connect(sub_models.Tank.interface.NUR, interface.NUR),
+    connect(sub_models.Tank.interface.OUR_ASU, interface.OUR_ASU),
+    // FAPO 29/08/19         
+    connect(sub_models.Tank.interface.OfflineBOD, interface.BOD),
+    connect(sub_models.Tank.interface.OfflineTKN, interface.TKN),
+    connect(sub_models.Tank.interface.OnlineCOD, interface.COD),
+    connect(sub_models.Tank.interface.OnlineTN, interface.TN),
+    // connect(sub_models.Tank.interface.BOD, interface.BOD),
+    // connect(sub_models.Tank.interface.TKN, interface.TKN),
+    // connect(sub_models.Tank.interface.COD, interface.COD),
+    // connect(sub_models.Tank.interface.TN, interface.TN),
+    connect(sub_models.Tank.interface.TSS, interface.TSS),
+    connect(sub_models.Tank.interface.V_ASU, interface.V_ASU),
+    connect(sub_models.Tank.interface.AerationEnergy, interface.AerationEnergy),
+    connect(sub_models.Tank.interface.AerationPower, interface.AerationPower),
+    connect(sub_models.Tank.interface.MixingEnergy, interface.MixingEnergy),
+    connect(sub_models.Tank.interface.MixingPower, interface.MixingPower),
+  };
+
+:};
+
+
+#endif // ASM1, ..
+
+#endif // WWTP_ASU_ASTAGE

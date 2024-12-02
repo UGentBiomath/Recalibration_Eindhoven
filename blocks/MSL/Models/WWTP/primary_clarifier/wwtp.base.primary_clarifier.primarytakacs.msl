@@ -1,0 +1,76 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:57$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_PRIMARY_CLARIFIER_TAKACS
+#define WWTP_BASE_PRIMARY_CLARIFIER_TAKACS
+
+
+// This model was developed by Takacs et al. (1991).
+// The clarifier is divided in 10 horizontal layers
+// (a discretion of the underlying partial differential equations)
+// and the mass balance is calculated for each layer. 
+// The novelty of this model 
+// is the fact that an expression is proposed for the settling velocity v_S 
+// which is valid for both the thickening and the clarification zone. 
+// 
+// Literature : 
+// Takacs I., Patry G.G. & Nolasco D. (1991), 
+// A dynamic model of the thickening/clarification process,
+// Wat. Res., 25, 1263-1271.
+//
+// Coderre, A. (1999) 
+// Simulation du comportement des decanteurs primaires de Valcartier: 
+// Evaluation du modele de Takacs et al. (1991),
+// Essai de maitrise, Universite Laval, Quebec.
+
+#ifdef StandardCategoryModels
+
+CLASS PrimaryTakacs (* icon = "primary_clarifier" *) "Layered clarifier model by Takacs"
+EXTENDS SettlingTank_TakacsNonSVI WITH
+{:
+
+  comments <- "A model for a primary settler by Takacs";
+  
+  interface <-
+  { 
+    OBJ PumpingEnergy (* terminal = "out_3" *) "Pumping energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ PumpingPower (* terminal = "out_3" *) "Pumping power" : Real := {: causality <- "COUT"; unit <- "kWh/d" ; group <- "Energy" :};
+  };
+  
+  parameters <- 
+  {     
+    OBJ f_ns "Non-settleable fraction of suspended solids" : Fraction := {: value <- 0.0024 ; group <- "Settling" :};
+    OBJ F_Energy_FlowRate "Conversion factor Energy needed/Pump flow rate" : EnergyForPumping := {: value <- 0.04 ; group <- "Energy":};
+  };
+  
+  initial <-
+  {
+    state.Help_f_ns := parameters.f_ns ;
+  };
+  
+  equations <-
+  {
+    // PUMPING ENERGY
+    //(EURE 26/07/2019) [kWh/m3] * [m3/d] = [kWh/d]
+  interface.PumpingPower = parameters.F_Energy_FlowRate * state.Q_Under_Actual ;
+    DERIV(state.Integ_PE,[independent.t])=  state.Q_Under_Actual;
+    interface.PumpingEnergy = parameters.F_Energy_FlowRate * state.Integ_PE ;
+  };
+
+:};
+#endif // StandardCategoryModels
+
+#endif // WWTP_BASE_PRIMARY_CLARIFIER_TAKACS

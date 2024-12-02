@@ -1,0 +1,37 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:27$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_TANKS
+#define SEWER_TANKS
+
+#include "Sewer/tanks/tank.freeflow.msl"
+#include "Sewer/tanks/tank.runoff.msl"
+#include "Sewer/tanks/tank.sedimentation.msl"
+#include "Sewer/tanks/tank.withreaction.msl"
+#include "Sewer/tanks/tank.withreaction.sedimentation.msl"
+#include "Sewer/tanks/tank.withreaction.accumulation.msl"
+#include "Sewer/tanks/tanks02.cascade.runoff.msl"
+#include "Sewer/tanks/tanks03.cascade.runoff.msl"
+#include "Sewer/tanks/tanks01.backwater.msl"
+#include "Sewer/tanks/tanks02.cascade.backwater.msl"
+#include "Sewer/tanks/tanks03.cascade.backwater.msl"
+#include "Sewer/tanks/tanks02.cascade.withsedimentation.msl"
+#include "Sewer/tanks/tanks03.cascade.withsedimentation.msl"
+#include "Sewer/tanks/stormtank.base.msl"
+
+
+#endif // SEWER_TANKS

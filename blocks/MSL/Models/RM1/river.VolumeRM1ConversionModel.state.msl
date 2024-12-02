@@ -1,0 +1,21 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ Help_KL20 (* hidden = "1"; *) "Mass transfer constant for rearation at 20 degC" : Velocity := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ Help_T_water (* hidden = "1"; *) "Water temperature" : CelsiusTemperature := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ KL_20 (* hidden = "1"; *) "Mass transfer constant for rearation at 20 degC" : Velocity := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ KL_T (* *) "Mass transfer constant for reaeration at actual temperature" : Velocity := {: group <- "Kinetics"; :};
+    OBJ K_N_T (* *) "Nitrification rate at actual temperature" : RateConstant := {: group <- "Kinetics"; :};
+    OBJ Kd1_T (* *) "Decay rate BOD1 at actual temperature" : RateConstant := {: group <- "Kinetics"; :};
+    OBJ Kd2_T (* *) "Decay rate BOD2 at actual temperature" : RateConstant := {: group <- "Kinetics"; :};
+    OBJ S_O_Saturation (* *) "Oxygen saturation concentration" : Concentration := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Conditions"; :};
+    OBJ T_Water (* is_favorite = "1"; *) "Water temperature" : CelsiusTemperature := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Conditions"; :};
+    OBJ rate_BODs (* hidden = "1"; *) "Rate of BODs degradation" : Real := {: group <- "Kinetics"; :};
+    OBJ rate_MacroO2 (* hidden = "1"; *) "Net oxygen production/consumption Macrophytes" : Real := {: group <- "Kinetics"; :};
+    OBJ rate_Nitrif (* hidden = "1"; *) "Nitrification rate" : Real := {: group <- "Kinetics"; :};
+    OBJ rate_OxiBOD1 (* hidden = "1"; *) "BOD1 oxidation rate" : Real := {: group <- "Kinetics"; :};
+    OBJ rate_OxiBOD1p (* hidden = "1"; *) "BOD1p oxidation rate" : Real := {: group <- "Kinetics"; :};
+    OBJ rate_OxiBOD2 (* hidden = "1"; *) "BOD1 oxidation rate" : Real := {: group <- "Kinetics"; :};
+    OBJ rate_OxiBOD2p (* hidden = "1"; *) "BOD2p oxidation rate" : Real := {: group <- "Kinetics"; :};
+    OBJ rate_Reaer (* hidden = "1"; *) "Rate of reaeration" : Real := {: group <- "Kinetics"; :};
+    OBJ rate_SedO2 (* hidden = "1"; *) "Oxygen entrapment in sediment" : Real := {: group <- "Kinetics"; :};
+

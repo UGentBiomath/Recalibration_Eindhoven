@@ -1,0 +1,5 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    interface.BOD = state.C[BOD1] + state.C[BOD2] + state.C[BOD1p] + state.C[BOD2p];
+    interface.DO = state.C[O2];
+

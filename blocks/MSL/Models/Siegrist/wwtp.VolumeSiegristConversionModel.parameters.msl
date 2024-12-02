@@ -1,0 +1,36 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ H_CH4 (* *) "Henry coefficient for CH4" : HenryCoefficient := {: value <- 0.876; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Stoichiometry"; :};
+    OBJ H_CO2 (* *) "Henry coefficient for CO2" : HenryCoefficient := {: value <- 0.04; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Stoichiometry"; :};
+    OBJ H_H2 (* *) "Henry coefficient for H2" : HenryCoefficient := {: value <- 1.334; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Stoichiometry"; :};
+    OBJ K_I_AC_FA (* *) "Anaerobic FA oxidation inhibition concentration for S_AC" : Concentration := {: value <- 2000.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ K_I_AC_PRO (* *) "Anaerobic propionate inhibition concentration for S_AC" : Concentration := {: value <- 1500.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ K_I_H2_FA (* *) "Anaerobic FA oxidation inhibition concentration for S_H2" : Concentration := {: value <- 12E-03; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ K_I_H2_PRO (* *) "Anaerobic propionate oxidation inhibition concentration for S_H2" : Concentration := {: value <- 0.6E-03; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ K_I_H_AC (* *) "Acetate to methane conversion inhibition concentration for S_H" : MolConcentration := {: value <- 6.3E-4; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ K_I_H_H2 (* *) "Hydrogen to methane conversion inhibition concentration for S_H" : MolConcentration := {: value <- 6.3E-4; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ K_I_H_PRO (* *) "Anaerobic propionate oxidation inhibition concentration for S_H" : MolConcentration := {: value <- 6.3E-4; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ K_S_AC (* *) "Acetate to methane conversion half-saturation concentration for S_AC" : HalfSatCoeff := {: value <- 30.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ K_S_AS (* *) "Anaerobic fermentation half-saturation concentration for S_AS" : HalfSatCoeff := {: value <- 50.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ K_S_FA (* *) "Anaerobic FA oxidation half-saturation concentration for S_FA" : HalfSatCoeff := {: value <- 200.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ K_S_H2 (* *) "Hydrogen to methane conversion half-saturation concentration for S_H2" : HalfSatCoeff := {: value <- 0.06; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ K_S_H_AC (* *) "Acetate to methane conversion half-saturation concentration for S_H" : MolConcentration := {: value <- 1E-5; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ K_S_H_H2 (* *) "Hydrogen to methane conversion half-saturation concentration for S_H" : MolConcentration := {: value <- 1E-5; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ K_S_H_PRO (* *) "Anaerobic propionate oxidation half-saturation concentration for S_H" : MolConcentration := {: value <- 1E-5; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ K_S_PRO (* *) "Anaerobic propionate oxidation half-saturation concentration for S_PRO" : HalfSatCoeff := {: value <- 15.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ TempCoef1 (* hidden = "1"; *) "Temperature coefficient" : Real := {: unit <- "-"; value <- 0.0; interval <- {: lowerBound <- 0.0; upperBound <- +INF; :}; :};
+    OBJ TempCoef2 (* hidden = "1"; *) "Temperature coefficient" : Real := {: unit <- "-"; value <- 0.0; interval <- {: lowerBound <- 0.0; upperBound <- +INF; :}; :};
+    OBJ b_AC (* *) "Specific decay rate for acetate to methane converting bacteria" : DecayCoefficient := {: value <- 0.10; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ b_AS (* *) "Specific decay rate for AA and sugar fermenting bacteria" : DecayCoefficient := {: value <- 1.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ b_FA (* *) "Specific decay rate for FA oxidising anaerobic bacteria" : DecayCoefficient := {: value <- 0.10; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ b_H2 (* *) "Specific decay rate for hydrogen to methane converting bacteria" : DecayCoefficient := {: value <- 0.4; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ b_PRO (* *) "Specific decay rate for propionate oxidising anaerobic bacteria" : DecayCoefficient := {: value <- 0.10; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ k_CO2 (* *) "Rate of carbon dioxide deprotolysis" : Real := {: value <- 0.0045; interval <- {: lowerBound <- 0.0; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ k_HCO3 (* *) "Rate of bicarbonate protolysis" : Real := {: unit <- "d-1.m3.Mol-1"; value <- 10.0; interval <- {: lowerBound <- 0.0; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ k_R (* *) "Specific hydrolysis rate of biopolymers" : MaxSpecificHydrolysisRate := {: value <- 0.25; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ mu_AC (* *) "Maximum specific growth rate of acetate to methane converting bacteria" : MaxGrowthRate := {: value <- 0.95; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ mu_AS (* *) "Maximum specific growth rate of AA and sugar fermenting bacteria" : MaxGrowthRate := {: value <- 5.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ mu_FA (* *) "Maximum specific growth rate of FA oxidising anaerobic bacteria" : MaxGrowthRate := {: value <- 0.55; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ mu_H2 (* *) "Maximum specific growth rate of hydrogen to methane converting bacteria" : MaxGrowthRate := {: value <- 3.60; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ mu_PRO (* *) "Maximum specific growth rate of propionate oxidising bacteria" : MaxGrowthRate := {: value <- 0.80; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+

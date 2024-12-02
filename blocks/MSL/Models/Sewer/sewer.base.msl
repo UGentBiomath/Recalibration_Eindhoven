@@ -1,0 +1,375 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:27$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_BASE
+#define SEWER_BASE
+
+// a class for tanks in the sewer system having an outflow supposed to be at
+// the bottom of the tank plus a weir for when the tank is full.
+CLASS SewerAtomicModelWithVariableVolume EXTENDS Base_WaterSewerModel WITH
+ {:
+
+  interface <-
+  {
+    OBJ Outflow1 (* terminal = "out_1" *) "Outflow 1" : OutSewTerminal := {: causality <- "COUT"; group <- "Outflow" :};
+    OBJ Outflow2 (* terminal = "out_2" *) "Outflow 2" : OutSewTerminal := {: causality <- "COUT"; group <- "Outflow" :};
+  };
+  
+  parameters <-
+  {
+    OBJ UnitDepth "Depth of the unit" : Length:= {: value <- 0.003; group <- "Hydraulic" :};
+    OBJ Vmax "Volume of the tank beneath the the lowest point of the weir" : Volume := {: group <- "Hydraulic" :};
+    OBJ Hinit "Initial level of the tank" : Length := {: value <- 0.1; group <- "Hydraulic" :};
+    OBJ grav (* hidden = "1" *) "Gravitional constant": Acceleration := {: value <- 73231257600.0; :};
+    OBJ alpha (* fixed = "1"; hidden ="1" *) "Parameter, function of weir type or width" : Real:= {: group <- "Hydraulic" :};
+    OBJ beta (* fixed = "1"; hidden ="1" *) "Parameter, function of weir design" : Real:= {: group <- "Hydraulic" :};
+  };
+  
+  initial <-
+  {
+    parameters.Vmax = parameters.L * parameters.W * parameters.UnitDepth ;
+    
+    state.SewM[H2O] = parameters.L * parameters.W * parameters.Hinit / 1E-06 ;
+  };
+  
+  state <-
+  {
+    OBJ Q_over "Overflow Rate" : FlowRate := {: group <- "Flow" :};
+//    OBJ f_out "" : Fraction;
+  };
+  
+  equations <-
+  {
+    interface.Outflow1[H2O] = - state.Q_Out / 1E-06 ;
+
+    interface.Outflow2[H2O] = - state.Q_over / 1E-06 ;
+
+    state.V = state.SewM[H2O] * 1E-06 ;
+  };
+
+:};
+
+
+// SewerWaterVolumeASMConversionModel -> Base_WaterSewerModel
+CLASS Base_WaterSewerModel EXTENDS BaseUnit_SewerVolumeConversionModel WITH
+{:
+  
+  parameters <-
+  {
+    OBJ TRef_Kla (*  *) "Temperature at which Kla is calculated" : CelsiusTemperature := {: value <- 20; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Volatilization"; :};
+    OBJ g (* hidden = "1"; fixed = "1" *) "Earth gravity acceleration" : Real := {: unit <- "m/s2"; value <- 9.81; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+    OBJ slp (*  *) "Bottom slope in steady flow" : Real := {: value <- 0.03; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Geometry"; :};
+  };
+  
+  state <-
+  {
+    OBJ Radius (*  *) "Hydraulic radius" : Length := {: group <- "Hydraulics"; :};
+  };
+
+  equations <-
+  {
+    // D_O2 = m2/s, rho_w = kg/m3, eta_dyn_w = kg/m/s, eta_kyn_w = m2/s, Schmidt_O2 = -, vel_shear = m/s
+    state.D_O2 = 4.864 * pow(10.0,-13.0) * pow(parameters.TRef_Kla,2.0) + 2.88 * pow(10.0,- 11.0) * parameters.TRef_Kla + 1.268 * pow(10.0,- 9.0);
+    state.rho_w = - 1.62 * pow(10.0,-5.0) * pow((3.98-parameters.TRef_Kla),3.0) - 0.005799 * pow((3.98-parameters.TRef_Kla),2.0) + 0.024738 * (3.98-parameters.TRef_Kla) + 1000.0;
+    state.eta_dyn_w = (pow(10.0,(1301.0 / (998.333 + 8.1855 * (parameters.TRef_Kla - 20.0) + 0.00585 * pow((parameters.TRef_Kla - 20.0),2.0))) - 3.30233))/10.0;
+    state.eta_kyn_w = state.eta_dyn_w / state.rho_w;
+    state.Schmidt_O2 = state.eta_kyn_w /state.D_O2;
+    state.vel_shear = pow(parameters.g * state.Radius * parameters.slp,0.5);
+    // small Eddy model (according to Moog and Jirka): commonly found in sewer systems (Huisman)
+    state.Kla = (0.161 * pow (state.Schmidt_O2,-0.5) * pow((pow (state.vel_shear,3.0) / state.WaterLevel) * state.eta_kyn_w, 0.25) / state.WaterLevel) * 86400.0;
+
+    state.Radius = state.V / parameters.L / (2.0 * state.WaterLevel + parameters.W);
+    state.WaterLevel = state.V / (parameters.W * parameters.L);
+  };
+  
+:};
+
+
+// SewerPipeVolumeASMConversionModel -> Base_PipeSewerModel
+CLASS Base_PipeSewerModel
+"A base circular pipe model with calculation of kinematic viscosity and reaeration"
+EXTENDS BaseUnit_SewerVolumeConversionModel WITH//Base_SewerAtomicModelWithVolume WITH
+{:
+
+  parameters <-
+  {
+//    OBJ H_Min (* hidden = "1";  *) "Minimal water level to avoid numerical problems" : Length := {: value <- 0.01; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+    // Geometric characteristics
+    OBJ D "Diameter" : Length := {: value <- 0.3; group <- "Geometry" :};
+    // use the same 'L' of the base class - 
+    //OBJ L "Length" : Length := {: value <- 1.0; group <- "Geometry" :};
+    OBJ TRef_Kla (*  *) "Temperature at which Kla is calculated" : CelsiusTemperature := {: value <- 20; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Volatilization"; :};
+    OBJ g (* hidden = "1"; fixed = "1" *) "Earth gravity acceleration" : Real := {: unit <- "m/s2"; value <- 9.81; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+    OBJ slp (*  *) "Bottom slope in steady flow" : Real := {: value <- 0.03; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Geometry"; :};
+    OBJ theta_Kla	(* hidden = "1" *) "Constant for temperature influence on re-aeration" : Real	:= {: value <- 1.0241 ; group <- "Aeration" :};  //Huisman et al. (2004)
+  };
+  
+  state <-
+  {
+//    OBJ WaterLevel (*  *) "Water level" : Length := {: group <- "Hydraulics"; :};
+    OBJ Radius (*  *) "Hydraulic radius" : Length := {: group <- "Hydraulics"; :};
+    OBJ Arel "relative area" : Fraction;
+    OBJ phi "Filling angle" : Real := {: unit <- "rad" :};
+    OBJ tau "Filling level" : Fraction;
+    OBJ zeta "Relative hydraulic radius" : Real;
+    OBJ v_mean "Mean velocity in the pipe" : Velocity;
+  };
+  
+  equations <-
+  {
+    // D_O2 = m2/s, rho_w = kg/m3, eta_dyn_w = kg/m/s, eta_kyn_w = m2/s, Schmidt_O2 = -, vel_shear = m/s
+    state.D_O2 = 4.864 * pow(10.0,-13.0) * pow(parameters.TRef_Kla,2.0) + 2.88 * pow(10.0,- 11.0) * parameters.TRef_Kla + 1.268 * pow(10.0,- 9.0);
+    state.rho_w = - 1.62 * pow(10.0,-5.0) * pow((3.98-parameters.TRef_Kla),3.0) - 0.005799 * pow((3.98-parameters.TRef_Kla),2.0) + 0.024738 * (3.98-parameters.TRef_Kla) + 1000.0;
+    state.eta_dyn_w = (pow(10.0,(1301.0 / (998.333 + 8.1855 * (parameters.TRef_Kla - 20.0) + 0.00585 * pow((parameters.TRef_Kla - 20.0),2.0))) - 3.30233))/10.0;
+    state.eta_kyn_w = state.eta_dyn_w / state.rho_w;
+    state.Schmidt_O2 = state.eta_kyn_w /state.D_O2;
+    state.vel_shear = pow(parameters.g * state.Radius * parameters.slp,0.5);
+    // small Eddy model (according to Moog and Jirka): commonly found in sewer systems (Huisman)
+    state.Kla = IF (state.WaterLevel > 0.0) THEN (0.161 * pow (state.Schmidt_O2,-0.5) * pow((pow (state.vel_shear,3.0) / state.WaterLevel) * state.eta_kyn_w, 0.25) / state.WaterLevel) * 86400.0
+      ELSE 0.0;
+
+    state.Radius = state.zeta * parameters.D/4.0 ;
+    state.WaterLevel = state.tau * parameters.D ;
+  };
+  
+:};
+
+
+// SewerSedVolumeASMConversionModel -> Base_SedimentSewerModel
+CLASS Base_SedimentSewerModel EXTENDS BaseUnit_SewerVolumeConversionModel WITH
+{:
+
+  equations <-
+  {
+    state.WaterLevel = 2.0 * parameters.H_Min ;
+  };
+
+:};
+
+
+// SewerKosimVolumeASMConversionModel -> Base_TankSewerModel
+CLASS Base_TankSewerModel EXTENDS BaseUnit_SewerVolumeConversionModel WITH
+{:
+  interface <-
+  {
+    OBJ T_aw (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Temperature at air/water interface" : CelsiusTemperature := {: value <- 20.0; causality <- "CIN" ; group <- "Operational" :};
+  };
+  
+  parameters <-
+  {
+    OBJ TRef_Kla (*  *) "Temperature at which Kla is calculated" : CelsiusTemperature := {: value <- 20; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Volatilization"; :};
+    OBJ g (* hidden = "1"; fixed = "1" *) "Earth gravity acceleration" : Real := {: unit <- "m/s2"; value <- 9.81; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
+    OBJ slp (*  *) "Bottom slope in steady flow" : Real := {: value <- 0.03; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Geometry"; :};
+  };
+
+  state <-
+  {
+    OBJ Radius (*  *) "Hydraulic radius" : Length := {: group <- "Hydraulics"; :};
+  };
+
+  equations <-
+  {
+    // D_O2 = m2/s, rho_w = kg/m3, eta_dyn_w = kg/m/s, eta_kyn_w = m2/s, Schmidt_O2 = -, vel_shear = m/s
+    state.D_O2 = 4.864 * pow(10.0,-13.0) * pow(parameters.TRef_Kla,2.0) + 2.88 * pow(10.0,- 11.0) * parameters.TRef_Kla + 1.268 * pow(10.0,- 9.0);
+    state.rho_w = - 1.62 * pow(10.0,-5.0) * pow((3.98-parameters.TRef_Kla),3.0) - 0.005799 * pow((3.98-parameters.TRef_Kla),2.0) + 0.024738 * (3.98-parameters.TRef_Kla) + 1000.0;
+    state.eta_dyn_w = (pow(10.0,(1301.0 / (998.333 + 8.1855 * (parameters.TRef_Kla - 20.0) + 0.00585 * pow((parameters.TRef_Kla - 20.0),2.0))) - 3.30233))/10.0;
+    state.eta_kyn_w = state.eta_dyn_w / state.rho_w;
+    state.Schmidt_O2 = state.eta_kyn_w /state.D_O2;
+    state.vel_shear = pow(parameters.g * state.Radius * parameters.slp,0.5);
+    // small Eddy model (according to Moog and Jirka): commonly found in sewer systems (Huisman)
+    state.Kla = (0.161 * pow (state.Schmidt_O2,-0.5) * pow((pow (state.vel_shear,3.0) / state.WaterLevel) * state.eta_kyn_w, 0.25) / state.WaterLevel) * 86400.0;
+
+    state.Radius = state.V / parameters.L / (2.0 * state.WaterLevel + parameters.W);
+    state.WaterLevel = state.V / (parameters.W * parameters.L);
+  };
+
+:};
+
+
+// base class for models with conversion processes: TANK, WATER, SEDIMENT
+CLASS BaseUnit_SewerVolumeConversionModel EXTENDS Base_SewerVolumeConversionModel WITH
+{:
+    #include "Kosim1/sewer.VolumeKosim1ConversionModel.body.msl"
+:};
+
+
+CLASS Base_SewerVolumeConversionModel EXTENDS Base_SewerAtomicModelWithVolume WITH
+{:
+  // This is a "VolumeConversionModel.body" block
+  parameters <-
+  {
+    OBJ Stoichiometry (* hidden = "1" *) "The stoichiometry matrix" : QuantityType[Kosim1NrOfReactions;][Kosim1NrOfComponents,];
+  };
+  
+  state <-
+  {
+    OBJ Kinetics (* hidden = "1" *) "The kinetic vector" : QuantityType[Kosim1NrOfReactions;];
+    OBJ Kla_Actual "The actual Kla in the system" : OxygenTransferCoefficient := {: group <- "Operational" :};
+//    OBJ Temp_Actual (* is_favorite = "1" *) "Actual temperature" : CelsiusTemperature  := {: group <- "Operational" :}; 
+  };
+
+  equations <-
+  {
+    {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}:
+        state.ConversionTermPerSewComponent[Comp_Index] = SUMOVER Reaction_Index IN {1 .. Kosim1NrOfReactions}:
+        (parameters.Stoichiometry[Reaction_Index][Comp_Index] * state.Kinetics[Reaction_Index]) * state.V ; };
+  };
+
+:};
+
+
+// base class for models with no conversion processes: PIPE
+CLASS Base_SewerAtomicModelWithVolume EXTENDS SewerAtomicModelWithVolume WITH
+{:
+
+  interface <-
+  {
+    OBJ Temp (* manip = "1"; terminal = "in_2"; is_favorite = "1" *) "System temperature" : CelsiusTemperature := {: value <- 20.0; causality <- "CIN" ; group <- "Operational" :};
+  };
+    
+  parameters <-
+  {
+    OBJ L (*  *) "Length of the tank" : Length := {: value <- 0; group <- "Geometry"; :};
+    OBJ W (*  *) "Width of the tank" : Length := {: value <- 0; group <- "Geometry"; :};
+  };
+  
+  state <-
+  {
+    OBJ D_O2 (* hidden = "1";  *) "Oxygen diffusivity in water" : Diffusivity := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Water Properties"; :};
+    OBJ Kla (*  *) "Re-aeration constant for oxygen" : ProcessRate := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Rates"; :};
+    OBJ Schmidt_O2 (* hidden = "1";  *) "Schmidt number for oxygen" : Real := {: value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Water Properties"; :};
+    OBJ eta_dyn_w (* hidden = "1";  *) "Dynamic viscosity of water" : DynamicViscosity := {: value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Water Properties"; :};
+    OBJ eta_kyn_w (* hidden = "1";  *) "Kinematic viscosity of water" : KinematicViscosity := {: value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Water Properties"; :};
+    OBJ rho_w (* hidden = "1";  *) "Density of water" : Density := {: unit <- "kg/m3"; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Water Properties"; :};
+    OBJ vel_shear (*  *) "Shear stress velocity" : Velocity := {: unit <- "m/s"; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Hydraulics"; :};
+    OBJ Temp_Syst "System temperature" : CelsiusTemperature := {: group <- "Operational" :};
+  };
+
+  equations <-
+  {
+    // InterfaceVars
+    state.Temp_Syst = interface.Temp;
+  };
+  
+:};
+
+
+CLASS SewerAtomicModelWithVolume "Atomic sewer model for entities with volume"
+EXTENDS SewerAtomicModelNoVolume WITH
+{:
+ 
+  state <-
+  {
+   OBJ ConversionTermPerSewComponent (* hidden = "1" *): Kosim1MassFluxVector ; //conversionTermPerSewComponent
+   OBJ SewM (* hidden = "0" *) : Kosim1MassVector := [{: value <-1000000 :},
+   	   {:value <- 30 :}, {:value <- 10 :}, {:value <- 100 :}, {:value <- 200 :}, {:value <- 150 :}; ];
+
+//   OBJ WaterLevel "Water level inside the tank" : Length := {: group <- "Tank" :} ;
+   OBJ V (* is_favorite = "1" *) "Volume of the tank" : Volume := {: group <- "Tank" :} ;
+   // SewC -> C
+   OBJ C "Concentration of the state components" : Kosim1ConcentrationVector := {: group <- "Concentrations" :} ;
+   OBJ Q_Out (* is_favorite = "1" *) "Effluent flow rate" : FlowRate := {: group <- "Flow" :} ;	  
+  };
+
+  equations <-
+  {
+   {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}: DERIV(state.SewM[Comp_Index],[independent.t]) = 
+		state.FluxPerSewComponent[Comp_Index] + state.ConversionTermPerSewComponent[Comp_Index]; };
+  };
+ 
+ :};
+
+
+/*
+CLASS SewerAtomicModelWithoutVolume
+ "Atomic sewer model for entities with no volume"
+ SPECIALISES PhysicalDAEModelType :=
+ {:
+ 
+  parameters <-
+  {
+   OBJ SewSpecificVolume (* hidden = "1" *) "The specific volumes (= 1/density) of the components" : SpecificVolume[Kosim1NrOfComponents;] ;
+  };
+
+  independent <-
+  {
+   OBJ t : Time ;
+  };
+
+  state <-
+  {
+   OBJ InFluxPerComponent (* hidden = "1" *) : Kosim1MassFluxVector ;
+   OBJ Q_In (* is_favorite = "1" *) "Influent flow rate" : FlowRate := {: group <- "Flow" :} ;//Q_in
+  };
+
+  initial <-
+  {
+   parameters.SewSpecificVolume[H2O] := 0.000001 ;
+  };
+
+  equations <-
+  {
+   {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}: state.InFluxPerComponent[Comp_Index] =
+		SUMOVER sew_term_index IN {SelectByType(interface,InSewTerminal)}: (sew_term_index[Comp_Index]); };
+
+   state.Q_In = parameters.SewSpecificVolume[H2O] * state.InFluxPerComponent[H2O] ;
+  };
+ 
+ :};
+ */
+
+
+// originally: SewerAtomicModelWithoutVolume
+CLASS SewerAtomicModelNoVolume "Atomic sewer model for entities with no volume"
+SPECIALISES PhysicalDAEModelType :=
+{:
+  
+  interface <-
+  {
+    // common to PipeCircular_wReaction
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InSewTerminal := {: causality <- "CIN"; group <- "Inflow" :};
+//    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {:causality <- "COUT"; group <- "Outflow":};
+  };
+
+  independent <-
+  {
+    OBJ t : Time ;
+  };
+  
+  state <-
+  {
+    OBJ InFluxPerComponent (* hidden = "1" *) : Kosim1MassFluxVector ;
+    OBJ FluxPerSewComponent (* hidden = "1" *) : Kosim1MassFluxVector ;
+    OBJ Q_In (* is_favorite = "1" *) "Influent flow rate" : FlowRate := {: group <- "Flow" :} ;//Q_in
+  };
+  
+  equations <-
+  {
+    {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}: state.InFluxPerComponent[Comp_Index] =
+      SUMOVER sew_term_index IN {SelectByType(interface,InSewTerminal)}: (sew_term_index[Comp_Index]); };
+    
+    {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}: state.FluxPerSewComponent[Comp_Index] =
+      state.InFluxPerComponent[Comp_Index] +
+      (SUMOVER sew_term_index IN {SelectByType(interface,OutSewTerminal)}: sew_term_index[Comp_Index]); };
+
+    state.Q_In = 1E-06 * state.InFluxPerComponent[H2O] ;
+  };
+
+:};
+ 
+
+#endif // SEWER_BASE

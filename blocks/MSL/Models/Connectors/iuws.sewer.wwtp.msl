@@ -1,0 +1,605 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 15:21:58$
+ *
+ ******************************************************************************/
+
+#ifndef IUWS_CONNECTORS_SEWER_WWTP
+#define IUWS_CONNECTORS_SEWER_WWTP
+
+
+CLASS SewerToWWTP (* icon = "Connector" *) "Generator of WWTP influent pollutograph"
+EXTENDS SewerConnectors_Base WITH 
+{:
+
+  comments <- "Generator of WWTP influent pollutograph";
+
+  interface <-
+  {
+   OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+  };
+
+  parameters <-
+  {
+   OBJ ID_Q_1h (* hidden = "1" *) "ID for buffer" : Real;
+   OBJ ID_Q_COD (* hidden = "1" *) "ID for buffer" : Real;
+   OBJ ID_Q_CODs (* hidden = "1" *) "ID for buffer" : Real;
+   OBJ ID_Q_TSS (* hidden = "1" *) "ID for buffer" : Real;
+   OBJ ID_Q_NH4 (* hidden = "1" *) "ID for buffer" : Real;
+   OBJ ID_Q_PO4 (* hidden = "1" *) "ID for buffer" : Real;
+   OBJ ID_dilu (* hidden = "1" *) "ID for buffer" : Real;
+   // Average concentrations
+   OBJ Q_95_av (* is_favorite = "1" *) "Daily average Q, 95-ile" : FlowRate := {: value <- 70000 ; group <- "_Averages" :};
+   OBJ COD_av (* is_favorite = "1" *) "COD daily average concentration" : Concentration := {: value <- 640 ; group <- "_Averages" :};
+   OBJ CODs_av (* is_favorite = "1" *) "CODs daily average concentration" : Concentration := {: value <- 200 ; group <- "_Averages" :};
+   OBJ TSS_av (* is_favorite = "1" *) "TSS daily average concentration" : Concentration := {: value <- 290 ; group <- "_Averages" :};
+   OBJ NH4_av (* is_favorite = "1" *) "NH4 daily average concentration" : Concentration := {: value <- 30 ; group <- "_Averages" :};
+   OBJ PO4_av (* is_favorite = "1" *) "PO4 daily average concentration" : Concentration := {: value <- 7 ; group <- "_Averages" :};
+   // Dilution factors
+   OBJ alpha_COD "Dilution factor for COD" : Fraction := {: value <- 0.7 ; group <- "_Dilution" :};
+   OBJ alpha_CODs "Dilution factor for CODs" : Fraction := {: value <- 0.75 ; group <- "_Dilution" :};
+   OBJ alpha_TSS "Dilution factor for TSS" : Fraction := {: value <- 0.5 ; group <- "_Dilution" :};
+   OBJ alpha_NH4 "Dilution factor for NH4" : Fraction := {: value <- 0.95 ; group <- "_Dilution" :};
+   OBJ alpha_PO4 "Dilution factor for PO4" : Fraction := {: value <- 0.7 ; group <- "_Dilution" :};
+   // Replenishment factors
+   OBJ beta_COD "Replenishment factor for COD" : Fraction := {: value <- 0.5 ; group <- "_Replenishment" :};
+   OBJ beta_CODs "Replenishment factor for CODs" : Fraction := {: value <- 0.35 ; group <- "_Replenishment" :};
+   OBJ beta_TSS "Replenishment factor for TSS" : Fraction := {: value <- 0.4 ; group <- "_Replenishment" :};
+   OBJ beta_NH4 "Replenishment factor for NH4" : Fraction := {: value <- 0.6 ; group <- "_Replenishment" :};
+   OBJ beta_PO4 "Replenishment factor for PO4" : Fraction := {: value <- 0.5 ; group <- "_Replenishment" :};
+   OBJ window_COD "Window length for COD, replenishment factor" : Time := {: value <- 1.5 ; group <- "_Replenishment" :};
+   OBJ window_CODs "Window length for CODs, replenishment factor" : Time := {: value <- 2 ; group <- "_Replenishment" :};
+   OBJ window_TSS "Window length for TSS, replenishment factor" : Time := {: value <- 2 ; group <- "_Replenishment" :};
+   OBJ window_NH4 "Window length for NH4, replenishment factor" : Time := {: value <- 2 ; group <- "_Replenishment" :};
+   OBJ window_PO4 "Window length for PO4, replenishment factor" : Time := {: value <- 2 ; group <- "_Replenishment" :};
+   OBJ window_dilu "Window length for dilution factor" : Time := {: value <- 0.083333333 ; group <- "_Dilution" :};
+   // Peak
+   OBJ peak_COD "Peak factor for COD" : Real := {: value <- 2.5 ; group <- "_Peaks" :};
+   OBJ peak_CODs "Peak factor for CODs" : Real := {: value <- 1.2 ; group <- "_Peaks" :};
+   OBJ peak_TSS "Peak factor for TSS" : Real := {: value <- 2.5 ; group <- "_Peaks" :};
+   OBJ peak_NH4 "Peak factor for NH4" : Real := {: value <- 1.2 ; group <- "_Peaks" :};
+   OBJ peak_PO4 "Peak factor for PO4" : Real := {: value <- 1.5 ; group <- "_Peaks" :};
+   OBJ Q_peak "Flow rate for start of peak concentration" : FlowRate := {: value <- 240000 ; group <- "_Peaks" :};
+   OBJ t_max_peak "Maximum duration of peak concentration" : Time := {: value <- 0.20833333 ; group <- "_Peaks" :};
+   OBJ t_COD_peak "Duration of COD peak concentration" : Time := {: value <- 0.20833333 ; group <- "_Peaks" :};
+   OBJ t_CODs_peak "Duration of CODs peak concentration" : Time := {: value <- 0.20833333 ; group <- "_Peaks" :};
+   OBJ t_TSS_peak "Duration of TSS peak concentration" : Time := {: value <- 0.20833333 ; group <- "_Peaks" :};
+   OBJ t_NH4_peak "Duration of NH4 peak concentration" : Time := {: value <- 0.20833333 ; group <- "_Peaks" :};
+   OBJ t_PO4_peak "Duration of PO4 peak concentration" : Time := {: value <- 0.20833333 ; group <- "_Peaks" :};
+/*   
+   OBJ Q_95_norm_H00 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 1.07 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H01 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 1.02 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H02 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 1.00 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H03 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 0.97 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H04 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 0.94 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H05 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 0.89 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H06 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 0.84 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H07 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 0.80 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H08 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 0.77 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H09 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 0.76 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H10 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 0.80 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H11 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 0.89 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H12 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 1.00 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H13 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 1.10 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H14 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 1.15 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H15 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 1.18 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H16 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 1.18 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H17 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 1.17 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H18 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 1.13 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H19 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 1.09 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H20 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 1.07 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H21 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 1.05 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H22 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 1.05 ; group <- "Q_95_norm" :};
+	 OBJ Q_95_norm_H23 (* hidden = "0" *) "Normalized Q hourly pattern, 95%ile" : Real := {: value <- 1.07 ; group <- "Q_95_norm" :};
+			  
+   OBJ COD_norm_H00 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 1.07 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H01 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 1.02 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H02 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 1.00 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H03 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 0.97 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H04 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 0.94 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H05 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 0.89 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H06 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 0.84 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H07 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 0.80 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H08 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 0.77 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H09 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 0.76 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H10 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 1.10 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H11 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 1.15 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H12 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 0.76 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H13 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 0.80 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H14 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 0.89 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H15 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 1.00 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H16 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 1.10 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H17 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 1.17 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H18 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 1.13 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H19 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 1.09 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H20 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 1.07 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H21 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 1.05 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H22 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 1.05 ; group <- "COD_norm" :};
+	 OBJ COD_norm_H23 (* hidden = "0" *) "Normalized COD hourly pattern, average" : Real := {: value <- 1.07 ; group <- "COD_norm" :};
+	  
+	 OBJ CODs_norm_H00 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 1.07 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H01 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 1.02 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H02 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 1.00 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H03 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 0.97 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H04 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 0.94 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H05 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 0.89 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H06 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 0.84 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H07 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 0.80 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H08 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 0.77 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H09 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 0.76 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H10 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 1.10 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H11 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 1.15 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H12 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 0.76 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H13 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 0.80 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H14 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 0.89 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H15 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 1.00 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H16 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 1.10 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H17 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 1.17 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H18 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 1.13 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H19 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 1.09 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H20 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 1.07 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H21 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 1.05 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H22 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 1.05 ; group <- "CODs_norm" :};
+	 OBJ CODs_norm_H23 (* hidden = "0" *) "Normalized CODs hourly pattern, average" : Real := {: value <- 1.07 ; group <- "CODs_norm" :};
+	 
+	 OBJ TSS_norm_H00 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 1.07 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H01 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 1.02 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H02 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 1.00 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H03 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 0.97 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H04 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 0.94 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H05 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 0.89 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H06 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 0.84 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H07 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 0.80 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H08 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 0.77 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H09 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 0.76 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H10 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 1.10 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H11 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 1.15 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H12 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 0.76 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H13 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 0.80 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H14 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 0.89 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H15 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 1.00 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H16 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 1.10 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H17 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 1.17 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H18 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 1.13 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H19 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 1.09 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H20 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 1.07 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H21 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 1.05 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H22 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 1.05 ; group <- "TSS_norm" :};
+	 OBJ TSS_norm_H23 (* hidden = "0" *) "Normalized TSS hourly pattern, average" : Real := {: value <- 1.07 ; group <- "TSS_norm" :};
+	 
+	 OBJ NH4_norm_H00 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 1.07 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H01 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 1.02 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H02 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 1.00 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H03 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 0.97 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H04 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 0.94 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H05 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 0.89 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H06 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 0.84 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H07 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 0.80 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H08 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 0.77 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H09 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 0.76 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H10 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 1.10 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H11 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 1.15 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H12 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 0.76 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H13 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 0.80 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H14 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 0.89 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H15 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 1.00 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H16 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 1.10 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H17 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 1.17 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H18 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 1.13 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H19 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 1.09 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H20 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 1.07 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H21 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 1.05 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H22 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 1.05 ; group <- "NH4_norm" :};
+	 OBJ NH4_norm_H23 (* hidden = "0" *) "Normalized NH4 hourly pattern, average" : Real := {: value <- 1.07 ; group <- "NH4_norm" :};
+	 
+	 OBJ PO4_norm_H00 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 1.07 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H01 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 1.02 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H02 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 1.00 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H03 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 0.97 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H04 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 0.94 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H05 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 0.89 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H06 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 0.84 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H07 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 0.80 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H08 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 0.77 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H09 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 0.76 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H10 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 1.10 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H11 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 1.15 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H12 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 0.76 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H13 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 0.80 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H14 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 0.89 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H15 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 1.00 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H16 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 1.10 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H17 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 1.17 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H18 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 1.13 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H19 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 1.09 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H20 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 1.07 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H21 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 1.05 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H22 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 1.05 ; group <- "PO4_norm" :};
+	 OBJ PO4_norm_H23 (* hidden = "0" *) "Normalized PO4 hourly pattern, average" : Real := {: value <- 1.07 ; group <- "PO4_norm" :};
+*/	 
+   OBJ Q_95_norm (* hidden = "1" *) "Normalized Q hourly pattern, 95-ile" : HourlyDailyPattern
+   	   := [{: value <- 1.07 :}, {: value <- 1.02 :}, {: value <- 1.00 :}, {: value <- 0.97 :},
+	   {: value <- 0.94 :}, {: value <- 0.89 :}, {: value <- 0.84 :}, {: value <- 0.80 :},
+	   {: value <- 0.77 :}, {: value <- 0.76 :}, {: value <- 0.80 :}, {: value <- 0.89 :},
+	   {: value <- 1.00 :}, {: value <- 1.10 :}, {: value <- 1.15 :}, {: value <- 1.18 :},
+	   {: value <- 1.18 :}, {: value <- 1.17 :}, {: value <- 1.13 :}, {: value <- 1.09 :},
+	   {: value <- 1.07 :}, {: value <- 1.05 :}, {: value <- 1.05 :}, {: value <- 1.07 :}; ] ;
+   OBJ COD_norm (* hidden = "1" *) "Normalized COD hourly pattern, average" : HourlyDailyPattern 
+   	   := [{: value <- 1.07 :}, {: value <- 1.02 :}, {: value <- 1.00 :}, {: value <- 0.97 :},
+	   {: value <- 0.94 :}, {: value <- 0.89 :}, {: value <- 0.84 :}, {: value <- 0.80 :},
+	   {: value <- 0.77 :}, {: value <- 0.76 :}, {: value <- 1.10 :}, {: value <- 1.15 :},
+	   {: value <- 0.76 :}, {: value <- 0.80 :}, {: value <- 0.89 :}, {: value <- 1.00 :},
+	   {: value <- 1.10 :}, {: value <- 1.17 :}, {: value <- 1.13 :}, {: value <- 1.09 :},
+	   {: value <- 1.07 :}, {: value <- 1.05 :}, {: value <- 1.05 :}, {: value <- 1.07 :}; ] ;
+   OBJ CODs_norm (* hidden = "1" *) "Normalized CODs hourly pattern, average" : HourlyDailyPattern  
+   	   := [{: value <- 1.07 :}, {: value <- 1.02 :}, {: value <- 1.00 :}, {: value <- 0.97 :},
+	   {: value <- 0.94 :}, {: value <- 0.89 :}, {: value <- 0.84 :}, {: value <- 0.80 :},
+	   {: value <- 0.77 :}, {: value <- 0.76 :}, {: value <- 1.10 :}, {: value <- 1.15 :},
+	   {: value <- 0.76 :}, {: value <- 0.80 :}, {: value <- 0.89 :}, {: value <- 1.00 :},
+	   {: value <- 1.10 :}, {: value <- 1.17 :}, {: value <- 1.13 :}, {: value <- 1.09 :},
+	   {: value <- 1.07 :}, {: value <- 1.05 :}, {: value <- 1.05 :}, {: value <- 1.07 :}; ] ;
+   OBJ TSS_norm (* hidden = "1" *) "Normalized TSS hourly pattern, average" : HourlyDailyPattern 
+   	   := [{: value <- 1.07 :}, {: value <- 1.02 :}, {: value <- 1.00 :}, {: value <- 0.97 :},
+	   {: value <- 0.94 :}, {: value <- 0.89 :}, {: value <- 0.84 :}, {: value <- 0.80 :},
+	   {: value <- 0.77 :}, {: value <- 0.76 :}, {: value <- 1.10 :}, {: value <- 1.15 :},
+	   {: value <- 0.76 :}, {: value <- 0.80 :}, {: value <- 0.89 :}, {: value <- 1.00 :},
+	   {: value <- 1.10 :}, {: value <- 1.17 :}, {: value <- 1.13 :}, {: value <- 1.09 :},
+	   {: value <- 1.07 :}, {: value <- 1.05 :}, {: value <- 1.05 :}, {: value <- 1.07 :}; ] ;
+   OBJ NH4_norm (* hidden = "1" *) "Normalized NH4 hourly pattern, average" : HourlyDailyPattern  
+   	   := [{: value <- 1.07 :}, {: value <- 1.02 :}, {: value <- 1.00 :}, {: value <- 0.97 :},
+	   {: value <- 0.94 :}, {: value <- 0.89 :}, {: value <- 0.84 :}, {: value <- 0.80 :},
+	   {: value <- 0.77 :}, {: value <- 0.76 :}, {: value <- 1.10 :}, {: value <- 1.15 :},
+	   {: value <- 0.76 :}, {: value <- 0.80 :}, {: value <- 0.89 :}, {: value <- 1.00 :},
+	   {: value <- 1.10 :}, {: value <- 1.17 :}, {: value <- 1.13 :}, {: value <- 1.09 :},
+	   {: value <- 1.07 :}, {: value <- 1.05 :}, {: value <- 1.05 :}, {: value <- 1.07 :}; ] ;
+   OBJ PO4_norm (* hidden = "1" *) "Normalized PO4 hourly pattern, average" : HourlyDailyPattern
+   	   := [{: value <- 1.07 :}, {: value <- 1.02 :}, {: value <- 1.00 :}, {: value <- 0.97 :},
+	   {: value <- 0.94 :}, {: value <- 0.89 :}, {: value <- 0.84 :}, {: value <- 0.80 :},
+	   {: value <- 0.77 :}, {: value <- 0.76 :}, {: value <- 1.10 :}, {: value <- 1.15 :},
+	   {: value <- 0.76 :}, {: value <- 0.80 :}, {: value <- 0.89 :}, {: value <- 1.00 :},
+	   {: value <- 1.10 :}, {: value <- 1.17 :}, {: value <- 1.13 :}, {: value <- 1.09 :},
+	   {: value <- 1.07 :}, {: value <- 1.05 :}, {: value <- 1.05 :}, {: value <- 1.07 :}; ] ;
+  };
+
+  state <-
+  {
+//base class:   OBJ help_Int_Q (* hidden = "1" *) "Integral of Q_In (total volume since start of simulation)" : Volume := {: group <- "_Buffer" :};
+   OBJ buffer_Int_Q_1h (* hidden = "1" *) "Buffer for Q in integral" : Real:= {: group <- "_Buffer" :};
+   OBJ buffer_Int_Q_COD (* hidden = "1" *) "Buffer for Q in integral" : Real:= {: group <- "_Buffer" :};
+   OBJ buffer_Int_Q_CODs (* hidden = "1" *) "Buffer for Q in integral" : Real:= {: group <- "_Buffer" :};
+   OBJ buffer_Int_Q_TSS (* hidden = "1" *) "Buffer for Q in integral" : Real:= {: group <- "_Buffer" :};
+   OBJ buffer_Int_Q_NH4 (* hidden = "1" *) "Buffer for Q in integral" : Real:= {: group <- "_Buffer" :};
+   OBJ buffer_Int_Q_PO4 (* hidden = "1" *) "Buffer for Q in integral" : Real:= {: group <- "_Buffer" :};
+   OBJ buffer_dilu (* hidden = "1" *) "Buffer for dilution" : Real := {: group <- "_Buffer" :};
+   OBJ V_1h (* hidden = "1" *) "V in last hour" : Volume := {: group <- "_Buffer" :};
+   OBJ V_COD (* hidden = "1" *) "V for COD replenishment" : Volume := {: group <- "_Buffer" :};
+   OBJ V_CODs (* hidden = "1" *) "V for COD replenishment" : Volume := {: group <- "_Buffer" :};
+   OBJ V_TSS (* hidden = "1" *) "V for COD replenishment" : Volume := {: group <- "_Buffer" :};
+   OBJ V_NH4 (* hidden = "1" *) "V for COD replenishment" : Volume := {: group <- "_Buffer" :};
+   OBJ V_PO4 (* hidden = "1" *) "V for COD replenishment" : Volume := {: group <- "_Buffer" :};
+   OBJ V_1hp (* hidden = "1" *) "V in last hour previous" : Volume := {: group <- "_Buffer" :};
+   OBJ V_CODp (* hidden = "1" *) "V for COD replenishment previous" : Volume := {: group <- "_Buffer" :};
+   OBJ V_CODsp (* hidden = "1" *) "V for COD replenishment previous" : Volume := {: group <- "_Buffer" :};
+   OBJ V_TSSp (* hidden = "1" *) "V for COD replenishment previous" : Volume := {: group <- "_Buffer" :};
+   OBJ V_NH4p (* hidden = "1" *) "V for COD replenishment previous" : Volume := {: group <- "_Buffer" :};
+   OBJ V_PO4p (* hidden = "1" *) "V for COD replenishment previous" : Volume := {: group <- "_Buffer" :};
+   OBJ diluh (* hidden = "1" *) "Dilution factor" : Real := {: group <- "_Buffer" :};
+   OBJ diluhh (* hidden = "1" *) "Dilution factor" : Real := {: group <- "_Buffer" :};
+
+   OBJ f_dil (* hidden = "1" *) "Dilution factor" : Fraction := {: group <- "_Results" :};
+   OBJ repl_CODh (* hidden = "1" *) "Replenishment factor COD" : Real := {: group <- "_Results" :};
+   OBJ repl_CODsh (* hidden = "1" *) "Replenishment factor CODs" : Real := {: group <- "_Results" :};
+   OBJ repl_TSSh (* hidden = "1" *) "Replenishment factor TSS" : Real := {: group <- "_Results" :};
+   OBJ repl_NH4h (* hidden = "1" *) "Replenishment factor NH4" : Real := {: group <- "_Results" :};
+   OBJ repl_PO4h (* hidden = "1" *) "Replenishment factor PO4" : Real := {: group <- "_Results" :};
+   OBJ peak_COD_factor (* hidden = "1" *) "Peak COD" : Real := {: group <- "_Results" :};
+   OBJ peak_CODs_factor (* hidden = "1" *) "Peak CODs" : Real := {: group <- "_Results" :};
+   OBJ peak_TSS_factor (* hidden = "1" *) "Peak TSS" : Real := {: group <- "_Results" :};
+   OBJ peak_NH4_factor (* hidden = "1" *) "Peak NH4" : Real := {: group <- "_Results" :};
+   OBJ peak_PO4_factor (* hidden = "1" *) "Peak PO4" : Real := {: group <- "_Results" :};
+   OBJ t_start (* hidden = "1" *) "Peak start" : Real := {: group <- "_Results" :};
+
+//   OBJ Daytime (* hidden = "1" *) "Calculates hour of the day" : Real := {: group <- "_Buffer" :};
+//   OBJ help_Time (* hidden = "1" *) "Time of the day expressed in days" : Real := {: group <- "_Buffer" :};
+   OBJ Timestep (* hidden = "1" *) "Hour of the day" : Integer := {: group <- "_Buffer" :};
+   // Actual dynamic time series
+//base class:   OBJ Q_In (* is_favorite = "1" *) "Actual influent to the WWTP" : FlowRate := {: group <- "Results" :};
+   OBJ COD (* is_favorite = "1" *) "Actual COD" : Concentration := {: group <- "Results" :};
+   OBJ CODs (* is_favorite = "1" *) "Actual soluble COD" : Concentration := {: group <- "Results" :};
+   OBJ TSS (* is_favorite = "1" *) "Actual TSS" : Concentration := {: group <- "Results" :};
+   OBJ NH4 (* is_favorite = "1" *) "Actual NH4" : Concentration := {: group <- "Results" :};
+   OBJ PO4 (* is_favorite = "1" *) "Actual PO4" : Concentration := {: group <- "Results" :};
+   OBJ repl_COD (* hidden = "1" *) "Replenishment factor COD" : Fraction := {: group <- "Results" :};
+   OBJ repl_CODs (* hidden = "1" *) "Replenishment factor CODs" : Fraction := {: group <- "Results" :};
+   OBJ repl_TSS (* hidden = "1" *) "Replenishment factor TSS" : Fraction := {: group <- "Results" :};
+   OBJ repl_NH4 (* hidden = "1" *) "Replenishment factor NH4" : Fraction := {: group <- "Results" :};
+   OBJ repl_PO4 (* hidden = "1" *) "Replenishment factor PO4" : Fraction := {: group <- "Results" :};
+  };
+  
+  initial <-
+  {
+   // Buffer
+   parameters.ID_Q_1h = MSLUBufferCreate(0.05, 0);
+   parameters.ID_Q_COD = MSLUBufferCreate(parameters.window_COD, 0);
+   parameters.ID_Q_CODs = MSLUBufferCreate(parameters.window_CODs, 0);
+   parameters.ID_Q_TSS = MSLUBufferCreate(parameters.window_TSS, 0);
+   parameters.ID_Q_NH4 = MSLUBufferCreate(parameters.window_NH4, 0);
+   parameters.ID_Q_PO4 = MSLUBufferCreate(parameters.window_PO4, 0);
+   parameters.ID_dilu = MSLUBufferCreate(parameters.window_dilu, 0);
+/*    
+	 parameters.Q_95_norm[H00] = parameters.Q_95_norm_H00;
+	 parameters.Q_95_norm[H01] = parameters.Q_95_norm_H01;
+	 parameters.Q_95_norm[H02] = parameters.Q_95_norm_H02;
+	 parameters.Q_95_norm[H03] = parameters.Q_95_norm_H03;
+	 parameters.Q_95_norm[H04] = parameters.Q_95_norm_H04;
+	 parameters.Q_95_norm[H05] = parameters.Q_95_norm_H05;
+	 parameters.Q_95_norm[H06] = parameters.Q_95_norm_H06;
+	 parameters.Q_95_norm[H07] = parameters.Q_95_norm_H07;
+	 parameters.Q_95_norm[H08] = parameters.Q_95_norm_H08;
+	 parameters.Q_95_norm[H09] = parameters.Q_95_norm_H09;
+	 parameters.Q_95_norm[H10] = parameters.Q_95_norm_H10;
+	 parameters.Q_95_norm[H11] = parameters.Q_95_norm_H11;
+	 parameters.Q_95_norm[H12] = parameters.Q_95_norm_H12;
+	 parameters.Q_95_norm[H13] = parameters.Q_95_norm_H13;
+	 parameters.Q_95_norm[H14] = parameters.Q_95_norm_H14;
+	 parameters.Q_95_norm[H15] = parameters.Q_95_norm_H15;
+	 parameters.Q_95_norm[H16] = parameters.Q_95_norm_H16;
+	 parameters.Q_95_norm[H17] = parameters.Q_95_norm_H17;
+	 parameters.Q_95_norm[H18] = parameters.Q_95_norm_H18;
+	 parameters.Q_95_norm[H19] = parameters.Q_95_norm_H19;
+	 parameters.Q_95_norm[H20] = parameters.Q_95_norm_H20;
+	 parameters.Q_95_norm[H21] = parameters.Q_95_norm_H21;
+	 parameters.Q_95_norm[H22] = parameters.Q_95_norm_H22;
+	 parameters.Q_95_norm[H23] = parameters.Q_95_norm_H23;
+	 
+	 parameters.COD_norm[H00] = parameters.COD_norm_H00;
+	 parameters.COD_norm[H01] = parameters.COD_norm_H01;
+	 parameters.COD_norm[H02] = parameters.COD_norm_H02;
+	 parameters.COD_norm[H03] = parameters.COD_norm_H03;
+	 parameters.COD_norm[H04] = parameters.COD_norm_H04;
+	 parameters.COD_norm[H05] = parameters.COD_norm_H05;
+	 parameters.COD_norm[H06] = parameters.COD_norm_H06;
+	 parameters.COD_norm[H07] = parameters.COD_norm_H07;
+	 parameters.COD_norm[H08] = parameters.COD_norm_H08;
+	 parameters.COD_norm[H09] = parameters.COD_norm_H09;
+	 parameters.COD_norm[H10] = parameters.COD_norm_H10;
+	 parameters.COD_norm[H11] = parameters.COD_norm_H11;
+	 parameters.COD_norm[H12] = parameters.COD_norm_H12;
+	 parameters.COD_norm[H13] = parameters.COD_norm_H13;
+	 parameters.COD_norm[H14] = parameters.COD_norm_H14;
+	 parameters.COD_norm[H15] = parameters.COD_norm_H15;
+	 parameters.COD_norm[H16] = parameters.COD_norm_H16;
+	 parameters.COD_norm[H17] = parameters.COD_norm_H17;
+	 parameters.COD_norm[H18] = parameters.COD_norm_H18;
+	 parameters.COD_norm[H19] = parameters.COD_norm_H19;
+	 parameters.COD_norm[H20] = parameters.COD_norm_H20;
+	 parameters.COD_norm[H21] = parameters.COD_norm_H21;
+	 parameters.COD_norm[H22] = parameters.COD_norm_H22;
+	 parameters.COD_norm[H23] = parameters.COD_norm_H23;
+	 
+	 parameters.CODs_norm[H00] = parameters.CODs_norm_H00;
+	 parameters.CODs_norm[H01] = parameters.CODs_norm_H01;
+	 parameters.CODs_norm[H02] = parameters.CODs_norm_H02;
+	 parameters.CODs_norm[H03] = parameters.CODs_norm_H03;
+	 parameters.CODs_norm[H04] = parameters.CODs_norm_H04;
+	 parameters.CODs_norm[H05] = parameters.CODs_norm_H05;
+	 parameters.CODs_norm[H06] = parameters.CODs_norm_H06;
+	 parameters.CODs_norm[H07] = parameters.CODs_norm_H07;
+	 parameters.CODs_norm[H08] = parameters.CODs_norm_H08;
+	 parameters.CODs_norm[H09] = parameters.CODs_norm_H09;
+	 parameters.CODs_norm[H10] = parameters.CODs_norm_H10;
+	 parameters.CODs_norm[H11] = parameters.CODs_norm_H11;
+	 parameters.CODs_norm[H12] = parameters.CODs_norm_H12;
+	 parameters.CODs_norm[H13] = parameters.CODs_norm_H13;
+	 parameters.CODs_norm[H14] = parameters.CODs_norm_H14;
+	 parameters.CODs_norm[H15] = parameters.CODs_norm_H15;
+	 parameters.CODs_norm[H16] = parameters.CODs_norm_H16;
+	 parameters.CODs_norm[H17] = parameters.CODs_norm_H17;
+	 parameters.CODs_norm[H18] = parameters.CODs_norm_H18;
+	 parameters.CODs_norm[H19] = parameters.CODs_norm_H19;
+	 parameters.CODs_norm[H20] = parameters.CODs_norm_H20;
+	 parameters.CODs_norm[H21] = parameters.CODs_norm_H21;
+	 parameters.CODs_norm[H22] = parameters.CODs_norm_H22;
+	 parameters.CODs_norm[H23] = parameters.CODs_norm_H23;
+	 
+	 parameters.TSS_norm[H00] = parameters.TSS_norm_H00;
+	 parameters.TSS_norm[H01] = parameters.TSS_norm_H01;
+	 parameters.TSS_norm[H02] = parameters.TSS_norm_H02;
+	 parameters.TSS_norm[H03] = parameters.TSS_norm_H03;
+	 parameters.TSS_norm[H04] = parameters.TSS_norm_H04;
+	 parameters.TSS_norm[H05] = parameters.TSS_norm_H05;
+	 parameters.TSS_norm[H06] = parameters.TSS_norm_H06;
+	 parameters.TSS_norm[H07] = parameters.TSS_norm_H07;
+	 parameters.TSS_norm[H08] = parameters.TSS_norm_H08;
+	 parameters.TSS_norm[H09] = parameters.TSS_norm_H09;
+	 parameters.TSS_norm[H10] = parameters.TSS_norm_H10;
+	 parameters.TSS_norm[H11] = parameters.TSS_norm_H11;
+	 parameters.TSS_norm[H12] = parameters.TSS_norm_H12;
+	 parameters.TSS_norm[H13] = parameters.TSS_norm_H13;
+	 parameters.TSS_norm[H14] = parameters.TSS_norm_H14;
+	 parameters.TSS_norm[H15] = parameters.TSS_norm_H15;
+	 parameters.TSS_norm[H16] = parameters.TSS_norm_H16;
+	 parameters.TSS_norm[H17] = parameters.TSS_norm_H17;
+	 parameters.TSS_norm[H18] = parameters.TSS_norm_H18;
+	 parameters.TSS_norm[H19] = parameters.TSS_norm_H19;
+	 parameters.TSS_norm[H20] = parameters.TSS_norm_H20;
+	 parameters.TSS_norm[H21] = parameters.TSS_norm_H21;
+	 parameters.TSS_norm[H22] = parameters.TSS_norm_H22;
+	 parameters.TSS_norm[H23] = parameters.TSS_norm_H23;
+	 
+	 parameters.NH4_norm[H00] = parameters.NH4_norm_H00;
+	 parameters.NH4_norm[H01] = parameters.NH4_norm_H01;
+	 parameters.NH4_norm[H02] = parameters.NH4_norm_H02;
+	 parameters.NH4_norm[H03] = parameters.NH4_norm_H03;
+	 parameters.NH4_norm[H04] = parameters.NH4_norm_H04;
+	 parameters.NH4_norm[H05] = parameters.NH4_norm_H05;
+	 parameters.NH4_norm[H06] = parameters.NH4_norm_H06;
+	 parameters.NH4_norm[H07] = parameters.NH4_norm_H07;
+	 parameters.NH4_norm[H08] = parameters.NH4_norm_H08;
+	 parameters.NH4_norm[H09] = parameters.NH4_norm_H09;
+	 parameters.NH4_norm[H10] = parameters.NH4_norm_H10;
+	 parameters.NH4_norm[H11] = parameters.NH4_norm_H11;
+	 parameters.NH4_norm[H12] = parameters.NH4_norm_H12;
+	 parameters.NH4_norm[H13] = parameters.NH4_norm_H13;
+	 parameters.NH4_norm[H14] = parameters.NH4_norm_H14;
+	 parameters.NH4_norm[H15] = parameters.NH4_norm_H15;
+	 parameters.NH4_norm[H16] = parameters.NH4_norm_H16;
+	 parameters.NH4_norm[H17] = parameters.NH4_norm_H17;
+	 parameters.NH4_norm[H18] = parameters.NH4_norm_H18;
+	 parameters.NH4_norm[H19] = parameters.NH4_norm_H19;
+	 parameters.NH4_norm[H20] = parameters.NH4_norm_H20;
+	 parameters.NH4_norm[H21] = parameters.NH4_norm_H21;
+	 parameters.NH4_norm[H22] = parameters.NH4_norm_H22;
+	 parameters.NH4_norm[H23] = parameters.NH4_norm_H23;
+	 
+	 parameters.PO4_norm[H00] = parameters.PO4_norm_H00;
+	 parameters.PO4_norm[H01] = parameters.PO4_norm_H01;
+	 parameters.PO4_norm[H02] = parameters.PO4_norm_H02;
+	 parameters.PO4_norm[H03] = parameters.PO4_norm_H03;
+	 parameters.PO4_norm[H04] = parameters.PO4_norm_H04;
+	 parameters.PO4_norm[H05] = parameters.PO4_norm_H05;
+	 parameters.PO4_norm[H06] = parameters.PO4_norm_H06;
+	 parameters.PO4_norm[H07] = parameters.PO4_norm_H07;
+	 parameters.PO4_norm[H08] = parameters.PO4_norm_H08;
+	 parameters.PO4_norm[H09] = parameters.PO4_norm_H09;
+	 parameters.PO4_norm[H10] = parameters.PO4_norm_H10;
+	 parameters.PO4_norm[H11] = parameters.PO4_norm_H11;
+	 parameters.PO4_norm[H12] = parameters.PO4_norm_H12;
+	 parameters.PO4_norm[H13] = parameters.PO4_norm_H13;
+	 parameters.PO4_norm[H14] = parameters.PO4_norm_H14;
+	 parameters.PO4_norm[H15] = parameters.PO4_norm_H15;
+	 parameters.PO4_norm[H16] = parameters.PO4_norm_H16;
+	 parameters.PO4_norm[H17] = parameters.PO4_norm_H17;
+	 parameters.PO4_norm[H18] = parameters.PO4_norm_H18;
+	 parameters.PO4_norm[H19] = parameters.PO4_norm_H19;
+	 parameters.PO4_norm[H20] = parameters.PO4_norm_H20;
+	 parameters.PO4_norm[H21] = parameters.PO4_norm_H21;
+	 parameters.PO4_norm[H22] = parameters.PO4_norm_H22;
+	 parameters.PO4_norm[H23] = parameters.PO4_norm_H23;
+*/
+  };
+
+  equations <-
+  {
+//base class:   state.Q_In = interface.Inflow[H2O] / 1000000 ;
+// BEGIN :: Buffer
+//base class:   DERIV(state.help_Int_Q,[independent.t]) = state.Q_In ;
+   
+   state.buffer_Int_Q_1h = MSLUBufferPut(parameters.ID_Q_1h, independent.t, state.help_Int_Q);
+   state.buffer_Int_Q_COD = MSLUBufferPut(parameters.ID_Q_COD, independent.t, state.help_Int_Q);
+   state.buffer_Int_Q_CODs = MSLUBufferPut(parameters.ID_Q_CODs, independent.t, state.help_Int_Q);
+   state.buffer_Int_Q_TSS = MSLUBufferPut(parameters.ID_Q_TSS, independent.t, state.help_Int_Q);
+   state.buffer_Int_Q_NH4 = MSLUBufferPut(parameters.ID_Q_NH4, independent.t, state.help_Int_Q);
+   state.buffer_Int_Q_PO4 = MSLUBufferPut(parameters.ID_Q_PO4, independent.t, state.help_Int_Q);
+   
+   state.V_1hp = MSLUBufferGet(parameters.ID_Q_1h, (independent.t - 0.041666667));
+   state.V_CODp = MSLUBufferGet(parameters.ID_Q_COD, (independent.t - parameters.window_COD));
+   state.V_CODsp = MSLUBufferGet(parameters.ID_Q_CODs, (independent.t - parameters.window_CODs));
+   state.V_TSSp = MSLUBufferGet(parameters.ID_Q_TSS, (independent.t - parameters.window_TSS));
+   state.V_NH4p = MSLUBufferGet(parameters.ID_Q_NH4, (independent.t - parameters.window_NH4));
+   state.V_PO4p = MSLUBufferGet(parameters.ID_Q_PO4, (independent.t - parameters.window_PO4));
+   
+   state.V_1h = state.help_Int_Q - state.V_1hp;
+   state.V_COD = state.help_Int_Q - state.V_CODp;
+   state.V_CODs = state.help_Int_Q - state.V_CODsp;
+   state.V_TSS = state.help_Int_Q - state.V_TSSp;
+   state.V_NH4 = state.help_Int_Q - state.V_NH4p;
+   state.V_PO4 = state.help_Int_Q - state.V_PO4p;
+      
+//   state.help_Time = independent.t - floor(independent.t);
+//   state.Daytime = (independent.t - floor(independent.t)) * 24 ; 
+   state.Timestep = floor((independent.t - floor(independent.t)) * 24) + 1 ;
+   
+   state.diluh = IF (state.V_1h > 1)
+   		THEN parameters.Q_95_av * parameters.Q_95_norm[state.Timestep] / (state.V_1h * 24) ELSE 1.0 ;
+		
+   state.buffer_dilu = MSLUBufferPut(parameters.ID_dilu, independent.t, state.diluh);
+   state.diluhh = MSLUBufferGet(parameters.ID_dilu, (independent.t - parameters.window_dilu));
+   
+   state.f_dil = IF (state.diluhh > 1) THEN 1.0
+   		ELSE IF (state.diluhh <= 0.01) THEN 0.01
+			 ELSE state.diluhh ;
+// END :: Buffer
+
+   // COD
+   state.repl_CODh = parameters.Q_95_av * parameters.window_COD / state.V_COD ;
+   state.repl_COD = IF (state.repl_CODh > 1) THEN 1.0 ELSE state.repl_CODh ;
+   // Soluble COD	   
+   state.repl_CODsh = parameters.Q_95_av * parameters.window_CODs / state.V_CODs ;
+   state.repl_CODs = IF (state.repl_CODsh > 1) THEN 1.0 ELSE state.repl_CODsh ;
+   // Soluble TSS	   
+   state.repl_TSSh = parameters.Q_95_av * parameters.window_TSS / state.V_TSS;
+   state.repl_TSS = IF (state.repl_TSSh > 1) THEN 1.0 ELSE state.repl_TSSh ;
+   // Soluble NH4	   
+   state.repl_NH4h = parameters.Q_95_av * parameters.window_NH4 / state.V_NH4;
+   state.repl_NH4 = IF (state.repl_NH4h > 1) THEN 1.0 ELSE state.repl_NH4h ;
+   // Soluble PO4	   
+   state.repl_PO4h = parameters.Q_95_av * parameters.window_PO4 / state.V_PO4;
+   state.repl_PO4 = IF (state.repl_PO4h > 1) THEN 1 ELSE state.repl_PO4h;
+   
+   state.t_start = IF ((previous(state.t_start) == 0) && (state.Q_In > parameters.Q_peak)) THEN independent.t
+   		ELSE IF ((previous(state.t_start) > 0) && ((independent.t - state.t_start) > parameters.t_max_peak)) THEN 0
+			 ELSE previous(state.t_start);
+						
+   state.peak_COD_factor = IF ((independent.t - state.t_start) < parameters.t_COD_peak)
+   		THEN parameters.peak_COD ELSE 1 ;
+		
+   state.peak_CODs_factor = IF ((independent.t - state.t_start) < parameters.t_CODs_peak)
+   		THEN parameters.peak_CODs ELSE 1 ;
+		
+   state.peak_TSS_factor = IF ((independent.t - state.t_start) < parameters.t_TSS_peak)
+   		THEN parameters.peak_TSS ELSE 1;
+		
+   state.peak_NH4_factor = IF ((independent.t - state.t_start) < parameters.t_NH4_peak)
+   		THEN parameters.peak_NH4 ELSE 1 ;
+		
+   state.peak_PO4_factor = IF ((independent.t - state.t_start) < parameters.t_PO4_peak)
+   		THEN parameters.peak_PO4 ELSE 1;
+   				
+   state.COD = parameters.COD_av * parameters.COD_norm[state.Timestep] 
+   			 * (parameters.alpha_COD * (state.f_dil - 1) + 1) // dilution
+			 * (parameters.beta_COD * (state.repl_COD - 1) + 1) // replenishment
+			 * state.peak_COD_factor; // peak
+
+   state.CODs = parameters.CODs_av * parameters.CODs_norm[state.Timestep] 
+   			 * (parameters.alpha_CODs * (state.f_dil - 1) + 1) // dilution
+			 * (parameters.beta_CODs * (state.repl_CODs - 1) + 1) // replenishment
+			 * state.peak_CODs_factor; // peak
+			 
+   state.TSS = parameters.TSS_av * parameters.TSS_norm[state.Timestep] 
+   			 * (parameters.alpha_TSS * (state.f_dil - 1) + 1) // dilution
+			 * (parameters.beta_TSS * (state.repl_TSS - 1) + 1) // replenishment
+			 * state.peak_TSS_factor; // peak
+			 
+   state.NH4 = parameters.NH4_av * parameters.NH4_norm[state.Timestep] 
+   			 * (parameters.alpha_NH4 * (state.f_dil - 1) + 1) // dilution
+			 * (parameters.beta_NH4 * (state.repl_NH4 - 1) + 1) // replenishment
+			 * state.peak_NH4_factor; // peak
+			 
+   state.PO4 = parameters.PO4_av * parameters.PO4_norm[state.Timestep] 
+   			 * (parameters.alpha_PO4 * (state.f_dil - 1) + 1) // dilution
+			 * (parameters.beta_PO4 * (state.repl_PO4 - 1) + 1) // replenishment
+			 * state.peak_PO4_factor; // peak
+
+   interface.Outflow[H2O] = -interface.Inflow[H2O];
+   interface.Outflow[XCOD] = -(state.COD - state.CODs) * state.Q_In;
+   interface.Outflow[SCOD] = -state.CODs * state.Q_In;
+   interface.Outflow[XTSS] = -state.TSS * state.Q_In;
+   interface.Outflow[NH4] = -state.NH4 * state.Q_In;
+   interface.Outflow[PO4] = -state.PO4 * state.Q_In;
+ };
+
+:};
+
+ 
+#endif // IUWS_CONNECTORS_SEWER_WWTP

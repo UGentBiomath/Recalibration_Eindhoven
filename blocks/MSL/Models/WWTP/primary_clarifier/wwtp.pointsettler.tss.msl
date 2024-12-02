@@ -1,0 +1,357 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 5. februar 2019 16:34:09$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_POINTSETTLER_TSS
+#define WWTP_POINTSETTLER_TSS
+
+
+#if (defined ASM2dModTemp)
+
+CLASS PointSettler_TSS (* icon = "primary_clarifier" *) "Point-settler model for primary clarifier, with variable TSS removal efficiency and calculation of BOD and COD removal"
+EXTENDS PointSettler_TSS_Base WITH
+{:
+ 
+  comments <- "Point-settler model for primary clarifier, with variable TSS removal efficiency and calculation of BOD and COD removal";
+
+  interface <-
+  { 
+    OBJ Underflow (* terminal = "out_2" *) "Underflow" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Underflow" :};
+  };
+
+  state <-
+  {
+//    OBJ Help_SCOD_Under (* hidden = "1" *) "Soluble COD under" : Concentration := {: group <- "Measurements" :};    
+//    OBJ SCOD_Under (* hidden = "1" *) "Soluble COD flux under" : Real := {: unit <- "g/d"; group <- "Measurements" :};
+    OBJ BOD_Under (* hidden = "1" *) "BOD flux under" : Real := {: unit <- "g/d"; group <- "Measurements" :};
+  };
+  
+  equations <-
+  {
+    // fluxes (g/d)
+    //
+    #if (defined ASM2dModTemp || defined ASM2dMod1)
+    state.XCOD_Under = IF (state.Q_Under_Actual <= 0.0) THEN 0.0
+      ELSE (interface.Underflow[X_I] + interface.Underflow[X_S] + interface.Underflow[X_AUT] +
+      interface.Underflow[X_H] + interface.Underflow[X_PAO] + interface.Underflow[X_PHA]) ; 
+//    state.COD_Out = - ((state.COD_In * state.Q_In) + state.COD_Under) ; 
+
+    state.BOD_Under = IF (state.Q_Under_Actual <= 0.0) THEN 0.0
+      ELSE parameters.F_BOD_COD * (interface.Underflow[S_A] + interface.Underflow[S_F] +
+        interface.Underflow[X_S] + interface.Underflow[X_PHA] + (1 - parameters.f_X_I) * (interface.Underflow[X_AUT] +
+        interface.Underflow[X_H] + interface.Underflow[X_PAO])) ; 
+    #endif
+
+    #if (defined ASM2dMod2)
+    state.XCOD_Under = IF (state.Q_Under_Actual <= 0.0) THEN 0.0
+      ELSE (interface.Underflow[X_I] + interface.Underflow[X_S] + interface.Underflow[X_AOB] +
+      interface.Underflow[X_NOB] + interface.Underflow[X_OHO] + interface.Underflow[X_PAO] + interface.Underflow[X_PHA]) ; 
+
+    state.BOD_Under = IF (state.Q_Under_Actual <= 0.0) THEN 0.0
+      ELSE parameters.F_BOD_COD * (interface.Underflow[S_A] + interface.Underflow[S_F] +
+        interface.Underflow[X_S] + interface.Underflow[X_PHA] + (1 - parameters.f_X_I) * (interface.Underflow[X_AOB] +
+        interface.Underflow[X_NOB] + interface.Underflow[X_OHO] + interface.Underflow[X_PAO])) ; 
+    #endif
+    // end - fluxes
+
+//    state.r_COD = - state.COD_Under / (state.COD_In * state.Q_In) ;
+//    state.r_SCOD = - state.SCOD_Under / (state.SCOD_In * state.Q_In) ;
+    
+//    state.r_BOD = - state.BOD_Under / (state.BOD_In * state.Q_In) ;
+
+    // H2O
+    interface.Underflow[1] = - state.Q_Under_Actual / 1E-06 ;
+    
+    // Particulates are governed by TSS % removal
+    {FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+      interface.Outflow[Comp_Index] = state.Help_XOutflow[Comp_Index] ;};   
+
+    // Solubles in base class, except S_NH
+    // S_NH
+    interface.Outflow[S_NH] = IF (state.Q_In <= interface.Q_Under) THEN 0.0
+      ELSE - (state.f_Out) * interface.Inflow[S_NH] ;   
+
+    {FOREACH Comp_Index IN {IndexOfFirstSolubleComponent .. IndexOfLastParticulateComponent}:
+      interface.Underflow[Comp_Index] = - (state.InFluxPerComponent[Comp_Index] + interface.Outflow[Comp_Index]) ;};
+  };
+   
+:};
+
+
+CLASS PointSettler_TSS_Base EXTENDS BaseModel_NoVolume WITH
+{:
+ 
+  interface <-
+  { 
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Overflow" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+//    OBJ Underflow (* terminal = "out_2" *) "Underflow" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Underflow" :};
+    OBJ Q_Under (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Underflow rate" : FlowRate := {: causality <- "CIN" ; value <- 10 ; group <- "Operation" :};  
+//    OBJ PumpingEnergy (* terminal = "out_3" *)"Pumping energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+//    OBJ PumpingPower (* terminal = "out_3" *) "Pumping power" : Power := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ r_TSS (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "TSS removal" : Fraction := {: causality <- "CIN" ; value <- 0.6 ; group <- "Operation" :};
+  };
+  
+  parameters <- 
+  { 
+    OBJ F_BOD_COD "Conversion factor BOD/COD" : Fraction := {:value<- 0.65 ; group <- "Conversion":};
+    OBJ F_TSS_COD "Fraction TSS/COD" : Fraction := {: value <- 0.75 ; group <- "Conversion factors" :};
+    #if (defined ASM2dModTemp || defined ASM2dMod1 || defined ASM2dMod2)
+    OBJ f_X_I "Fraction of inert COD generated in biomass lysis" : Fraction := {:value <- 0.10 ; group <- "Stoichiometry" :};
+    OBJ i_TSS_BM "TSS to biomass ratio for X_H, X_PAO, X_AUT" : ConversionFactor := {: value <- 0.9; group <- "Composition parameters"; :};
+    OBJ i_TSS_X_S "TSS to X_S ratio" : ConversionFactor := {: value <- 0.75; group <- "Composition parameters"; :};
+    OBJ i_TSS_X_I "TSS to X_I ratio" : ConversionFactor := {: value <- 0.75; group <- "Composition parameters"; :};
+    #endif
+    OBJ C_Sol_Under (* hidden = "1" *) "" : Real := {: value <- 1.0 ; interval <- {: lowerBound <- 0.0 :} :} ;
+    // PUMPING ENERGY
+//    OBJ F_Energy_FlowRate "Conversion factor Energy needed/Pump flow rate" : EnergyForPumping := {: value <- 0.04 ; group <- "Energy":};
+  };
+
+  state <-
+  {
+    OBJ Q_Out (* is_favorite = "1" *) "Effluent flow rate" : FlowRate := {: group <- "Operation" :};
+    OBJ f_Out (* hidden = "1" *) "Fraction of the influent flux going to the overflow" : Fraction ;
+    OBJ Q_Under_Actual (* is_favorite = "1" *) "Underflow rate" : FlowRate := {: group <- "Operation" :};
+    OBJ f_Under (* hidden = "1" *) "Fraction of the influent flux going to the underflow" : Fraction ;
+    OBJ BOD_In "BOD in" : Concentration := {: group <- "Probe-IN" :};
+    OBJ COD_In "COD in" : Concentration := {: group <- "Probe-IN" :};
+    OBJ SCOD_In "Soluble COD in" : Concentration := {: group <- "Probe-IN" :};    
+    OBJ TSS_In "TSS in" : Concentration := {: group <- "Probe-IN" :};
+    OBJ TSSc_In "TSSc in" : Concentration := {: group <- "Probe-IN" :};
+    // Remark: this is prior to any fictitious manipulation due to eg reject water
+    OBJ BOD_Out "BOD in settled effluent" : Concentration := {: group <- "Probe-OUT" :};
+    OBJ r_BOD (* is_favorite = "1" *) "BOD removal" : Real := {: group <- "Removal" :}; // preferably Fraction but may give warnings
+    OBJ r_COD (* is_favorite = "1" *) "COD removal" : Real := {: group <- "Removal" :}; // preferably Fraction but may give warnings
+    OBJ r_SCOD (* hidden = "1" *) "S_COD removal" : Real := {: group <- "Removal" :}; // preferably Fraction but may give warnings
+    // END Remark
+    // this represents the actual outflow vector (only X_ components are filled in) of the point-settler
+    // without any other fictitious contribution - e.g. reject water
+    OBJ Help_XOutflow (* hidden = "1" *) "Overflow" : MassFlux[NrOfComponents;] := {: group <- "Calculations" :};
+    OBJ Help_SCOD_Under (* hidden = "1" *) "Soluble COD under" : Concentration := {: group <- "Calculations" :};
+    OBJ Help_BOD_Out (* hidden = "1" *) "BOD flux out (calc)" : Real := {: unit <- "g/d"; group <- "Calculations" :};
+    OBJ SCOD_Out (* hidden = "1" *) "Soluble COD flux out" : Real := {: unit <- "g/d"; group <- "Calculations" :};
+    OBJ XCOD_Out (* hidden = "1" *) "Particulate COD flux out" : Real := {: unit <- "g/d"; group <- "Calculations" :};
+    OBJ COD_Out (* hidden = "1" *) "COD flux out" : Real := {: unit <- "g/d"; group <- "Calculations" :};
+    OBJ SCOD_Under (* hidden = "1" *) "Soluble COD flux under" : Real := {: unit <- "g/d"; group <- "Calculations" :};
+    OBJ XCOD_Under (* hidden = "1" *) "Particulate COD flux under" : Real := {: unit <- "g/d"; group <- "Calculations" :};
+    OBJ COD_Under (* hidden = "1" *) "COD flux under" : Real := {: unit <- "g/d"; group <- "Calculations" :};
+  };
+
+  equations <-
+  {
+    state.Q_Under_Actual = IF (state.Q_In <= interface.Q_Under) THEN state.Q_In
+      ELSE interface.Q_Under ;
+  
+    state.Q_Out = state.Q_In - state.Q_Under_Actual ;
+  
+    state.f_Out = IF  (state.Q_In <= interface.Q_Under) THEN 0.0
+      ELSE (state.Q_In - interface.Q_Under) / state.Q_In ;
+      
+    state.f_Under = 1.0 - state.f_Out ;
+
+    #if (defined ASM2dModTemp || defined ASM2dMod1)
+    state.BOD_In = IF (state.Q_In <= 0.0) THEN 0.0
+      ELSE parameters.F_BOD_COD * (interface.Inflow[S_A] + interface.Inflow[S_F] +
+        interface.Inflow[X_S] + interface.Inflow[X_PHA] + (1 - parameters.f_X_I) * (interface.Inflow[X_AUT] +
+        interface.Inflow[X_H] + interface.Inflow[X_PAO])) / state.Q_In ; 
+
+    state.COD_In = IF (state.Q_In <= 0.0) THEN 0.0
+      ELSE (interface.Inflow[S_A] + interface.Inflow[S_F] + interface.Inflow[X_S] +
+      interface.Inflow[S_I] + interface.Inflow[X_I] + interface.Inflow[X_AUT] +
+      interface.Inflow[X_H] + interface.Inflow[X_PAO] + interface.Inflow[X_PHA]) / state.Q_In ; 
+
+    // this is computed based on TSS % removal
+//    state.XCOD_Out = IF (state.Q_Out <= 0.0) THEN 0.0
+//      ELSE (interface.Outflow[X_I] + interface.Outflow[X_S] + interface.Outflow[X_AUT] +
+//      interface.Outflow[X_H] + interface.Outflow[X_PAO] + interface.Outflow[X_PHA]) ; 
+    state.XCOD_Out = IF (state.Q_Out <= 0.0) THEN 0.0
+      ELSE (state.Help_XOutflow[X_I] + state.Help_XOutflow[X_S] + state.Help_XOutflow[X_AUT] +
+      state.Help_XOutflow[X_H] + state.Help_XOutflow[X_PAO] + state.Help_XOutflow[X_PHA]) ; 
+
+    state.Help_BOD_Out = IF (state.Q_In <= 0.0) THEN 0.0
+      ELSE - parameters.F_BOD_COD * (interface.Outflow[S_A] + interface.Outflow[S_F] +
+        state.Help_XOutflow[X_S] + state.Help_XOutflow[X_PHA] + (1 - parameters.f_X_I) * 
+        (state.Help_XOutflow[X_AUT] + state.Help_XOutflow[X_H] + state.Help_XOutflow[X_PAO])) ; 
+
+//orig    state.COD_Out = - ((state.COD_In * state.Q_In) + state.COD_Under) ; 
+    state.COD_Out = IF (state.Q_Out <= 0.0) THEN 0.0
+      ELSE - (interface.Outflow[S_A] + interface.Outflow[S_F] + state.Help_XOutflow[X_S] +
+      interface.Outflow[S_I] + state.Help_XOutflow[X_I] + state.Help_XOutflow[X_AUT] +
+      state.Help_XOutflow[X_H] + state.Help_XOutflow[X_PAO] + state.Help_XOutflow[X_PHA]) / state.Q_Out ; 
+
+    state.TSSc_In = IF (state.Q_In <= 0.0) THEN 0.0
+      ELSE (interface.Inflow[X_I] * parameters.i_TSS_X_I + interface.Inflow[X_S] * parameters.i_TSS_X_S +
+      (interface.Inflow[X_H] + interface.Inflow[X_PAO] + interface.Inflow[X_AUT]) * parameters.i_TSS_BM +
+      interface.Inflow[X_PP] * 3.23 + interface.Inflow[X_PHA] * 0.6 + interface.Inflow[X_MEOH] * 1.0 +
+      interface.Inflow[X_MEP] * 1.0) / state.Q_In ;
+
+    #endif
+
+    #if (defined ASM2dMod2)
+    state.BOD_In = IF (state.Q_In <= 0.0) THEN 0.0
+      ELSE parameters.F_BOD_COD * (interface.Inflow[S_A] + interface.Inflow[S_F] +
+        interface.Inflow[X_S] + interface.Inflow[X_PHA] + (1 - parameters.f_X_I) * (interface.Inflow[X_AOB] +
+        interface.Inflow[X_NOB] + interface.Inflow[X_OHO] + interface.Inflow[X_PAO])) / state.Q_In ; 
+
+    state.COD_In = IF (state.Q_In <= 0.0) THEN 0.0
+      ELSE (interface.Inflow[S_A] + interface.Inflow[S_F] + interface.Inflow[X_S] +
+      interface.Inflow[S_I] + interface.Inflow[X_I] + interface.Inflow[X_AOB] + interface.Inflow[X_NOB] +
+      interface.Inflow[X_OHO] + interface.Inflow[X_PAO] + interface.Inflow[X_PHA]) / state.Q_In ; 
+
+    state.XCOD_Out = IF (state.Q_Out <= 0.0) THEN 0.0
+      ELSE (state.Help_XOutflow[X_I] + state.Help_XOutflow[X_S] + state.Help_XOutflow[X_AOB] +
+      state.Help_XOutflow[X_NOB] + state.Help_XOutflow[X_OHO] + state.Help_XOutflow[X_PAO] + state.Help_XOutflow[X_PHA]) ; 
+
+    state.Help_BOD_Out = IF (state.Q_In <= 0.0) THEN 0.0
+      ELSE - parameters.F_BOD_COD * (interface.Outflow[S_A] + interface.Outflow[S_F] +
+        state.Help_XOutflow[X_S] + state.Help_XOutflow[X_PHA] + (1 - parameters.f_X_I) * 
+        (state.Help_XOutflow[X_AOB] + state.Help_XOutflow[X_NOB] + state.Help_XOutflow[X_OHO] + state.Help_XOutflow[X_PAO])) ; 
+
+    state.COD_Out = IF (state.Q_Out <= 0.0) THEN 0.0
+      ELSE - (interface.Outflow[S_A] + interface.Outflow[S_F] + state.Help_XOutflow[X_S] +
+      interface.Outflow[S_I] + state.Help_XOutflow[X_I] + state.Help_XOutflow[X_AOB] +
+      state.Help_XOutflow[X_NOB] + state.Help_XOutflow[X_OHO] + state.Help_XOutflow[X_PAO] + state.Help_XOutflow[X_PHA]) / state.Q_Out ; 
+
+    state.TSSc_In = IF (state.Q_In <= 0.0) THEN 0.0
+      ELSE (interface.Inflow[X_I] * parameters.i_TSS_X_I + interface.Inflow[X_S] * parameters.i_TSS_X_S +
+      (interface.Inflow[X_OHO] + interface.Inflow[X_PAO] + interface.Inflow[X_AOB] + interface.Inflow[X_NOB]) * parameters.i_TSS_BM +
+      interface.Inflow[X_PP] * 3.23 + interface.Inflow[X_PHA] * 0.6 + interface.Inflow[X_MEOH] * 1.0 +
+      interface.Inflow[X_MEP] * 1.0) / state.Q_In ;
+
+    #endif
+
+    state.SCOD_In = IF (state.Q_In <= 0.0) THEN 0.0
+      ELSE (interface.Inflow[S_A] + interface.Inflow[S_F] + interface.Inflow[S_I]) / state.Q_In ; 
+
+    // fluxes (g/d)
+    state.SCOD_Out = (state.COD_Out - state.XCOD_Out) ; 
+
+    // Particulates are governed by TSS % removal
+    {FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+      state.Help_XOutflow[Comp_Index] = IF (state.Q_In <= interface.Q_Under) THEN 0.0
+        ELSE - (1 - interface.r_TSS) * interface.Inflow[Comp_Index] ;};   
+
+    state.BOD_Out = IF (state.Q_In <= 0.0) THEN 0.0
+      ELSE state.Help_BOD_Out / state.Q_Out ;
+    //
+    state.Help_SCOD_Under = state.SCOD_In * parameters.C_Sol_Under ;
+    state.SCOD_Under = - (state.Help_SCOD_Under * state.Q_Under_Actual) ; 
+
+/* in derived class
+    state.XCOD_Under = IF (state.Q_Under_Actual <= 0.0) THEN 0.0
+      ELSE (interface.Underflow[X_I] + interface.Underflow[X_S] + interface.Underflow[X_AUT] +
+      interface.Underflow[X_H] + interface.Underflow[X_PAO] + interface.Underflow[X_PHA]) ; 
+*/
+    state.COD_Under = state.SCOD_Under + state.XCOD_Under ; 
+
+/* in derived class
+    state.BOD_Under = IF (state.Q_Under_Actual <= 0.0) THEN 0.0
+      ELSE parameters.F_BOD_COD * (interface.Underflow[S_A] + interface.Underflow[S_F] +
+        interface.Underflow[X_S] + interface.Underflow[X_PHA] + (1 - parameters.f_X_I) * (interface.Underflow[X_AUT] +
+        interface.Underflow[X_H] + interface.Underflow[X_PAO])) ; 
+    // end - fluxes
+*/
+    state.TSS_In = IF (state.Q_In <= 0.0) THEN 0.0
+      ELSE interface.Inflow[X_TSS] / state.Q_In ; 
+
+//orig    state.r_COD = - state.COD_Under / (state.COD_In * state.Q_In) ;
+    state.r_COD = (state.COD_In - state.COD_Out) / state.COD_In ;
+    state.r_SCOD = - state.SCOD_Under / (state.SCOD_In * state.Q_In) ;    
+//orig    state.r_BOD = - state.BOD_Under / (state.BOD_In * state.Q_In) ;
+    state.r_BOD = (state.BOD_In - state.BOD_Out) / state.BOD_In ;
+
+    // H2O
+    interface.Outflow[1] = - state.Q_Out / 1E-06 ;
+//    interface.Underflow[1] = - state.Q_Under_Actual / 1E-06 ;
+    
+    // Solubles .....................
+    // S_I
+    interface.Outflow[S_I] = IF (state.Q_In <= interface.Q_Under) THEN 0.0
+      ELSE - (1 - state.r_SCOD) * interface.Inflow[S_I] ;   
+    // S_O
+    interface.Outflow[S_O] = IF (state.Q_In <= interface.Q_Under) THEN 0.0
+      ELSE - (state.f_Out) * interface.Inflow[S_O] ;   
+    // S_N2
+    interface.Outflow[S_N2] = IF (state.Q_In <= interface.Q_Under) THEN 0.0
+      ELSE - (state.f_Out) * interface.Inflow[S_N2] ;   
+    // S_F
+    interface.Outflow[S_F] = IF (state.Q_In <= interface.Q_Under) THEN 0.0
+      ELSE - (1 - state.r_SCOD) * interface.Inflow[S_F] ;   
+    // S_A
+    interface.Outflow[S_A] = IF (state.Q_In <= interface.Q_Under) THEN 0.0
+      ELSE - (1 - state.r_SCOD) * interface.Inflow[S_A] ;   
+    
+    #if (defined ASM2dModTemp || defined ASM2dMod1)
+    // S_NO
+    interface.Outflow[S_NO] = IF (state.Q_In <= interface.Q_Under) THEN 0.0
+      ELSE - (state.f_Out) * interface.Inflow[S_NO] ;
+    #endif      
+    
+    #if (defined ASM2dMod2)
+    // S_NOx
+    interface.Outflow[S_NO2] = IF (state.Q_In <= interface.Q_Under) THEN 0.0
+      ELSE - (state.f_Out) * interface.Inflow[S_NO2] ;
+
+    interface.Outflow[S_NO3] = IF (state.Q_In <= interface.Q_Under) THEN 0.0
+      ELSE - (state.f_Out) * interface.Inflow[S_NO3] ;
+    #endif      
+    // S_PO
+    interface.Outflow[S_PO] = IF (state.Q_In <= interface.Q_Under) THEN 0.0
+      ELSE - (state.f_Out) * interface.Inflow[S_PO] ;   
+    // S_NH is to be implemented in derived classes
+    // S_ALK
+    interface.Outflow[S_ALK] = IF (state.Q_In <= interface.Q_Under) THEN 0.0
+      ELSE - (state.f_Out) * interface.Inflow[S_ALK] ;   
+  
+  // PUMPING ENERGY
+//  interface.PumpingPower = 1E3 * parameters.F_Energy_FlowRate * state.Q_Under_Actual / 24 ;
+//  DERIV(state.Integ_PE,[independent.t])=  state.Q_Under_Actual;
+//  interface.PumpingEnergy = parameters.F_Energy_FlowRate * state.Integ_PE ;  
+  };
+
+:};
+
+
+CLASS BaseModel_NoVolume SPECIALISES PhysicalDAEModelType :=
+{:
+
+  independent <- 
+  { 
+    OBJ t "Time"  : Time := {: group <- "Time" :}; 
+  };
+  
+  state <-
+  {
+    OBJ InFluxPerComponent (* hidden = "1" *) "Vector containing incoming fluxes for all components" : MassFluxVector;
+    OBJ Q_In (* is_favorite = "1" *) "Influent flow rate" : FlowRate := {: group <- "Operation" :};
+  };
+  
+  equations <-
+  {
+    {FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}:
+      state.InFluxPerComponent[Comp_Index] =
+      SUMOVER In_Terminal IN {SelectByType(interface,InWWTPTerminal)}: (In_Terminal[Comp_Index]) ; };
+    
+      state.Q_In = 1E-06 * state.InFluxPerComponent[IndexOfSolvent] ;
+  };
+
+:};
+
+
+#endif // ASM2dModTemp
+
+
+#endif // WWTP_POINTSETTLER_TSS

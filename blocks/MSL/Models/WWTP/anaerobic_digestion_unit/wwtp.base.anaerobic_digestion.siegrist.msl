@@ -1,0 +1,258 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:46$
+ *
+ ******************************************************************************/
+
+#ifndef ANAEROBIC_DIGESTION_SIEGRIST
+#define ANAEROBIC_DIGESTION_SIEGRIST
+
+#if (defined ASM1Temp)
+
+CLASS AD_Siegrist (* icon = "anaerobic_digester" *) "Anaerobic digester according to Siegrist et al. (incl. interface transformers for ASM1)"
+SPECIALISES CoupledModelType :=
+{:
+  comments <- "A model for anaerobic digestion processes by Siegrist et al. (incl. interface transformers for ASM1)";
+  
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InWWTPTerminal := {: causality <- CIN ; group <- "Effluent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutWWTPTerminal := {: causality <- COUT ; group <- "Effluent" :};
+    OBJ Q_Stripping (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Gas flow for stripping" : FlowRate := {: causality <- "CIN" ; value <- 30 ; group <- "Operational" :}; 
+    OBJ Temp (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Celsius Temperature" : CelsiusTemperature := {: causality <- "CIN" ; value <- 35.0 ; group <- "Operational":};
+    //
+    OBJ Q_Biogas (* terminal = "out_4"; is_favorite = "1" *) "Biogas flow (incl. stripping gas)" : FlowRate := {: causality <- "COUT" ; group <- "Operational" :}; 
+  };
+  
+  parameters <-
+  {
+    OBJ f_X_Out (* is_favorite = "1" *) "Fraction of particulate matter that leaves the reactor" : Fraction := {: value <- 0.10 ; group <- "Settling" :};
+    OBJ p (* is_favorite = "1" *) "Head pressure in the digester" : Pressure := {:value <- 101325.00 ; group <- "Operational":};
+    OBJ Vol (* is_favorite = "1";  *) "Volume of liquid in the reactor" : Volume := {: value <- 3400; group <- "Dimension"; :};
+
+// also remember OBJ i_X_B, i_X_P, i_S_AS, i_X_S_An, i_X_An, i_X_IN are common to both transformers -> needs to be sync 
+    OBJ i_X_B "Mass of N per mass of COD in biomass (ASM1)" : Fraction := {: value <- 0.086 ; group <- "Conversion factors" :};
+    OBJ i_X_P "Mass of N per mass of COD in products formed (ASM1)" : Fraction := {: value <- 0.04 ; group <- "Conversion factors" :};
+    OBJ i_S_AS "Mass of N per mass of COD in Amino Acids (S_AS)" : Fraction := {: value <- 0.040 ; group <- "Conversion factors" :};
+    OBJ i_X_S_An "Mass of N per mass of COD in slowly biodegradable matter (X_S)" : Fraction := {: value <- 0.020 ; group <- "Conversion factors" :};
+    OBJ i_X_An "Mass of N per mass of COD in anaerobic biomass" : Fraction := {: value <- 0.080 ; group <- "Conversion factors" :};
+    OBJ i_X_IN "Mass of N per mass of COD in inert particulates" : Fraction := {: value <- 0.040 ; group <- "Conversion factors" :};
+    OBJ f_AC_S "Acetate (S_AC) fraction of S_S" : Fraction := {: value <- 0.30 ; group <- "Conversion factors" :};
+    OBJ f_PRO_S "Propionate (S_PRO) fraction of S_S" : Fraction := {: value <- 0.10 ; group <- "Conversion factors" :};
+    OBJ f_AS_S "Amino Acids and sugar (S_AS) fraction of S_S" : Fraction := {: value <- 0.10 ; group <- "Conversion factors" :};
+    OBJ f_XS_I "X_I fraction that becomes biodegradable in anaerobic conditions" : Fraction := {: value <- 0.10 ; group <- "Conversion factors" :};
+    OBJ f_XS_H "X_BH fraction that becomes biodegradable in anaerobic conditions" : Fraction := {: value <- 0.08 ; group <- "Conversion factors" :};
+    OBJ f_XS_A "X_BA fraction that becomes biodegradable in anaerobic conditions" : Fraction := {: value <- 0.92 ; group <- "Conversion factors" :};
+    OBJ f_XS_P "X_P fraction that becomes biodegradable in anaerobic conditions" : Fraction := {: value <- 0.10 ; group <- "Conversion factors" :};
+    OBJ f_AS_H "Fraction of X_BH that are capable of fermenting" : Fraction := {: value <- 0.50 ; group <- "Conversion factors" :};
+    OBJ f_P_An "Fraction of anaerobic biomass that leads to inert matter" : Fraction := {: value <- 0.08 ; group <- "Conversion factors" :};
+    OBJ f_H_AS "Fraction of fermenting biomass that are heterotrophs" : Fraction := {: value <- 0.50 ; group <- "Conversion factors" :};
+  };
+  
+  sub_models <-
+  {
+    OBJ Trans_In : ASM1ToSiegrist ;
+    OBJ Digester : SiegristConversionModel;
+    OBJ Trans_Out : SiegristToASM1;
+  };
+  
+  coupling <-
+  {
+    sub_models.Digester.parameters.Vol.value := parameters.Vol.value,
+    sub_models.Digester.parameters.f_X_Out.value := parameters.f_X_Out.value,
+    sub_models.Digester.parameters.p.value := parameters.p.value,
+    sub_models.Trans_In.parameters.i_X_B.value := parameters.i_X_B.value,
+    sub_models.Trans_Out.parameters.i_X_B.value := parameters.i_X_B.value,
+    sub_models.Trans_In.parameters.i_X_P.value := parameters.i_X_P.value,
+    sub_models.Trans_Out.parameters.i_X_P.value := parameters.i_X_P.value,
+    sub_models.Trans_In.parameters.i_S_AS.value := parameters.i_S_AS.value,
+    sub_models.Trans_Out.parameters.i_S_AS.value := parameters.i_S_AS.value,
+    sub_models.Trans_In.parameters.i_X_S_An.value := parameters.i_X_S_An.value,
+    sub_models.Trans_Out.parameters.i_X_S_An.value := parameters.i_X_S_An.value,
+    sub_models.Trans_In.parameters.i_X_An.value := parameters.i_X_An.value,
+    sub_models.Trans_Out.parameters.i_X_An.value := parameters.i_X_An.value,
+    sub_models.Trans_In.parameters.i_X_IN.value := parameters.i_X_IN.value,
+    sub_models.Trans_Out.parameters.i_X_IN.value := parameters.i_X_IN.value,
+    sub_models.Trans_In.parameters.f_AC_S.value := parameters.f_AC_S.value,
+    sub_models.Trans_In.parameters.f_PRO_S.value := parameters.f_PRO_S.value,
+    sub_models.Trans_In.parameters.f_AS_S.value := parameters.f_AS_S.value,
+    sub_models.Trans_In.parameters.f_XS_I.value := parameters.f_XS_I.value,
+    sub_models.Trans_In.parameters.f_XS_H.value := parameters.f_XS_H.value,
+    sub_models.Trans_In.parameters.f_XS_A.value := parameters.f_XS_A.value,
+    sub_models.Trans_In.parameters.f_XS_P.value := parameters.f_XS_P.value,
+    sub_models.Trans_In.parameters.f_AS_H.value := parameters.f_AS_H.value,
+    sub_models.Trans_Out.parameters.f_P_An.value := parameters.f_P_An.value,
+    sub_models.Trans_Out.parameters.f_H_AS.value := parameters.f_H_AS.value,
+
+    connect(interface.Q_Stripping, sub_models.Digester.interface.Q_Stripping),
+    connect(interface.Temp, sub_models.Digester.interface.Temp),
+    connect(sub_models.Digester.interface.Q_Biogas, interface.Q_Biogas),
+  
+    connect(interface.Inflow, sub_models.Trans_In.interface.Inflow),
+    connect(sub_models.Trans_In.interface.Outflow, sub_models.Digester.interface.Inflow),
+    connect(sub_models.Digester.interface.Outflow, sub_models.Trans_Out.interface.Inflow),
+    connect(sub_models.Trans_Out.interface.Outflow, interface.Outflow),
+  };
+
+:};
+
+
+
+CLASS SiegristConversionModel "A model for anaerobic digestion processes by Siegrist et al."
+EXTENDS Base_DigesterSiegrist WITH
+{:
+  #include "Siegrist/wwtp.VolumeSiegristConversionModel.body.msl"
+:};
+
+
+
+CLASS Base_DigesterSiegrist SPECIALISES PhysicalDAEModelType :=
+{:
+  comments <- "A model for anaerobic digestion processes by Siegrist et al.";
+  
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : SiegristWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : SiegristWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+    OBJ Q_Stripping (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Gas flow for stripping" : FlowRate := {: causality <- "CIN" ; value <- 30 ; group <- "Operational" :}; 
+    OBJ Temp (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Celsius Temperature" : CelsiusTemperature := {: causality <- "CIN" ; value <- 35.0 ; group <- "Operational":};
+    //
+    OBJ Q_Biogas (* terminal = "out_4"; is_favorite = "1" *) "Biogas flow (incl. stripping gas)" : FlowRate := {: causality <- "COUT" ; group <- "Operational" :}; 
+  };
+
+  parameters <-
+  {
+    OBJ SiegristSpecificVolume (* hidden = "1" *) "Specific volume for all Siegrist components" : SiegristSpecificVolumeVector ;
+    OBJ Stoichiometry (* hidden = "1" *) "A matrix structure containing stoichiometry" : PhysicalQuantityType[SiegristNrOfReactions;][SiegristNrOfComponents,];
+    OBJ f_X_Out (* is_favorite = "1" *) "Fraction of particulate matter that leaves the reactor" : Fraction := {: value <- 0.10 ; group <- "Settling" :};
+    OBJ p (* is_favorite = "1" *) "Head pressure in the digester" : Pressure := {:value <- 101325.00 ; group <- "Operational":};
+    OBJ R_Gas (* hidden = "1" *) "Universal gas constant" : Real := {: unit <- "J/(mol*K)"; value <- 8.314510; :};
+    OBJ Q_Gas0 "Initial (previous) value of Q_Gas_Tot" : FlowRate := {: value <- 655 ; group <- "Operational":};
+    OBJ Vol (* is_favorite = "1";  *) "Volume of liquid in the reactor" : Volume := {: value <- 3400; group <- "Dimension"; :};
+  };
+
+  state <-
+  {
+    OBJ MolVol_T (* hidden = "1" *) "Volume of 1 mol gas at temperature T (in degC)" : Volume ;
+    OBJ Kinetics (* hidden = "1" *) "A vector containing kinetics for all reactions" : PhysicalQuantityType[SiegristNrOfReactions;];
+    OBJ ConversionTermPerComponent (* hidden = "1" *) "Conversion terms for all the components" : MassFlux[SiegristNrOfComponents;];
+    OBJ OutFluxPerComponent (* hidden = "1" *) "Vector containing outgoing fluxes" : MassFlux[SiegristNrOfComponents;];
+    OBJ InFluxPerComponent (* hidden = "1" *) "Vector containing incoming fluxes" : MassFlux[SiegristNrOfComponents;];
+    OBJ rate_Stripping "Stripping rate: linearly proportional to total gas production": Rate := {: group <- "Operational"; :};
+    OBJ Q_In (* is_favorite = "1" *) "Influent flow rate" : FlowRate := {: group <- "Operational" :}; 
+    OBJ V_L (* hidden = "1" *) "Volume of liquid phase in the digester" : Volume := {: group <- "Dimension" :};
+    OBJ M "Mass vector for all components" : SiegristMassVector :=
+//  H2O, S_H2, S_CH4, S_CO2,
+      [{: value <- 1000000000:}, {: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :},
+//  S_HCO3, S_H, S_NH4, S_AC, S_PRO,
+      {: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :},
+//  S_AS, S_FA, S_IN, X_S, X_AS,
+      {: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :}, {: value <- 10 :}, {: value <- 10 :},
+//  X_FA, X_PRO, X_AC, X_H2, X_IN
+      {: value <- 10 :}, {: value <- 10 :}, {: value <- 10 :}, {: value <- 10 :}, {: value <- 10 :}; ] ;
+    OBJ C "Concentration vector for all the components" : SiegristConcentrationVector := {: group <- "Concentration" :};
+    OBJ pH_Reactor (* is_favorite = "1" *) "pH in the digester" : pH := {: group <- "Operational" :};
+    OBJ Flux_H2 "Flux of hydrogen gas produced" : MolFlowRate := {: group <- "Biogas" :};
+    OBJ Flux_CH4 "Flux of methane gas produced" : MolFlowRate := {: group <- "Biogas" :};
+    OBJ Flux_CO2 "Flux of carbon dioxide gas produced" : MolFlowRate := {: group <- "Biogas" :};
+    OBJ Q_H2 (* is_favorite = "1" *) "Flow rate of hydrogen gas produced" : FlowRate := {: group <- "Biogas" :};
+    OBJ Q_CH4 (* is_favorite = "1" *) "Flow rate of methane gas produced" : FlowRate := {: group <- "Biogas" :};
+    OBJ Q_CO2 (* is_favorite = "1" *) "Flow rate of carbon dioxide gas produced" : FlowRate := {: group <- "Biogas" :};
+    OBJ Q_Gas_Prod "Flow rate of gas produced" : FlowRate := {: group <- "Biogas" :};
+    OBJ Q_Gas_Tot (* hidden = "1" *) "Total gas flow rate (incl. stripping gas)" : FlowRate := {: group <- "Biogas" :};
+    OBJ C_H2 (* is_favorite = "1" *) "H2 concentration in total gas stream" : MolConcentration := {: group <- "Concentration" :};
+    OBJ C_CH4 (* is_favorite = "1" *) "CH4 concentration in total gas stream" : MolConcentration := {: group <- "Concentration" :};
+    OBJ C_CO2 (* is_favorite = "1" *) "CO2 concentration in total gas stream" : MolConcentration := {: group <- "Concentration" :};
+    OBJ prev_Q_Gas_Tot (* hidden = "1" *) "Help variable for the calculation of the previous value of Q_Gas_Tot" : FlowRate ;
+  };
+
+  initial <-
+  {
+    parameters.SiegristSpecificVolume[H2O] := 0.000001;
+    state.MolVol_T := 22.4e-3 * ((interface.Temp + 273.15) / 273.15);
+    state.M[H2O] := 1E06 * parameters.Vol ;    
+    state.V_L := 1E-06 * state.M[H2O] ;
+    state.C[S_H] := state.M[S_H] / state.V_L ; 
+  };
+
+  independent <- 
+  { 
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+  };
+
+  equations <-
+  {
+    state.prev_Q_Gas_Tot = IF (previous(independent.t) >= independent.t) THEN parameters.Q_Gas0
+      ELSE previous(state.Q_Gas_Tot) ;
+      
+    state.rate_Stripping = IF (state.V_L <= 0) THEN 0.0
+      ELSE state.prev_Q_Gas_Tot / (state.V_L * (parameters.R_Gas / parameters.p) * (273.15 + interface.Temp)) ;
+
+    state.pH_Reactor = IF (state.C[S_H] <= 0) THEN 0.0
+      ELSE - log10(state.C[S_H] / 1000);
+
+    state.V_L = SUMOVER Comp_Index IN {1 .. SiegristNrOfComponents}:
+      (parameters.SiegristSpecificVolume[Comp_Index] * state.M[Comp_Index]);
+
+    // Conversion model
+    {FOREACH Comp_Index IN {1 .. SiegristNrOfComponents}: state.ConversionTermPerComponent[Comp_Index] =
+        SUMOVER Reaction_Index IN {1 .. SiegristNrOfReactions}:
+        (parameters.Stoichiometry[Reaction_Index][Comp_Index] * state.Kinetics[Reaction_Index]) * state.V_L ; };
+
+    {FOREACH Comp_Index IN {1 .. SiegristNrOfComponents}: DERIV(state.M[Comp_Index],[independent.t]) =
+        state.InFluxPerComponent[Comp_Index] + state.OutFluxPerComponent[Comp_Index] + state.ConversionTermPerComponent[Comp_Index] ; };
+    
+    state.Q_In = SUMOVER Comp_Index IN {1 .. SiegristNrOfComponents}:
+        (parameters.SiegristSpecificVolume[Comp_Index] * state.InFluxPerComponent[Comp_Index]);
+
+    {FOREACH Comp_Index IN {1 .. SiegristNrOfComponents}: state.C[Comp_Index] = state.M[Comp_Index] / state.V_L ; };
+    
+    // Constant volume
+    {FOREACH Comp_Index IN {1 .. S_IN}: state.OutFluxPerComponent[Comp_Index] = - state.C[Comp_Index] * state.Q_In ; };
+    
+    // Because of the very low growth rate of anaerobic biomass only part of the particulates (fraction f_X_Out) are leaving the system via
+    // the outflow, the remaining particulate matter stays in the reactor
+    {FOREACH Comp_Index IN {X_S .. X_IN}: state.OutFluxPerComponent[Comp_Index] = parameters.f_X_Out * (- state.C[Comp_Index] * state.Q_In) ; };
+    
+    // GAS PRODUCTION
+    // When p = 1 atm,  V(T) = V(T=273.15) * (T / 273.15)
+    // 1 Mol H2 = 16 g COD
+    state.Flux_H2 = - (parameters.Stoichiometry[H2Stripping][S_H2] * state.Kinetics[H2Stripping] * state.V_L) / 16.0 ;
+
+    // 1 Mol CH4 = 64 g COD
+    state.Flux_CH4 = - (parameters.Stoichiometry[CH4Stripping][S_CH4] * state.Kinetics[CH4Stripping] * state.V_L) / 64.0 ;
+
+    // S_CO2 is already expressed in mol/m3 in the Siegrist model
+    state.Flux_CO2 = - (parameters.Stoichiometry[CO2Stripping][S_CO2] * state.Kinetics[CO2Stripping] * state.V_L) ;
+
+    state.Q_H2 = state.Flux_H2 * state.MolVol_T ;
+    state.Q_CH4 = state.Flux_CH4 * state.MolVol_T ;
+    state.Q_CO2 = state.Flux_CO2 * state.MolVol_T ;
+
+    // Gas flows
+    state.Q_Gas_Prod = state.Q_H2 + state.Q_CH4 + state.Q_CO2 ;
+    state.Q_Gas_Tot = state.Q_Gas_Prod + interface.Q_Stripping ;
+
+    // Biogas composition
+    state.C_H2 = state.Flux_H2 / state.Q_Gas_Tot ;
+    state.C_CH4 = state.Flux_CH4 / state.Q_Gas_Tot ;
+    state.C_CO2 = state.Flux_CO2 / state.Q_Gas_Tot ;
+    
+    interface.Q_Biogas = state.Q_Gas_Tot ; 
+  };
+
+:};
+
+#endif //ASM1Temp
+
+#endif // ANAEROBIC_DIGESTION_SIEGRIST

@@ -1,0 +1,227 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 6. december 2016 12:22:10$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_PUMPS_CONTROL_MULTIPIPE_10C5T
+#define WWTP_PUMPS_CONTROL_MULTIPIPE_10C5T
+
+
+CLASS MultiPipe_10cf_5throttle (* icon = "pump" *) // (10/12/2015) should be: (* icon = "multi_pump" *)
+"Pump group controller: 10 centrifugal pumps, of which 5 controlled by throttling; each pump has its own discharge pipe"
+SPECIALISES CoupledModelType :=
+{:
+
+  comments <- "Pump group controller: 10 centrifugal pumps, of which 5 controlled by throttling; each pump has its own discharge pipe";
+  
+  interface <-
+  {
+    // Input vars - manip
+    OBJ Q_In (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Desired flow rate" : FlowRate := {: value <- 20000.0; causality <- "CIN" ; group <- "Input" :};
+    OBJ TSS (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "TSS in the pumped liquid" : Concentration := {: value <- 3000.0; causality <- "CIN" ; group <- "Operational" :};
+    OBJ HeadLoss_Ext (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Head loss due to external phenomena (optional)" : Length := {: causality <- "CIN" ; group <- "Operational" :};
+    OBJ Elevation (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Elevation head to be overcome by the pump" : Length := {: causality <- "CIN" ; group <- "Operational" :};
+    // which pumps are active
+    OBJ IsOn_PC1 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *)  "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN" ; value <- 1; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "Operational" :};
+    OBJ IsOn_PC2 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *)  "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN" ; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "Operational" :};
+    OBJ IsOn_PC3 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *)  "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN" ; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "Operational" :};
+    OBJ IsOn_PC4 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *)  "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN" ; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "Operational" :};
+    OBJ IsOn_PC5 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *)  "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN" ; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "Operational" :};
+    OBJ IsOn_PU1 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *)  "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN" ; value <- 1; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "Operational" :};
+    OBJ IsOn_PU2 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *)  "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN" ; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "Operational" :};
+    OBJ IsOn_PU3 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *)  "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN" ; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "Operational" :};
+    OBJ IsOn_PU4 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *)  "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN" ; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "Operational" :};
+    OBJ IsOn_PU5 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *)  "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN" ; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "Operational" :};
+    
+    OBJ Q_Out (* terminal = "out_2" *) "Actual flow rate delivered" : FlowRate := {: causality <- "COUT" ; group <- "Output" :};
+    OBJ PumpedVolume (* terminal = "out_2" *) "Pumped quantity since start of simulation" : Volume := {: causality <- "COUT" ; group <- "Energy" :};
+    OBJ PumpingEnergy_Ave (* terminal = "out_2" *) "Average energy consumption since start of simulation" : EnergyForPumping := {: causality <- "COUT" ; group <- "Energy" :};
+    OBJ PowerConsumption (* terminal = "out_2" *) "Actual power consumption" : Power := {: causality <- "COUT" ; group <- "Energy" :};
+    OBJ PumpingEnergy (* terminal = "out_2" *) "Energy consumption since start of simulation" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :}
+  };
+  
+  sub_models <-
+  {
+    OBJ Ctl : Pump_Control_MultiPipe_10 ;
+    OBJ PC1 : Centrifugal_Q_Throttling ; // C = controlled by throttling
+    OBJ PC2 : Centrifugal_Q_Throttling ;
+    OBJ PC3 : Centrifugal_Q_Throttling ;
+    OBJ PC4 : Centrifugal_Q_Throttling ;
+    OBJ PC5 : Centrifugal_Q_Throttling ;
+    OBJ PU1 : Centrifugal_Q_Throttling ; // U = uncontrolled (Q is fixed)
+    OBJ PU2 : Centrifugal_Q_Throttling ;
+    OBJ PU3 : Centrifugal_Q_Throttling ;
+    OBJ PU4 : Centrifugal_Q_Throttling ;
+    OBJ PU5 : Centrifugal_Q_Throttling ;
+  };
+  
+  coupling <-
+  {
+    connect(interface.Q_In, sub_models.Ctl.interface.Q_In),
+    
+    // === Input interface variable :: directly connected to pump models ===
+    connect(interface.TSS, sub_models.PC1.interface.TSS), //UncontrollablePump1.TSS = TSS;
+    connect(interface.TSS, sub_models.PC2.interface.TSS),
+    connect(interface.TSS, sub_models.PC3.interface.TSS),
+    connect(interface.TSS, sub_models.PC4.interface.TSS),
+    connect(interface.TSS, sub_models.PC5.interface.TSS),
+    connect(interface.TSS, sub_models.PU1.interface.TSS),
+    connect(interface.TSS, sub_models.PU2.interface.TSS),
+    connect(interface.TSS, sub_models.PU3.interface.TSS),
+    connect(interface.TSS, sub_models.PU4.interface.TSS),
+    connect(interface.TSS, sub_models.PU5.interface.TSS),
+    
+    connect(interface.Elevation, sub_models.PC1.interface.Elevation), //UncontrollablePump1.Elevation = Elevation;
+    connect(interface.Elevation, sub_models.PC2.interface.Elevation),
+    connect(interface.Elevation, sub_models.PC3.interface.Elevation),
+    connect(interface.Elevation, sub_models.PC4.interface.Elevation),
+    connect(interface.Elevation, sub_models.PC5.interface.Elevation),
+    connect(interface.Elevation, sub_models.PU1.interface.Elevation),
+    connect(interface.Elevation, sub_models.PU2.interface.Elevation),
+    connect(interface.Elevation, sub_models.PU3.interface.Elevation),
+    connect(interface.Elevation, sub_models.PU4.interface.Elevation),
+    connect(interface.Elevation, sub_models.PU5.interface.Elevation),
+    
+    connect(interface.HeadLoss_Ext, sub_models.PC1.interface.HeadLoss_Ext), //UncontrollablePump1.ExternalHeadLoss = ExternalHeadLoss;
+    connect(interface.HeadLoss_Ext, sub_models.PC2.interface.HeadLoss_Ext),
+    connect(interface.HeadLoss_Ext, sub_models.PC3.interface.HeadLoss_Ext),
+    connect(interface.HeadLoss_Ext, sub_models.PC4.interface.HeadLoss_Ext),
+    connect(interface.HeadLoss_Ext, sub_models.PC5.interface.HeadLoss_Ext),
+    connect(interface.HeadLoss_Ext, sub_models.PU1.interface.HeadLoss_Ext),
+    connect(interface.HeadLoss_Ext, sub_models.PU2.interface.HeadLoss_Ext),
+    connect(interface.HeadLoss_Ext, sub_models.PU3.interface.HeadLoss_Ext),
+    connect(interface.HeadLoss_Ext, sub_models.PU4.interface.HeadLoss_Ext),
+    connect(interface.HeadLoss_Ext, sub_models.PU5.interface.HeadLoss_Ext),
+    
+    // === These are connected to the master controller ===
+    connect(interface.IsOn_PC1, sub_models.Ctl.interface.IsOn_PC1),
+    connect(interface.IsOn_PC2, sub_models.Ctl.interface.IsOn_PC2),
+    connect(interface.IsOn_PC3, sub_models.Ctl.interface.IsOn_PC3),
+    connect(interface.IsOn_PC4, sub_models.Ctl.interface.IsOn_PC4),
+    connect(interface.IsOn_PC5, sub_models.Ctl.interface.IsOn_PC5),
+    connect(interface.IsOn_PU1, sub_models.Ctl.interface.IsOn_PU1),
+    connect(interface.IsOn_PU2, sub_models.Ctl.interface.IsOn_PU2),
+    connect(interface.IsOn_PU3, sub_models.Ctl.interface.IsOn_PU3),
+    connect(interface.IsOn_PU4, sub_models.Ctl.interface.IsOn_PU4),
+    connect(interface.IsOn_PU5, sub_models.Ctl.interface.IsOn_PU5),
+    
+    // === Output interface variables ===
+    // Minimum and maximum achievable Q per pump
+    connect(sub_models.PC1.state.Q_Max, sub_models.Ctl.interface.QMax_PC1),
+    connect(sub_models.PC2.state.Q_Max, sub_models.Ctl.interface.QMax_PC2),
+    connect(sub_models.PC3.state.Q_Max, sub_models.Ctl.interface.QMax_PC3),
+    connect(sub_models.PC4.state.Q_Max, sub_models.Ctl.interface.QMax_PC4),
+    connect(sub_models.PC5.state.Q_Max, sub_models.Ctl.interface.QMax_PC5),
+    connect(sub_models.PC1.state.Q_Min, sub_models.Ctl.interface.QMin_PC1),
+    connect(sub_models.PC2.state.Q_Min, sub_models.Ctl.interface.QMin_PC2),
+    connect(sub_models.PC3.state.Q_Min, sub_models.Ctl.interface.QMin_PC3),
+    connect(sub_models.PC4.state.Q_Min, sub_models.Ctl.interface.QMin_PC4),
+    connect(sub_models.PC5.state.Q_Min, sub_models.Ctl.interface.QMin_PC5),
+    connect(sub_models.PU1.state.Q_Max, sub_models.Ctl.interface.QMax_PU1),
+    connect(sub_models.PU2.state.Q_Max, sub_models.Ctl.interface.QMax_PU2),
+    connect(sub_models.PU3.state.Q_Max, sub_models.Ctl.interface.QMax_PU3),
+    connect(sub_models.PU4.state.Q_Max, sub_models.Ctl.interface.QMax_PU4),
+    connect(sub_models.PU5.state.Q_Max, sub_models.Ctl.interface.QMax_PU5),
+    
+    // Once the actual flow rate that each pump can deliver is computed at the level
+    // of the 'master control', it is then passed as input to the respective pump
+    connect(sub_models.Ctl.interface.QInPC1, sub_models.PC1.interface.Q_Op),
+    connect(sub_models.Ctl.interface.QInPC2, sub_models.PC2.interface.Q_Op),
+    connect(sub_models.Ctl.interface.QInPC3, sub_models.PC3.interface.Q_Op),
+    connect(sub_models.Ctl.interface.QInPC4, sub_models.PC4.interface.Q_Op),
+    connect(sub_models.Ctl.interface.QInPC5, sub_models.PC5.interface.Q_Op),
+    connect(sub_models.Ctl.interface.QInPU1, sub_models.PU1.interface.Q_Op),
+    connect(sub_models.Ctl.interface.QInPU2, sub_models.PU2.interface.Q_Op),
+    connect(sub_models.Ctl.interface.QInPU3, sub_models.PU3.interface.Q_Op),
+    connect(sub_models.Ctl.interface.QInPU4, sub_models.PU4.interface.Q_Op),
+    connect(sub_models.Ctl.interface.QInPU5, sub_models.PU5.interface.Q_Op),
+    
+    connect(sub_models.Ctl.interface.IsOnPC1, sub_models.PC1.interface.IsOn),
+    connect(sub_models.Ctl.interface.IsOnPC2, sub_models.PC2.interface.IsOn),
+    connect(sub_models.Ctl.interface.IsOnPC3, sub_models.PC3.interface.IsOn),
+    connect(sub_models.Ctl.interface.IsOnPC4, sub_models.PC4.interface.IsOn),
+    connect(sub_models.Ctl.interface.IsOnPC5, sub_models.PC5.interface.IsOn),
+    connect(sub_models.Ctl.interface.IsOnPU1, sub_models.PU1.interface.IsOn),
+    connect(sub_models.Ctl.interface.IsOnPU2, sub_models.PU2.interface.IsOn),
+    connect(sub_models.Ctl.interface.IsOnPU3, sub_models.PU3.interface.IsOn),
+    connect(sub_models.Ctl.interface.IsOnPU4, sub_models.PU4.interface.IsOn),
+    connect(sub_models.Ctl.interface.IsOnPU5, sub_models.PU5.interface.IsOn),
+    
+    // Real output and power consumption
+    connect(sub_models.Ctl.interface.Q_Out, interface.Q_Out),
+    connect(sub_models.PC1.interface.Q_Out, sub_models.Ctl.interface.QOut_PC1),
+    connect(sub_models.PC2.interface.Q_Out, sub_models.Ctl.interface.QOut_PC2),
+    connect(sub_models.PC3.interface.Q_Out, sub_models.Ctl.interface.QOut_PC3),
+    connect(sub_models.PC4.interface.Q_Out, sub_models.Ctl.interface.QOut_PC4),
+    connect(sub_models.PC5.interface.Q_Out, sub_models.Ctl.interface.QOut_PC5),
+    connect(sub_models.PU1.interface.Q_Out, sub_models.Ctl.interface.QOut_PU1),
+    connect(sub_models.PU2.interface.Q_Out, sub_models.Ctl.interface.QOut_PU2),
+    connect(sub_models.PU3.interface.Q_Out, sub_models.Ctl.interface.QOut_PU3),
+    connect(sub_models.PU4.interface.Q_Out, sub_models.Ctl.interface.QOut_PU4),
+    connect(sub_models.PU5.interface.Q_Out, sub_models.Ctl.interface.QOut_PU5),
+    
+    connect(sub_models.Ctl.interface.PumpedVolume, interface.PumpedVolume),
+    connect(sub_models.PC1.interface.PumpedVolume, sub_models.Ctl.interface.Volume_PC1),
+    connect(sub_models.PC2.interface.PumpedVolume, sub_models.Ctl.interface.Volume_PC2),
+    connect(sub_models.PC3.interface.PumpedVolume, sub_models.Ctl.interface.Volume_PC3),
+    connect(sub_models.PC4.interface.PumpedVolume, sub_models.Ctl.interface.Volume_PC4),
+    connect(sub_models.PC5.interface.PumpedVolume, sub_models.Ctl.interface.Volume_PC5),
+    connect(sub_models.PU1.interface.PumpedVolume, sub_models.Ctl.interface.Volume_PU1),
+    connect(sub_models.PU2.interface.PumpedVolume, sub_models.Ctl.interface.Volume_PU2),
+    connect(sub_models.PU3.interface.PumpedVolume, sub_models.Ctl.interface.Volume_PU3),
+    connect(sub_models.PU4.interface.PumpedVolume, sub_models.Ctl.interface.Volume_PU4),
+    connect(sub_models.PU5.interface.PumpedVolume, sub_models.Ctl.interface.Volume_PU5),
+    
+    connect(sub_models.Ctl.interface.PumpingEnergy_Ave, interface.PumpingEnergy_Ave),
+    connect(sub_models.PC1.interface.PumpingEnergy_Ave, sub_models.Ctl.interface.EnergyAve_PC1),
+    connect(sub_models.PC2.interface.PumpingEnergy_Ave, sub_models.Ctl.interface.EnergyAve_PC2),
+    connect(sub_models.PC3.interface.PumpingEnergy_Ave, sub_models.Ctl.interface.EnergyAve_PC3),
+    connect(sub_models.PC4.interface.PumpingEnergy_Ave, sub_models.Ctl.interface.EnergyAve_PC4),
+    connect(sub_models.PC5.interface.PumpingEnergy_Ave, sub_models.Ctl.interface.EnergyAve_PC5),
+    connect(sub_models.PU1.interface.PumpingEnergy_Ave, sub_models.Ctl.interface.EnergyAve_PU1),
+    connect(sub_models.PU2.interface.PumpingEnergy_Ave, sub_models.Ctl.interface.EnergyAve_PU2),
+    connect(sub_models.PU3.interface.PumpingEnergy_Ave, sub_models.Ctl.interface.EnergyAve_PU3),
+    connect(sub_models.PU4.interface.PumpingEnergy_Ave, sub_models.Ctl.interface.EnergyAve_PU4),
+    connect(sub_models.PU5.interface.PumpingEnergy_Ave, sub_models.Ctl.interface.EnergyAve_PU5),
+    
+    connect(sub_models.Ctl.interface.PowerConsumption, interface.PowerConsumption),
+    connect(sub_models.PC1.interface.PowerConsumption, sub_models.Ctl.interface.Power_PC1),
+    connect(sub_models.PC2.interface.PowerConsumption, sub_models.Ctl.interface.Power_PC2),
+    connect(sub_models.PC3.interface.PowerConsumption, sub_models.Ctl.interface.Power_PC3),
+    connect(sub_models.PC4.interface.PowerConsumption, sub_models.Ctl.interface.Power_PC4),
+    connect(sub_models.PC5.interface.PowerConsumption, sub_models.Ctl.interface.Power_PC5),
+    connect(sub_models.PU1.interface.PowerConsumption, sub_models.Ctl.interface.Power_PU1),
+    connect(sub_models.PU2.interface.PowerConsumption, sub_models.Ctl.interface.Power_PU2),
+    connect(sub_models.PU3.interface.PowerConsumption, sub_models.Ctl.interface.Power_PU3),
+    connect(sub_models.PU4.interface.PowerConsumption, sub_models.Ctl.interface.Power_PU4),
+    connect(sub_models.PU5.interface.PowerConsumption, sub_models.Ctl.interface.Power_PU5),
+    
+    connect(sub_models.Ctl.interface.PumpingEnergy, interface.PumpingEnergy),
+    connect(sub_models.PC1.interface.PumpingEnergy, sub_models.Ctl.interface.Energy_PC1),
+    connect(sub_models.PC2.interface.PumpingEnergy, sub_models.Ctl.interface.Energy_PC2),
+    connect(sub_models.PC3.interface.PumpingEnergy, sub_models.Ctl.interface.Energy_PC3),
+    connect(sub_models.PC4.interface.PumpingEnergy, sub_models.Ctl.interface.Energy_PC4),
+    connect(sub_models.PC5.interface.PumpingEnergy, sub_models.Ctl.interface.Energy_PC5),
+    connect(sub_models.PU1.interface.PumpingEnergy, sub_models.Ctl.interface.Energy_PU1),
+    connect(sub_models.PU2.interface.PumpingEnergy, sub_models.Ctl.interface.Energy_PU2),
+    connect(sub_models.PU3.interface.PumpingEnergy, sub_models.Ctl.interface.Energy_PU3),
+    connect(sub_models.PU4.interface.PumpingEnergy, sub_models.Ctl.interface.Energy_PU4),
+    connect(sub_models.PU5.interface.PumpingEnergy, sub_models.Ctl.interface.Energy_PU5),
+  };
+
+:};
+
+
+#endif // WWTP_PUMPS_CONTROL_MULTIPIPE_10C5T

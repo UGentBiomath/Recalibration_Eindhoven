@@ -1,0 +1,38 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ K_X_Temp (* *) "K_X at the system temperature" : Real := {: value <- 0.0; group <- "Kinetic"; :};
+    OBJ Org_N (* *) "Organic nitrogen" : Concentration := {: group <- "Concentration"; :};
+    OBJ Org_P (* *) "Organic phosphorous" : Concentration := {: group <- "Concentration"; :};
+    OBJ Q_PAO_Stor_Temp (* *) "Q_PAO_Stor at the system temperature" : Real := {: value <- 0.0; group <- "Kinetic"; :};
+    OBJ Q_PP_Temp (* *) "Q_PP at the system temperature" : Real := {: value <- 0.0; group <- "Kinetic"; :};
+    OBJ Q_fe_Temp (* *) "Q_fe at the system temperature" : Real := {: value <- 0.0; group <- "Kinetic"; :};
+    OBJ S_Alk_MonodTerm (* hidden = "1"; *) "Monod terms for alkalinity" : MonodTerm := {: unit <- "-"; value <- 0.0; :};
+    OBJ S_BOD20 (* *) "Soluble BOD20" : Concentration := {: group <- "Concentration"; :};
+    OBJ S_COD (* *) "Soluble COD" : Concentration := {: group <- "Concentration"; :};
+    OBJ S_F_MonodTerm (* hidden = "1"; *) "Monod terms for S_F" : MonodTerm := {: unit <- "-"; value <- 0.0; :};
+    OBJ S_NH_MonodTerm (* hidden = "1"; *) "Monod terms for ammonium" : MonodTerm := {: unit <- "-"; value <- 0.0; :};
+    OBJ S_NO_InhibitionTerm (* hidden = "1"; *) "The inhibition term for S_NO" : InhibitionTerm := {: unit <- "-"; value <- 0.0; :};
+    OBJ S_NO_MonodTerm (* hidden = "1"; *) "Monod terms for S_NO" : MonodTerm := {: unit <- "-"; value <- 0.0; :};
+    OBJ S_O_InhibitionTerm (* hidden = "1"; *) "The inhibition term for oxygen" : InhibitionTerm := {: unit <- "-"; value <- 0.0; :};
+    OBJ S_O_MonodTerm (* hidden = "1"; *) "Monod terms for oxygen" : MonodTerm := {: unit <- "-"; value <- 0.0; :};
+    OBJ S_O_Saturation (* *) "Oxygen saturation concentration" : Concentration := {: unit <- "g/m3"; value <- 0.0; group <- "Kinetic"; :};
+    OBJ S_PO_MonodTerm (* hidden = "1"; *) "Monod terms for S_PO" : MonodTerm := {: unit <- "-"; value <- 0.0; :};
+    OBJ S_VFA_MonodTerm (* hidden = "1"; *) "Monod terms for S_VFA" : MonodTerm := {: unit <- "-"; value <- 0.0; :};
+    OBJ XC_B_MonodTerm (* hidden = "1"; *) "Monod terms for XC_B" : MonodTerm := {: unit <- "-"; value <- 0.0; :};
+    OBJ X_Ash (* *) "Ash content of biomass" : Concentration := {: group <- "Concentration"; :};
+    OBJ X_BOD20 (* *) "Particulate BOD20" : Concentration := {: group <- "Concentration"; :};
+    OBJ X_COD (* *) "Particulate COD" : Concentration := {: group <- "Concentration"; :};
+    OBJ X_ISS (* *) "Inorganic Suspended Solids" : Concentration := {: group <- "Concentration"; :};
+    OBJ X_PAO_Stor_MonodTerm (* hidden = "1"; *) "Monod terms for X_PAO_Stor" : MonodTerm := {: unit <- "-"; value <- 0.0; :};
+    OBJ X_TSS (* *) "Total suspended solids" : Concentration := {: group <- "Concentration"; :};
+    OBJ X_VSS (* *) "Volatile Suspended Solids" : Concentration := {: group <- "Concentration"; :};
+    OBJ b_ANO_Temp (* *) "b_ANO at the system temperature" : Real := {: value <- 0.0; group <- "Kinetic"; :};
+    OBJ b_OHO_Temp (* *) "b_OHO at the system temperature" : Real := {: value <- 0.0; group <- "Kinetic"; :};
+    OBJ b_PAO_Stor_Temp (* *) "b_PAO_Stor at the system temperature" : Real := {: value <- 0.0; group <- "Kinetic"; :};
+    OBJ b_PAO_Temp (* *) "b_PAO at the system temperature" : Real := {: value <- 0.0; group <- "Kinetic"; :};
+    OBJ b_PP_Temp (* *) "b_PP at the system temperature" : Real := {: value <- 0.0; group <- "Kinetic"; :};
+    OBJ k_h_Temp (* *) "k_h at the system temperature" : Real := {: value <- 0.0; group <- "Kinetic"; :};
+    OBJ mu_ANO_Temp (* *) "mu_ANO at the system temperature" : Real := {: value <- 0.0; group <- "Kinetic"; :};
+    OBJ mu_OHO_Temp (* *) "mu_OHO at the system temperature" : Real := {: value <- 0.0; group <- "Kinetic"; :};
+    OBJ mu_PAO_Temp (* *) "mu_PAO at the system temperature" : Real := {: value <- 0.0; group <- "Kinetic"; :};
+

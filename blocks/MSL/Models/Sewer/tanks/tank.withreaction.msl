@@ -1,0 +1,55 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:30$
+ *
+ ******************************************************************************/
+ 
+
+#ifndef SEWER_TANKS_TANK_WITH_REACTION
+#define SEWER_TANKS_TANK_WITH_REACTION
+
+
+CLASS Tank_wReaction (* icon = "Tank" *)
+"A buffer tank with linear expression for outflow and reaction"
+EXTENDS Base_TankSewerModel WITH
+{:
+
+  interface <-
+  { 
+   OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {: causality <- "COUT"; group <- "Outflow" :};
+  };
+
+  parameters <-
+  { 
+   OBJ k (* is_favorite = "1" *) "Reservoir time constant" : Time := {: value <- 0.0056 ; group <- "Hydraulics" :};
+   OBJ m (* is_favorite = "1" *) "Exponent (1 = linearity)" : Real := {:value <- 1.0 ; group <- "Hydraulics" :};
+   // this is to avoid problems with to small numbers
+   OBJ V_Min (* hidden = "1" *) "Minimum volume of the tank" : Volume := {: value <- 1.0 ; group <- "Hydraulics":};
+  };
+
+  equations <-
+  { 
+   state.V = 1E-06 * state.SewM[H2O] ;
+   
+   state.Q_Out =  IF (state.V < parameters.V_Min) THEN 0.0
+   		ELSE pow((state.V / parameters.k), (1 / parameters.m)) ;
+
+   {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}: state.C[Comp_Index] = state.SewM[Comp_Index] / state.V ; };
+   
+   {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}: interface.Outflow[Comp_Index] = - state.C[Comp_Index] * state.Q_Out ;};
+  };
+
+:};
+
+
+#endif //SEWER_TANKS_TANK_WITH_REACTION

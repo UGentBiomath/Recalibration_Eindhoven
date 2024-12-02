@@ -1,0 +1,61 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:54$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_TANKS_STORMTANK_PUMPED
+#define SEWER_TANKS_STORMTANK_PUMPED
+
+
+ CLASS StormTank_Pumped (* icon = "Tank" *)
+ "A tank with lateral weir and overflow when full. The outflow is function of the water level inside the tank and can therefore be higher than the maximum outflow calculated for the downstream pipe"
+ EXTENDS StormTank_Base WITH
+ {:
+ 
+  comments <- "A tank with lateral weir and overflow when full. The outflow is function of the water level inside the tank and can therefore be higher than the maximum outflow calculated for the downstream pipe";
+
+  parameters <-
+  {
+   // Qpump -> Q_Pump
+   OBJ Q_Pump "Outflow pumping rate" : FlowRate := {: value <- 4320.0; group <- "Hydraulic" :} ;
+   // consider moving to base class (26/02/2015)
+   OBJ f_Sed (* is_favorite = "1" *) "Sedimentation fraction" : Fraction:= {: value <- 0.25; group <- "Hydraulic":};
+  };
+
+  equations <-
+  {
+   state.Q_Out = IF (state.Help_Q > parameters.Q_Pump) THEN parameters.Q_Pump ELSE state.Help_Q ;
+   
+   // consider moving to base class? (26/02/2015)
+   state.Q_over = IF (state.V < parameters.Vmax) THEN 0
+      ELSE parameters.alpha * pow(((state.V - parameters.Vmax) / (parameters.W * parameters.L)), parameters.beta) ;
+
+   {FOREACH Comp_Index IN {Kosim1IndexOfFirstParticulateComponent .. Kosim1IndexOfLastParticulateComponent}:
+      state.C[Comp_Index] = IF (state.V == 0) THEN 0
+          ELSE IF (state.V > (parameters.Vmax / 8.0)) THEN (1.0  -parameters.f_Sed) * state.SewM[Comp_Index] / state.V
+              ELSE state.SewM[Comp_Index] / state.V ; };
+
+   {FOREACH Comp_Index IN {2 .. Kosim1NrOfComponents}:
+      interface.Outflow1[Comp_Index] = - state.Q_Out * state.C[Comp_Index] ; };
+
+   {FOREACH Comp_Index IN {2 .. Kosim1NrOfComponents}:
+      interface.Outflow2[Comp_Index] = - state.Q_over * state.C[Comp_Index] ; }; 	  		    
+  
+  };
+
+ :};
+
+
+#endif // SEWER_TANKS_STORMTANK_PUMPED

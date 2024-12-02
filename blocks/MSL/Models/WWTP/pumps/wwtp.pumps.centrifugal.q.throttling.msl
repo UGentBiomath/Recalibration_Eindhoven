@@ -1,0 +1,51 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:49$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_PUMPS_CENTRIFUGAL_Q_THROTTLING
+#define WWTP_PUMPS_CENTRIFUGAL_Q_THROTTLING
+
+
+CLASS Centrifugal_Q_Throttling (* icon = "pump" *)
+"A model to calculate a throttling valve controlled centrifugal pump's power consumption based on the flow rate Q"
+EXTENDS Generic_Q WITH
+{:
+  comments <- "A model to calculate a throttling valve controlled centrifugal pump's power consumption based on the flow rate Q";
+  
+  equations <-
+  {
+    state.Q_Max = state.Q_NoCtl_Duty ;
+    state.Q_Min = 0.0 ;
+    
+    // Determine the actual operating conditions
+    state.help_Q = IF (interface.IsOn == 0) THEN 0.0
+      ELSE IF (interface.Q_Op > state.Q_Max) THEN state.Q_Max
+        ELSE interface.Q_Op ;
+    
+    state.H = IF (interface.IsOn == 0) THEN 0.0
+      ELSE IF (interface.Q_Op > state.Q_Max) THEN state.H_NoCtl_Duty
+        ELSE state.H_Pump ;
+    
+    // Pump efficiency (in base class: same eqn as VFD, with N=1)
+    state.help_N = 1.0 ;
+    
+    state.Eta_Total = state.Eta_Pump * parameters.Eta_motor ;
+  };
+
+:};
+
+
+#endif // WWTP_PUMPS_CENTRIFUGAL_Q_THROTTLING

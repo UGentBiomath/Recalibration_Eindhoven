@@ -1,0 +1,38 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE SiegristComponents "The components considered" = 
+ENUM
+{
+  H2O,
+  S_H2,
+  S_CH4,
+  S_CO2,
+  S_HCO3,
+  S_H,
+  S_NH4,
+  S_AC,
+  S_PRO,
+  S_AS,
+  S_FA,
+  S_IN,
+  X_S,
+  X_AS,
+  X_FA,
+  X_PRO,
+  X_AC,
+  X_H2,
+  X_IN
+};
+
+#define SiegristStandardCategoryModels
+OBJ SiegristIndexOfSolvent "Index of the solvent in the component vector" : Integer := 1;
+#define SiegristSolublesPresent
+OBJ SiegristIndexOfFirstSolubleComponent "Index of the first soluble component in the component vector" : Integer := 2;
+OBJ SiegristIndexOfLastSolubleComponent "Index of the last soluble component in the component vector" : Integer := 12;
+#define SiegristParticulatesPresent
+OBJ SiegristIndexOfFirstParticulateComponent "Index of the first particulate component in the component vector" : Integer := 13;
+OBJ SiegristIndexOfLastParticulateComponent "Index of the last particulate component in the component vector" : Integer := 19;
+#define SiegristCalculateTSSComponent
+OBJ SiegristIndexOfFirstTSSComponent "Index of the first TSS component in the component vector" : Integer := 13;
+OBJ SiegristIndexOfLastTSSComponent "Index of the last TSS component in the component vector" : Integer := 19;
+

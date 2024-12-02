@@ -1,0 +1,248 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 15. september 2017 13:16:13$
+ *
+ ******************************************************************************/
+
+
+state.S_O_Saturation = exp(7.7117 - 1.31403 * log(state.Temp_Actual + 45.93));
+
+state.b_A_Temp = parameters.b_A * exp(parameters.theta_b_A * (state.Temp_Actual - parameters.Temp_Ref));
+state.b_H_Temp = parameters.b_H * exp(parameters.theta_b_H * (state.Temp_Actual - parameters.Temp_Ref));
+state.b_PAO_Temp = parameters.b_PAO * exp(parameters.theta_b_PAO * (state.Temp_Actual - parameters.Temp_Ref));
+state.b_PHA_Temp = parameters.b_PHA * exp(parameters.theta_b_PHA * (state.Temp_Actual - parameters.Temp_Ref));
+state.b_PP_Temp = parameters.b_PP * exp(parameters.theta_b_PP * (state.Temp_Actual - parameters.Temp_Ref));
+state.k_h_Temp = parameters.k_h * exp(parameters.theta_k_h * (state.Temp_Actual - parameters.Temp_Ref));
+state.k_STO_Temp = parameters.k_STO * exp(parameters.theta_k_STO * (state.Temp_Actual - parameters.Temp_Ref));
+state.K_X_Temp = parameters.K_X * exp(parameters.theta_K_X * (state.Temp_Actual - parameters.Temp_Ref));
+state.mu_A_Temp = parameters.mu_A * exp(parameters.theta_mu_A * (state.Temp_Actual - parameters.Temp_Ref));
+state.mu_H_Temp = parameters.mu_H * exp(parameters.theta_mu_H * (state.Temp_Actual - parameters.Temp_Ref));
+state.mu_PAO_Temp = parameters.mu_PAO * exp(parameters.theta_mu_PAO * (state.Temp_Actual - parameters.Temp_Ref));
+state.q_PHA_Temp = parameters.q_PHA * exp(parameters.theta_q_PHA * (state.Temp_Actual - parameters.Temp_Ref));
+state.q_PP_Temp = parameters.q_PP * exp(parameters.theta_q_PP * (state.Temp_Actual - parameters.Temp_Ref));
+
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_O_InhibitionTerm_X_H[Layer_Index] = parameters.K_O / (parameters.K_O + state.C[S_O][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_O_InhibitionTerm_X_PAO[Layer_Index] = parameters.K_O_PAO / (parameters.K_O_PAO + state.C[S_O][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_ALK_MonodTerm_X_A[Layer_Index] = state.C[S_ALK][Layer_Index] / (parameters.K_HCO_A + state.C[S_ALK][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_ALK_MonodTerm_X_H[Layer_Index] = state.C[S_ALK][Layer_Index] / (parameters.K_HCO + state.C[S_ALK][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_ALK_MonodTerm_X_PAO[Layer_Index] = state.C[S_ALK][Layer_Index] / (parameters.K_HCO_PAO + state.C[S_ALK][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.X_PP_X_PAO_Max_MonodTerm[Layer_Index] = (parameters.K_MAX_PAO - (state.C[X_PP][Layer_Index] / state.C[X_PAO][Layer_Index])) / (parameters.K_iPP_PAO + (parameters.K_MAX_PAO - (state.C[X_PP][Layer_Index] / state.C[X_PAO][Layer_Index])));
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_NH_MonodTerm_X_A[Layer_Index] = state.C[S_NH][Layer_Index] / (parameters.K_NH_A + state.C[S_NH][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_NH_MonodTerm_X_H[Layer_Index] = state.C[S_NH][Layer_Index] / (parameters.K_NH + state.C[S_NH][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_NH_MonodTerm_X_PAO[Layer_Index] = state.C[S_NH][Layer_Index] / (parameters.K_NH_PAO + state.C[S_NH][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_NO_MonodTerm_X_H[Layer_Index] = state.C[S_NO][Layer_Index] / (parameters.K_NO + state.C[S_NO][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_NO_MonodTerm_X_PAO[Layer_Index] = state.C[S_NO][Layer_Index] / (parameters.K_NO_PAO + state.C[S_NO][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_O_MonodTerm_X_A[Layer_Index] = state.C[S_O][Layer_Index] / (parameters.K_O_A + state.C[S_O][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_O_MonodTerm_X_H[Layer_Index] = state.C[S_O][Layer_Index] / (parameters.K_O + state.C[S_O][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_O_MonodTerm_X_PAO[Layer_Index] = state.C[S_O][Layer_Index] / (parameters.K_O_PAO + state.C[S_O][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_PHA_MonodTerm_X_PAO[Layer_Index] = (state.C[X_PHA][Layer_Index] / state.C[X_PAO][Layer_Index]) / (parameters.K_PHA + state.C[X_PHA][Layer_Index] / state.C[X_PAO][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_PO_MonodTerm_X_A[Layer_Index] = state.C[S_PO][Layer_Index] / (parameters.K_PO_A + state.C[S_PO][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_PO_MonodTerm_X_H[Layer_Index] = state.C[S_PO][Layer_Index] / (parameters.K_PO_H + state.C[S_PO][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_PO_MonodTerm_X_PAO[Layer_Index] = state.C[S_PO][Layer_Index] / (parameters.K_PO_PAO + state.C[S_PO][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_PO_MonodTerm_X_PP[Layer_Index] = state.C[S_PO][Layer_Index] / (parameters.K_PO_PP + state.C[S_PO][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.X_PP_X_PAO_MonodTerm[Layer_Index] = (state.C[X_PP][Layer_Index] / state.C[X_PAO][Layer_Index]) / (parameters.K_PP_PAO + (state.C[X_PP][Layer_Index] / state.C[X_PAO][Layer_Index]));
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_S_MonodTerm_X_H[Layer_Index] = state.C[S_S][Layer_Index] / (parameters.K_SS_H + state.C[S_S][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.S_S_MonodTerm_X_PAO[Layer_Index] = state.C[S_S][Layer_Index] / (parameters.K_SS_PAO + state.C[S_S][Layer_Index]);
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.X_STO_MonodTerm_X_H[Layer_Index] = (state.C[X_STO][Layer_Index] / state.C[X_H][Layer_Index]) / (parameters.K_STO_H + (state.C[X_STO][Layer_Index] / state.C[X_H][Layer_Index])); 
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.X_S_MonodTerm_HYD[Layer_Index] = (state.C[X_S][Layer_Index] / state.C[X_H][Layer_Index]) / (state.K_X_Temp + (state.C[X_S][Layer_Index] / state.C[X_H][Layer_Index])); 
+  };
+  
+  
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rate01[Layer_Index] = state.k_h_Temp * state.X_S_MonodTerm_HYD[Layer_Index] * state.C[X_H][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rate02[Layer_Index] = state.k_STO_Temp * state.S_O_MonodTerm_X_H[Layer_Index] * state.S_S_MonodTerm_X_H[Layer_Index] * state.C[X_H][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rate03[Layer_Index] = state.k_STO_Temp * parameters.n_NO * state.S_O_InhibitionTerm_X_H[Layer_Index] * state.S_NO_MonodTerm_X_H[Layer_Index] * state.S_S_MonodTerm_X_H[Layer_Index] * state.C[X_H][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rate04[Layer_Index] = state.mu_H_Temp * state.S_O_MonodTerm_X_H[Layer_Index] * state.S_NH_MonodTerm_X_H[Layer_Index] * state.S_PO_MonodTerm_X_H[Layer_Index] * state.S_ALK_MonodTerm_X_H[Layer_Index] * state.X_STO_MonodTerm_X_H[Layer_Index] * state.C[X_H][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rate05[Layer_Index] = state.mu_H_Temp * parameters.n_NO * state.S_O_InhibitionTerm_X_H[Layer_Index] * state.S_NO_MonodTerm_X_H[Layer_Index] * state.S_NH_MonodTerm_X_H[Layer_Index] * state.S_PO_MonodTerm_X_H[Layer_Index] * state.S_ALK_MonodTerm_X_H[Layer_Index] * state.X_STO_MonodTerm_X_H[Layer_Index] * state.C[X_H][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rate06[Layer_Index] = state.b_H_Temp * state.S_O_MonodTerm_X_H[Layer_Index] * state.C[X_H][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rate07[Layer_Index] = state.b_H_Temp * parameters.n_NO_end_H * state.S_O_InhibitionTerm_X_H[Layer_Index] * state.S_NO_MonodTerm_X_H[Layer_Index] * state.C[X_H][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rate08[Layer_Index] = state.b_H_Temp * state.S_O_MonodTerm_X_H[Layer_Index] * state.C[X_STO][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rate09[Layer_Index] = state.b_H_Temp * parameters.n_NO_end_H * state.S_O_InhibitionTerm_X_H[Layer_Index] * state.S_NO_MonodTerm_X_H[Layer_Index] * state.C[X_STO][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rate10[Layer_Index] = state.mu_A_Temp * state.S_O_MonodTerm_X_A[Layer_Index] * state.S_NH_MonodTerm_X_A[Layer_Index] * state.S_PO_MonodTerm_X_A[Layer_Index] * state.S_ALK_MonodTerm_X_A[Layer_Index] * state.C[X_A][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rate11[Layer_Index] = state.b_A_Temp * state.S_O_MonodTerm_X_H[Layer_Index] * state.C[X_A][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rate12[Layer_Index] = state.b_A_Temp * parameters.n_NO_end_A * state.S_O_InhibitionTerm_X_H[Layer_Index] * state.S_NO_MonodTerm_X_H[Layer_Index] * state.C[X_A][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rateP01[Layer_Index] = state.q_PHA_Temp * state.S_S_MonodTerm_X_PAO[Layer_Index] * state.S_ALK_MonodTerm_X_PAO[Layer_Index] * state.X_PP_X_PAO_MonodTerm[Layer_Index] * state.C[X_PAO][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rateP02[Layer_Index] = state.q_PP_Temp * state.S_O_MonodTerm_X_PAO[Layer_Index] * state.S_PO_MonodTerm_X_PP[Layer_Index] * state.S_ALK_MonodTerm_X_PAO[Layer_Index] * state.S_PHA_MonodTerm_X_PAO[Layer_Index] * state.X_PP_X_PAO_Max_MonodTerm[Layer_Index] * state.C[X_PAO][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rateP03[Layer_Index] = state.q_PP_Temp * parameters.n_NO_PAO * state.S_O_InhibitionTerm_X_PAO[Layer_Index] * state.S_NO_MonodTerm_X_PAO[Layer_Index] * state.S_PO_MonodTerm_X_PP[Layer_Index] * state.S_ALK_MonodTerm_X_PAO[Layer_Index] * state.S_PHA_MonodTerm_X_PAO[Layer_Index] * state.X_PP_X_PAO_Max_MonodTerm[Layer_Index] * state.C[X_PAO][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rateP04[Layer_Index] = state.mu_PAO_Temp * state.S_O_MonodTerm_X_PAO[Layer_Index] * state.S_NH_MonodTerm_X_PAO[Layer_Index] * state.S_PO_MonodTerm_X_PAO[Layer_Index] * state.S_ALK_MonodTerm_X_PAO[Layer_Index] * state.S_PHA_MonodTerm_X_PAO[Layer_Index] * state.C[X_PAO][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rateP05[Layer_Index] = state.mu_PAO_Temp * parameters.n_NO_PAO * state.S_O_InhibitionTerm_X_PAO[Layer_Index] * state.S_NO_MonodTerm_X_PAO[Layer_Index] * state.S_NH_MonodTerm_X_PAO[Layer_Index] * state.S_PO_MonodTerm_X_PAO[Layer_Index] * state.S_ALK_MonodTerm_X_PAO[Layer_Index] * state.S_PHA_MonodTerm_X_PAO[Layer_Index] * state.C[X_PAO][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rateP06[Layer_Index] = state.b_PAO_Temp * state.S_O_MonodTerm_X_PAO[Layer_Index] * state.C[X_PAO][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rateP07[Layer_Index] = state.b_PAO_Temp * parameters.n_NO_end_PAO * state.S_O_InhibitionTerm_X_PAO[Layer_Index] * state.S_NO_MonodTerm_X_PAO[Layer_Index] * state.C[X_PAO][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rateP08[Layer_Index] = state.b_PP_Temp * state.S_O_MonodTerm_X_PAO[Layer_Index] * state.C[X_PP][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rateP09[Layer_Index] = state.b_PP_Temp * parameters.n_NO_lys_PP * state.S_O_InhibitionTerm_X_PAO[Layer_Index] * state.S_NO_MonodTerm_X_PAO[Layer_Index] * state.C[X_PP][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rateP10[Layer_Index] = state.b_PHA_Temp * state.S_O_MonodTerm_X_PAO[Layer_Index] * state.C[X_PHA][Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.rateP11[Layer_Index] = state.b_PHA_Temp * parameters.n_NO_resp_PHA * state.S_O_InhibitionTerm_X_PAO[Layer_Index] * state.S_NO_MonodTerm_X_PAO[Layer_Index] * state.C[X_PHA][Layer_Index];
+  };
+  
+
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[P01_Hydrolysis][Layer_Index] = state.rate01[Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[P02_AerStorageOfXSTO][Layer_Index] = state.rate02[Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[P03_AnoxStorageOfXSTO][Layer_Index] = state.rate03[Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[P04_AerGrowthOfXH][Layer_Index] = state.rate04[Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[P05_AnoxGrowthOfXH][Layer_Index] = state.rate05[Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[P06_AerEndogRespOfXH][Layer_Index] = state.rate06[Layer_Index]; 
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[P07_AnoxEndogRespOfXH][Layer_Index] = state.rate07[Layer_Index]; 
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[P08_AerRespOfXSTO][Layer_Index] = state.rate08[Layer_Index]; 
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[P09_AnoxRespOfXSTO][Layer_Index] = state.rate09[Layer_Index]; 
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[P10_Nitrification][Layer_Index] = state.rate10[Layer_Index]; 
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[P11_AerEndogRespOfXA][Layer_Index] = state.rate11[Layer_Index]; 
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[P12_AnoxEndogRespOfXA][Layer_Index] = state.rate12[Layer_Index]; 
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[PP01_StorageOfXPHA][Layer_Index] = state.rateP01[Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[PP02_AerStorageOfXPP][Layer_Index] = state.rateP02[Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[PP03_AnoxStorageOfXPP][Layer_Index] = state.rateP03[Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[PP04_AerGrowthOfXPAO][Layer_Index] = state.rateP04[Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[PP05_AnoxGrowthOfXPAO][Layer_Index] = state.rateP05[Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[PP06_AerEndogRespOfXPAO][Layer_Index] = state.rateP06[Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[PP07_AnoxEndogRespOfXPAO][Layer_Index] = state.rateP07[Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[PP08_AerLysisOfXPP][Layer_Index] = state.rateP08[Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[PP09_AnoxLysisOfXPP][Layer_Index] = state.rateP09[Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[PP10_AerRespOfXPHA][Layer_Index] = state.rateP10[Layer_Index];
+  };
+{FOREACH Layer_Index IN {1 .. NrOfLayers}:
+  state.Kinetics[PP11_AnoxRespOfXPHA][Layer_Index] = state.rateP11[Layer_Index];
+  };
+  

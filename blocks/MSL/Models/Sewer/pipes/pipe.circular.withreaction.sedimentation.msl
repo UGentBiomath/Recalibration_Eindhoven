@@ -1,0 +1,80 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_PIPES_PIPECIRCULARWITHREACTIONSEDIMENTATION
+#define SEWER_PIPES_PIPECIRCULARWITHREACTIONSEDIMENTATION
+
+ CLASS Pipe_Circular_wReaction_Sedimentation (* icon = "Tank" *)
+ "A circular pipe with sedimentation and reactions. Outflow is calculated by using the outflow-volume relationship for circular pipes"
+ EXTENDS Pipe_Circular_wReaction WITH
+ {:
+ 
+  comments <- "A circular pipe with sedimentation and reactions. Outflow is calculated by using the outflow-volume relationship for circular pipes";
+  
+  interface <-
+  {
+//   OBJ ResuspendedFlow (* terminal = "in_1" *) "Flow of resuspended particles" : InSewTerminal := {: causality <- "CIN" :};
+   OBJ F_Sed (* terminal = "out_1" *) "Flow of settling particles": OutSewTerminal := {: causality <- "COUT" :};
+   OBJ M_Sed (* terminal = "in_2"; manip = "1" *) "Mass of sediment settled on the bottom of the unit" : Mass := {: causality <- "CIN" :};
+   OBJ r_Res (* terminal = "out_2" *) "Shear stress at bottom": Real := {: causality <- "COUT"; group <- "Settling" :};
+  };
+
+  parameters <-
+  {
+   // favorite and group: missing
+   OBJ Qdwf_max "Maximum dry weather flow": FlowRate := {: value <- 0.15 :};
+   // MeanSedTSSMass -> TSSmean
+   OBJ TSSmean "Mean TSS sediment mass in the sewer": Mass := {: value <- 5000000.0 :};
+   OBJ kstar "Deposition rate" : Time := {: value <- 10.0 :};
+   OBJ kextra "Flow-mass recession constant(resuspension)" : Time := {: value <- 15.0 :};
+   OBJ b1 "Flow influence on sedimentation" : Concentration := {: value <- 1000.0 :};
+   OBJ bmax "Flow-mass influence on resuspension constant" : Concentration := {: value <- 30.0 :};
+  };
+
+  state <-
+  {
+   OBJ dDeposit (* hidden = "1" *) "Mass Differential" : Real ;
+   OBJ r_Sed (* hidden = "1" *) "Particulate matter removal rate" : Real;
+  };
+
+  equations <-
+  {
+   state.dDeposit = IF (state.Q_In <= parameters.Qdwf_max) THEN // DW conditions
+   	IF (interface.Inflow[XTSS] > previous(state.dDeposit))
+   		THEN MSLUGetMin2(- 1.0 / parameters.kstar * (interface.M_Sed - parameters.TSSmean) - parameters.b1 *
+   		(state.Q_In - parameters.Qdwf_max), interface.Inflow[XTSS])
+   		ELSE interface.Inflow[XTSS]
+   	ELSE -1.0/parameters.kextra * (interface.M_Sed - parameters.TSSmean)  //Rain
+   	- parameters.bmax * (1.0 - exp(-interface.M_Sed / parameters.kextra)) * (state.Q_In - parameters.Qdwf_max) ;
+   	
+   state.r_Sed = state.dDeposit / state.SewM[XTSS] * (state.SewM[XTSS] / (10000.0 + state.SewM[XTSS])) ;
+   
+   { FOREACH Comp_Index IN {Kosim1IndexOfFirstParticulateComponent .. Kosim1IndexOfLastParticulateComponent}:
+      interface.F_Sed[Comp_Index] = IF (state.dDeposit > 0)
+          THEN -state.r_Sed *state.SewM[Comp_Index]
+          ELSE 0 ; };
+
+   // passing the resuspension rate to the sediment unit
+   { FOREACH Comp_Index IN {Kosim1IndexOfFirstParticulateComponent .. Kosim1IndexOfLastParticulateComponent}:
+      interface.r_Res = IF (state.dDeposit < 0) THEN state.dDeposit ELSE 0 ; };
+
+  };
+
+ :};
+
+
+#endif // SEWER_PIPES_PIPECIRCULARWITHREACTIONSEDIMENTATION

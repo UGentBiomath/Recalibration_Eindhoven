@@ -1,0 +1,47 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ F_BOD_COD (* *) "Conversion factor BOD/COD" : Fraction := {: unit <- "-"; value <- 0.65; interval <- {: lowerBound <- 0.000000; upperBound <- 1.000000; :}; group <- "Conversion factors"; :};
+    OBJ F_TSS_COD (* *) "Fraction TSS/COD" : Fraction := {: unit <- "-"; value <- 0.75; interval <- {: lowerBound <- 0.000000; upperBound <- 1.000000; :}; group <- "Conversion factors"; :};
+    OBJ K_B_hyd (* *) "Half saturation coefficient for hydrolysis of slowly biodegradable substrate" : HalfSatCoeffForHydrolysis := {: unit <- "gCOD/gCOD"; value <- 0.03; group <- "Kinetics"; :};
+    OBJ K_Bf (* *) "S_Bf half-saturation coeff for OHO" : HalfSatCoeffForHetero := {: value <- 5.0; group <- "Kinetics"; :};
+    OBJ K_Bs (* *) "S_Bs half-saturation coeff for OHO" : HalfSatCoeffForHetero := {: value <- 40.0; group <- "Kinetics"; :};
+    OBJ K_EPS (* *) "Half-saturation coefficient for EPS (X_OHO)" : HalfSatCoeffForHetero := {: value <- 50.0; group <- "Kinetics"; :};
+    OBJ K_NHx_ANO (* *) "Half-saturation coefficient of ANOx for ammonium" : AmmonHalfSatCoeffForAutotr := {: unit <- "gNH3-N/m3"; value <- 1.0; group <- "Kinetics"; :};
+    OBJ K_NHx_OHO (* *) "Saturation coeff of heterotrophs for ammonium" : SaturationCoefficient := {: value <- 0.05; group <- "Kinetics"; :};
+    OBJ K_NOx_OHO (* *) "Nitrate half-saturation coefficient for denitrifying OHO" : NitrateHalfSatCoeffForDenitrifHetero := {: unit <- "gNO3-N/m3"; value <- 0.5; group <- "Kinetics"; :};
+    OBJ K_O_ANO (* *) "Oxygen half-saturation coeff for ANO" : OxygenHalfSatCoeffForAutotr := {: value <- 0.4; group <- "Kinetics"; :};
+    OBJ K_O_EPS (* *) "Oxygen half-saturation coefficient" : OxygenHalfSatCoeffForHetero := {: value <- 1.5; group <- "Kinetics"; :};
+    OBJ K_O_OHO (* *) "Oxygen half-saturation coeff for OHO" : OxygenHalfSatCoeffForHetero := {: value <- 0.2; group <- "Kinetics"; :};
+    OBJ K_O_STO (* *) "Oxygen half-saturation coefficient for storage" : OxygenHalfSatCoeffForHetero := {: value <- 1.0; group <- "Kinetics"; :};
+    OBJ K_SL (* *) "Half saturation coefficient for surface limitation" : HalfSatCoeffForHetero := {: value <- 0.002; group <- "Kinetics"; :};
+    OBJ K_STO_hyd (* *) "Hydrolysis half-saturation coefficient for X_STO (X_OHO)" : HalfSatCoeffForHydrolysis := {: value <- 0.15; group <- "Kinetics"; :};
+    OBJ Temp_Ref (* hidden = "1"; *) "Reference temperature of the activated sludge" : CelsiusTemperature := {: value <- 20.0; group <- "Kinetics"; :};
+    OBJ Y_ANO (* *) "Yield for autotrophic biomass" : YieldForAutotrophicBiomass := {: value <- 0.24; group <- "Stoichiometry"; :};
+    OBJ Y_OHO (* *) "Yield for OHOs" : YieldForHeterotrophicBiomass := {: value <- 0.67; group <- "Stoichiometry"; :};
+    OBJ b_ANO (* *) "Decay coefficient for ANO" : DecayCoeffAutotr := {: value <- 0.15; group <- "Kinetics"; :};
+    OBJ b_OHO (* *) "Decay coefficient for OHO" : DecayCoeffHeterotr := {: value <- 0.62; group <- "Kinetics"; :};
+    OBJ f_Shunt_max (* *) "Fraction of X_STO in the active biomass" : Real := {: unit <- "-"; value <- 0.30; group <- "Kinetics"; :};
+    OBJ f_U (* *) "Fraction of biomass converted to inert matter" : FractOfBiomassLeadingToPartProd := {: value <- 0.08; group <- "Stoichiometry"; :};
+    OBJ f_dia (* *) "Dual substrate (0) vs. diauxic (1) model for S_Bs uptake" : Integer := {: value <- 0.0; interval <- {: lowerBound <- 0.0; upperBound <- 1.0; :}; group <- "Kinetics"; :};
+    OBJ i_CB (* *) "COD to VSS ratio (for X_OHO)" : Ratio := {: value <- 1.48; group <- "Composition parameters"; :};
+    OBJ i_X_B (* *) "Mass Of Nitrogen Per Mass Of COD In Biomass" : MassOfNitrogenPerMassOfCODInBiomass := {: unit <- "gN/gCOD"; value <- 0.086; group <- "Composition parameters"; :};
+    OBJ i_X_U (* *) "Mass of nitrogen per unit COD in products formed" : MassOfNitrogenPerMassOfCODInProdFromBiomass := {: unit <- "gN/gCOD"; value <- 0.06; group <- "Composition parameters"; :};
+    OBJ k_EPS_hyd (* *) "Rate constant for EPS hydrolysis" : RateConstant := {: value <- 0.12; group <- "Kinetics"; :};
+    OBJ k_EPS_max (* *) "EPS formation coefficient" : Ratio := {: value <- 0.25; group <- "Kinetics"; :};
+    OBJ k_a (* *) "Maximum specific ammonification rate" : AmmonificationRate := {: unit <- "m3/(gCOD*d)"; value <- 0.08; group <- "Kinetics"; :};
+    OBJ mu_ANO (* *) "Max specific growth rate of ANOs" : MaxSpecifGrowthRateAutotr := {: value <- 0.8; group <- "Kinetics"; :};
+    OBJ mu_OHO (* *) "Max specific growth rate of OHOs" : MaxSpecifGrowthRateHetero := {: value <- 7.0; group <- "Kinetics"; :};
+    OBJ mu_OHOs (* *) "Max specific growth rate of OHOs on S_Bs" : MaxSpecifGrowthRateHetero := {: value <- 3.0; group <- "Kinetics"; :};
+    OBJ n_g (* *) "Correction factor for anoxic growth of OHOs" : CorrectionFactor := {: value <- 0.8; group <- "Kinetics"; :};
+    OBJ n_hyd (* *) "Correction factor for anoxic hydrolysis" : CorrectionFactor := {: value <- 0.4; group <- "Kinetics"; :};
+    OBJ q_STO_hyd (* *) "Rate constant for storage hydrolysis" : RateConstant := {: value <- 3.0; group <- "Kinetics"; :};
+    OBJ q_XB_hyd (* *) "Maximum specific hydrolysis rate" : MaxSpecificHydrolysisRate := {: unit <- "gCOD/(gCOD*d)"; value <- 3.5; group <- "Kinetics"; :};
+    OBJ q_ads (* *) "Rate constant for adsorption" : RateConstant := {: value <- 0.07; group <- "Kinetics"; :};
+    OBJ theta_K_X (* hidden = "1"; *) "Temperature correction factor for K_X (K_B_hyd)" : Real := {: value <- 1.116; group <- "Kinetics"; :};
+    OBJ theta_b_ANO (* hidden = "1"; *) "Temperature correction factor for b_A" : Real := {: value <- 1.116; group <- "Kinetics"; :};
+    OBJ theta_b_OHO (* hidden = "1"; *) "Temperature correction factor for b_H" : Real := {: value <- 1.12; group <- "Kinetics"; :};
+    OBJ theta_k_a (* hidden = "1"; *) "Temperature correction factor for k_a" : Real := {: value <- 1.072; group <- "Kinetics"; :};
+    OBJ theta_k_h (* hidden = "1"; *) "Temperature correction factor for k_h (q_XB_hyd)" : Real := {: value <- 1.116; group <- "Kinetics"; :};
+    OBJ theta_mu_ANO (* hidden = "1"; *) "Temperature correction factor for mu_A" : Real := {: value <- 1.103; group <- "Kinetics"; :};
+    OBJ theta_mu_OHO (* hidden = "1"; *) "Temperature correction factor for mu_H" : Real := {: value <- 1.072; group <- "Kinetics"; :};
+

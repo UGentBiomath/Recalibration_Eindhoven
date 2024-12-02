@@ -1,0 +1,29 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    state.Kinetics[ASFermentation] = parameters.mu_AS * (state.C[S_AS] / (parameters.K_S_AS + state.C[S_AS])) * state.C[X_AS] * parameters.TempCoef1;
+    state.Kinetics[AcToCH4Conv] = parameters.mu_AC * (state.C[S_AC] / (parameters.K_S_AC + state.C[S_AC])) * (state.C[S_H] / (parameters.K_S_H_AC + state.C[S_H])) *
+
+(parameters.K_I_H_AC / (parameters.K_I_H_AC + state.C[S_H])) * state.C[X_AC] * parameters.TempCoef2;
+    state.Kinetics[AnOxOfS_FA] = parameters.mu_FA * (state.C[S_FA] / (parameters.K_S_FA + state.C[S_FA])) * (parameters.K_I_AC_FA / (parameters.K_I_AC_FA + state.C[S_AC])) *
+
+(parameters.K_I_H2_FA / (parameters.K_I_H2_FA + state.C[S_H2])) * state.C[X_FA] * parameters.TempCoef1;
+    state.Kinetics[AnOxOfS_PRO] = parameters.mu_PRO * (state.C[S_PRO] / (parameters.K_S_PRO + state.C[S_PRO])) * (parameters.K_I_AC_PRO / (parameters.K_I_AC_PRO + state.C[S_AC])) *
+
+(parameters.K_I_H2_PRO / (parameters.K_I_H2_PRO + state.C[S_H2])) * (state.C[S_H] / (parameters.K_S_H_PRO + state.C[S_H])) * (parameters.K_I_H_PRO /
+
+(parameters.K_I_H_PRO + state.C[S_H])) * state.C[X_PRO] * parameters.TempCoef2;
+    state.Kinetics[BiopolymHydrol] = parameters.k_R * state.C[X_S] * parameters.TempCoef1;
+    state.Kinetics[CH4Stripping] = state.rate_Stripping * state.C[S_CH4];
+    state.Kinetics[CO2Stripping] = state.rate_Stripping * state.C[S_CO2];
+    state.Kinetics[DecayOfX_AC] = parameters.b_AC * state.C[X_AC] * parameters.TempCoef2;
+    state.Kinetics[DecayOfX_AS] = parameters.b_AS * state.C[X_AS] * parameters.TempCoef1;
+    state.Kinetics[DecayOfX_FA] = parameters.b_FA * state.C[X_FA] * parameters.TempCoef1;
+    state.Kinetics[DecayOfX_H2] = parameters.b_H2 * state.C[X_H2] * parameters.TempCoef2;
+    state.Kinetics[DecayOfX_PRO] = parameters.b_PRO * state.C[X_PRO] * parameters.TempCoef2;
+    state.Kinetics[DeprotolysisOfCO2] = parameters.k_CO2 * state.C[S_CO2];
+    state.Kinetics[H2Stripping] = state.rate_Stripping * state.C[S_H2];
+    state.Kinetics[H2ToCH4Conv] = parameters.mu_H2 * (state.C[S_H2] / (parameters.K_S_H2 + state.C[S_H2])) * (state.C[S_H] / (parameters.K_S_H_H2 + state.C[S_H])) *
+
+(parameters.K_I_H_H2 / (parameters.K_I_H_H2 + state.C[S_H])) * state.C[X_H2] * parameters.TempCoef2;
+    state.Kinetics[ProtolysisOfHCO3] = parameters.k_HCO3 * state.C[S_HCO3] * state.C[S_H];
+

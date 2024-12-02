@@ -1,0 +1,112 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+
+#ifndef SEWER_GENERATORS_RUNOFF
+#define SEWER_GENERATORS_RUNOFF
+
+
+CLASS Runoff_Base "A run off calculator for basins" SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  {
+    OBJ Rain (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Rainfall" : Rainfall := {: causality <- "CIN"; group <- "Inflow" :}; 
+    OBJ Evaporation (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Evaporation intensity" : RainfallIntensity := {: causality <- "CIN"; group <- "Inflow" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {: causality <- "COUT"; group <- "Outflow" :};    
+  };
+  
+  parameters <-
+  {
+    OBJ TotalArea (* is_favorite = "1" *) "Impervious area of the subcatchment" : Area := {: value <- 2000000; group <- "Catchment" :};
+    OBJ SewSpecificVolume (* hidden = "1" *) "Specific Volume" : SpecificVolume[Kosim1NrOfComponents;];
+    //
+    // Impervious areas
+    OBJ MaxRunoff "Maximum runoff coefficient for impervious areas" : Fraction := {: value <- 1.0; group <- "Catchment" :};
+    OBJ MaxWettingLosses "Maximum wetting losses" : Rainfall := {: value <- 0.5; group <- "Catchment" :};
+    OBJ MaxDepressionStorage "Maximum depression storage for impervious areas" : Rainfall := {: value <- 1.8; group <- "Catchment"    :};
+    OBJ ConcImp "Pollutant concentrations coming from the impervious areas (only valid if the accumulation/washoff process is deactivated)" : 
+      Kosim1ConcentrationVector := [{:value <- 1000000:}, {:value <- 20.0:}, {:value <- 5.0:}, {:value <- 20.0:},
+      {:value <- 200.0:}, {:value <- 100.0:} ; ];      
+    OBJ Timestep "Time step of the rain influent file" : Real := {: value <- 60; unit <- "min"; interval <- {: lowerBound <- 0; upperBound <- PLUS_INF:}; group <- "Rain" :};
+  };
+  
+  independent <- 
+  {
+    OBJ t : Time;
+  };
+  
+  initial <-
+  {
+    parameters.SewSpecificVolume[H2O] := 0.000001;
+  };
+  
+  state <-
+  {
+    OBJ FillingDepression "Filling degree of the depression storage for impervious areas" : Fraction := {: value <- 1; group <- "Catchment" :};
+    OBJ WettingLosses "Actual wetting losses for impervious areas" : Rainfall := {: value <- 1; group <- "Catchment" :};
+    OBJ NetRainfall "Net rainfall (after substraction of wetting losses on impervious areas)" : RainfallIntensity := {: group <- "Catchment" :};
+    OBJ Runoff "Run-off intensity": RainfallIntensity := {: group <- "Catchment" :};
+    OBJ Q_Imp (* is_favorite = "1" *) "Flow rate from the impervious areas" : FlowRate := {: group <- "Catchment" :};
+    
+    OBJ WettLossChange (* hidden = "1" *) "Rate of change in wetting loss" : RainfallIntensity := {: group <- "Catchment" :};
+    OBJ FillingChangeRateImp (* hidden = "1" *) "Rate of change in depression storage filling degree" : Rate := {: group <- "Catchment" :};
+    OBJ Help_Rain (* hidden = "1" *) "Rainfall intensity" : RainfallIntensity := {: group <- "Catchment" :}; 
+  };
+  
+  equations <-
+  { 
+    state.Help_Rain = (interface.Rain / parameters.Timestep) * 1440 ;
+    
+    // wetting losses
+    state.WettLossChange = IF (state.Help_Rain > 0) THEN
+      IF (state.WettingLosses >= parameters.MaxWettingLosses) THEN 0
+        ELSE state.Help_Rain
+      ELSE IF (state.WettingLosses > 0) THEN - interface.Evaporation
+        ELSE 0 ;
+    
+    DERIV(state.WettingLosses,[independent.t]) = state.WettLossChange;
+    
+    //remaining rain after wetting
+    state.NetRainfall = IF (state.Help_Rain > 0) THEN state.Help_Rain - state.WettLossChange
+      ELSE 0;
+    
+    // Depression filling degree (no units and lying between 0 and 1) 	
+    state.FillingChangeRateImp = IF (state.NetRainfall > 0)
+      THEN state.NetRainfall * (1 - state.FillingDepression)
+      ELSE - (interface.Evaporation * state.FillingDepression) ;      
+    
+    DERIV(state.FillingDepression,[independent.t]) = state.FillingChangeRateImp ;
+    
+    //Water runoff after wetting and depressions
+    //(01/04/2015) EURE: can be negative, as it is not protected. Q_Imp instead will be protected
+    state.Runoff =  IF (state.NetRainfall > 0)
+      THEN parameters.MaxRunoff * (state.NetRainfall - parameters.MaxDepressionStorage * state.FillingChangeRateImp)
+      ELSE 0;
+    
+    //pollutant concentrations (assuming they only come from impervious surfaces)
+    {FOREACH Comp_Index IN {Kosim1IndexOfFirstSolubleComponent .. Kosim1IndexOfLastSolubleComponent}:
+      interface.Outflow[Comp_Index] = - state.Q_Imp * parameters.ConcImp[Comp_Index] ; };
+  };
+
+:};
+
+
+#include "Sewer/generators/runoff.flux.msl"
+#include "Sewer/generators/runoff.accumulation.msl"
+//#include "IUWS/Sewer/generators.runoff.buffer.msl"
+
+
+#endif // SEWER_GENERATORS_RUNOFF

@@ -1,0 +1,31 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE UCTADReactions "The reactions between the components considered" = 
+ENUM
+{
+  AD_decay,
+  FSO_Hydrolysis,
+  BPO_Hydrolysis,
+  OHO_Lysis,
+  PAO_Lysis,
+  PP_Release,
+  PP_Hydrolysis,
+  BPO_PS_Hydrolysis,
+  PHA_Hydrolysis,
+  Acidogenesis_L,
+  Acidogenesis_H,
+  Acetogenesis,
+  AC_decay,
+  Acet_methanogenesis,
+  AM_decay,
+  Hyd_methanogenesis,
+  HM_decay,
+  Struvite_dissoc,
+  CaP_dissoc,
+  MgKP_dissoc,
+  Calcite_dissoc,
+  Magnesite_dissoc,
+  Newberyite_dissoc,
+  CO2_evolution
+};
+

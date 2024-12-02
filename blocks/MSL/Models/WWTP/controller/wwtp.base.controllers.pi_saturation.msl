@@ -1,0 +1,116 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:47$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_CONTROLLERS_PISATURATION
+#define WWTP_BASE_CONTROLLERS_PISATURATION
+
+
+CLASS BasePISaturation "PI controller with saturation"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  {
+    OBJ y_M (* terminal = "in_1" *) "Sensor measured output" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+    OBJ y_S  (* terminal = "in_2"; manip = "1" *) "Setpoint value for controlled variable" : Real := {: causality <- "CIN" ; value <- 2 ; group <- "Operational" :};
+    OBJ u_Min  (* terminal = "in_2"; manip = "1" *) "Minimum control action" : Real := {: causality <- "CIN" ;value <- 0 ; group <- "Operational" :};
+    OBJ u_Max  (* terminal = "in_2"; manip = "1" *) "Maximum control action" : Real := {: causality <- "CIN" ;value <- 1000 ; group <- "Operational" :};
+    OBJ K_P  (* terminal = "in_2"; manip = "1" *) "Factor of proportionality" :Real := {: causality <- "CIN" ; value <- 25 ; group <- "Operational" :};
+    OBJ T_I  (* terminal = "in_2"; manip = "1" *) "Integral time" : Time := {: causality <- "CIN" ; value <- 0.1 ; group <- "Operational" :};
+    OBJ u0 (* terminal = "in_2"; manip = "1" *) "No error action" : Real := {: causality <- "CIN" ; value <- 50 ; group <- "Operational" :};
+    OBJ u (* terminal = "out_1" *) "Controlled variable" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+  };
+
+  independent <- 
+  { 
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+  };
+
+  state <-
+  {
+    OBJ e "Error" : PhysicalQuantityType := {: group <- "Operational" :};
+    OBJ Integ_e (* hidden = "1" *) "Integral of error": PhysicalQuantityType := {: group <- "Operational" :};
+    OBJ help (* hidden = "1" *) "Previous time help variable" : Time;
+    OBJ uhelp (* hidden = "1" *) "Help variable to calculate the PI control action" : Real;
+    OBJ uhelp2 (* hidden = "1" *) "Help variable to calculate the PI control action after saturation" : Real ;   
+  /*
+    OBJ Prev_t (* hidden = "1" *) : Time;
+  */};
+
+  initial <-
+  {
+    state.Integ_e = 0.0 ;
+  };
+
+  equations <-
+  {
+    state.e = interface.y_S - interface.y_M;
+    
+    state.help = independent.t;
+    
+    DERIV(state.Integ_e, [independent.t]) = state.e ;
+
+    state.uhelp2 = IF(state.uhelp < interface.u_Min) THEN (interface.u_Min)
+      ELSE IF (state.uhelp > interface.u_Max) THEN interface.u_Max 
+        ELSE state.uhelp ;
+
+    interface.u = state.uhelp2;
+  };
+
+:};
+
+
+CLASS PI_Saturation (* icon = "controller_pi"; is_default = "true" *)
+"PI controller with saturation"
+EXTENDS BasePISaturation WITH
+{:
+  comments <- "A model for a proportional-integral controller with saturation";
+  
+  equations <-
+  {
+    state.uhelp = interface.u0 + interface.K_P * (state.e + (1 / interface.T_I) * state.Integ_e) ;  
+  };
+
+:};
+ 
+
+CLASS PI_Saturation_AntiWindup (* icon = "controller_pi" *)
+"PI controller with saturation and anti-windup"
+EXTENDS BasePISaturation WITH
+{:
+  comments <- "A model for a proportional-integral controller with saturation and anti-windup";
+  
+  interface <-
+  {
+    OBJ T_t (* terminal = "in_2"; manip = "1" *) "Antiwindup time constant, tracking time constant" : Time := {: causality <- "CIN" ; value <- 0.0002 ; group <- "Operational" :};
+  };
+
+state <-
+  {
+    OBJ uAntiwindup (* hidden = "1" *) "Help variable to calculate the antiwindup control action" : Real ;
+  };
+  
+  equations <-
+  {
+    DERIV(state.uAntiwindup, [independent.t]) = (state.uhelp2 - state.uhelp)/interface.T_t; 
+    
+    state.uhelp = interface.u0 + interface.K_P * (state.e + (1 / interface.T_I) * state.Integ_e) + state.uAntiwindup ; 
+  };
+
+:};
+ 
+ 
+#endif // WWTP_BASE_CONTROLLERS_PISATURATION

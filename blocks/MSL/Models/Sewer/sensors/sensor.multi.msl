@@ -1,0 +1,63 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$ EURE
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+
+#ifndef SEWER_SENSORS_MULTI
+#define SEWER_SENSORS_MULTI
+
+
+CLASS SewMultiSensor (* icon = "Sensor" *) "Sensor for BOD, COD, TN, (TP), NH4 and NO3"
+EXTENDS SewFlow WITH 
+{:
+
+  comments <- "Sensor for BOD, COD, TN, (TP), NH4 and NO3 for Kosim1 component vector";
+
+  interface <-
+  {
+    OBJ COD (* terminal = "out_2"; is_favorite = "1" *) "Measured COD" : Concentration := {: causality <- "COUT" ; group <- "Measurements" :};
+    OBJ BOD5 (* terminal = "out_2"; is_favorite = "1" *) "Measured BOD5" : Concentration := {: causality <- "COUT" ; group <- "Measurements" :};
+    OBJ TSS (* terminal = "out_2"; is_favorite = "1" *) "Measured TSS" : Concentration := {: causality <- "COUT" ; group <- "Measurements" :};
+    OBJ NH4 (* terminal = "out_2"; is_favorite = "1" *) "Measured NH4" : Concentration := {: causality <- "COUT" ; group <- "Measurements" :};
+    OBJ PO4 (* terminal = "out_2"; is_favorite = "1" *) "Measured PO4" : Concentration := {: causality <- "COUT" ; group <- "Measurements" :};
+  };
+
+  parameters <-
+  {
+    OBJ F_TSS_X_COD "Conversion factor TSS/COD particulate" : Real := {: value <- 0.75 ; group <- "Conversion factors" :};
+    OBJ F_BOD5_S_COD "Conversion factor BOD5/COD soluble": Fraction := {: value <- 0.25 ; group <- "Conversion factors" :};
+  };
+
+  equations <-
+  {
+    interface.COD = IF (state.Q_In == 0) THEN 0.0
+      ELSE (interface.Inflow[SCOD] + interface.Inflow[XCOD]) / state.Q_In; 
+    
+    interface.BOD5 = IF (state.Q_In == 0) THEN 0.0
+      ELSE parameters.F_BOD5_S_COD * interface.Inflow[SCOD] / state.Q_In;
+    
+    interface.TSS  = IF (state.Q_In == 0) THEN 0.0
+      ELSE parameters.F_TSS_X_COD * interface.Inflow[XCOD] / state.Q_In;
+    
+    interface.NH4  = IF (state.Q_In == 0) THEN 0.0
+      ELSE interface.Inflow[NH4] / state.Q_In;
+    
+    interface.PO4  = IF (state.Q_In == 0) THEN 0.0
+      ELSE interface.Inflow[PO4] / state.Q_In;
+  };
+
+:};  
+
+
+#endif // SEWER_SENSORS_MULTI

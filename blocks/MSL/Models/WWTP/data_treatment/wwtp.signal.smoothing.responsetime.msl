@@ -1,0 +1,136 @@
+/*******************************************************************************
+ *
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:48$
+ *
+ ******************************************************************************/
+ 
+#ifndef WWTP_SIGNAL_SMOOTHING_RESPONSETIME
+#define WWTP_SIGNAL_SMOOTHING_RESPONSETIME
+
+
+CLASS Base_RT21 "Base class for a 2nd-order Response-Time smoothing action for 1 signal" SPECIALISES PhysicalDAEModelType :=
+{:
+  
+  comments <- "Base class for a 2nd-order Response-Time smoothing action for 1 signal" ;
+
+  interface <-
+  {
+    OBJ u1 (* terminal = "out_1" *) "Output signal no.1" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+  };
+
+  parameters <-
+  {
+  	OBJ T90 (* hidden = "1" *) "Response time" : Time := {: value <- 0.00694444444444444 ; group <- "System" :};
+  };
+
+  independent <- 
+  { 
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+  };
+
+  state <-
+  {
+    OBJ Help_u1 (* hidden = "1" *) "Ideal output without smoothening": Real ;
+    OBJ Help_RT11 (* hidden = "1" *) "variable for 1st order response time output": Real ;
+		OBJ Help_RT21 (* hidden = "1" *) "variable for 2nd order response time output": Real ;
+    //this variable is for defining the response time depending on T90
+ 		OBJ Tau (* hidden = "1" *) "Time constant" : Time := {: value <- 0.00006944444444 ; group <- "System" :};  
+  };
+
+  initial <-
+  {
+    state.Tau = parameters.T90/3.89 ;
+  };
+
+  equations <-
+  {
+    //implementation of series of laplace transfer functions. 
+		DERIV(state.Help_RT11,[independent.t]) = - (1 / state.Tau) * (state.Help_RT11 - state.Help_u1) ;
+		DERIV(state.Help_RT21,[independent.t]) = - (1 / state.Tau) * (state.Help_RT21 - state.Help_RT11) ;
+
+    interface.u1 = state.Help_RT21 ;
+  };
+
+:};
+
+  
+CLASS Base_RT22 "Base class for a 2nd-order Response-Time smoothing action for 2 signals"
+EXTENDS Base_RT21 WITH
+{:
+  
+  comments <- "Base class for a 2nd-order Response-Time smoothing action for 2 signals" ;
+
+  interface <-
+  {
+    OBJ u2 (* terminal = "out_1" *) "Output signal no.2" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+  };
+
+  state <-
+  {
+    OBJ Help_u2 (* hidden = "1" *) "Ideal output without smoothening": Real ;
+    OBJ Help_RT12 (* hidden = "1" *) "variable for 1st order response time output": Real ;
+		OBJ Help_RT22 (* hidden = "1" *) "variable for 2nd order response time output": Real ;
+  };
+
+  equations <-
+  {
+    //implementation of series of laplace transfer functions
+		DERIV(state.Help_RT12,[independent.t]) = - (1 / state.Tau) * (state.Help_RT12 - state.Help_u2) ;
+		DERIV(state.Help_RT22,[independent.t]) = - (1 / state.Tau) * (state.Help_RT22 - state.Help_RT12) ;
+
+    interface.u2 = state.Help_RT22 ;
+  };
+
+:};
+
+
+CLASS Base_RT25 "Base class for a 2nd-order Response-Time smoothing action for 5 signals"
+EXTENDS Base_RT22 WITH
+{:
+  
+  comments <- "Base class for a 2nd-order Response-Time smoothing action for 5 signals" ;
+
+  interface <-
+  {
+    OBJ u3 (* terminal = "out_1" *) "Output signal no.3" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+    OBJ u4 (* terminal = "out_1" *) "Output signal no.4" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+    OBJ u5 (* terminal = "out_1" *) "Output signal no.5" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+  };
+
+  state <-
+  {
+    OBJ Help_u3 (* hidden = "1" *) "Ideal output without smoothening": Real ;
+    OBJ Help_u4 (* hidden = "1" *) "Ideal output without smoothening": Real ;
+    OBJ Help_u5 (* hidden = "1" *) "Ideal output without smoothening": Real ;
+    
+    OBJ Help_RT13 (* hidden = "1" *) "variable for 1st order response time output": Real ;
+		OBJ Help_RT23 (* hidden = "1" *) "variable for 2nd order response time output": Real ;
+    OBJ Help_RT14 (* hidden = "1" *) "variable for 1st order response time output": Real ;
+		OBJ Help_RT24 (* hidden = "1" *) "variable for 2nd order response time output": Real ;
+    OBJ Help_RT15 (* hidden = "1" *) "variable for 1st order response time output": Real ;
+		OBJ Help_RT25 (* hidden = "1" *) "variable for 2nd order response time output": Real ;
+  };
+
+  equations <-
+  {
+    //implementation of series of laplace transfer functions
+		DERIV(state.Help_RT13,[independent.t]) = - (1 / state.Tau) * (state.Help_RT13 - state.Help_u3) ;
+		DERIV(state.Help_RT23,[independent.t]) = - (1 / state.Tau) * (state.Help_RT23 - state.Help_RT13) ;
+
+		DERIV(state.Help_RT14,[independent.t]) = - (1 / state.Tau) * (state.Help_RT14 - state.Help_u4) ;
+		DERIV(state.Help_RT24,[independent.t]) = - (1 / state.Tau) * (state.Help_RT24 - state.Help_RT14) ;
+
+		DERIV(state.Help_RT15,[independent.t]) = - (1 / state.Tau) * (state.Help_RT15 - state.Help_u5) ;
+		DERIV(state.Help_RT25,[independent.t]) = - (1 / state.Tau) * (state.Help_RT25 - state.Help_RT15) ;
+
+    interface.u3 = state.Help_RT23 ;
+    interface.u4 = state.Help_RT24 ;
+    interface.u5 = state.Help_RT25 ;
+  };
+
+:};
+
+
+#endif // WWTP_SIGNAL_SMOOTHING_RESPONSETIME

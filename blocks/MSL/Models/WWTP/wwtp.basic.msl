@@ -1,0 +1,52 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 13. maj 2019 09:38:06$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_BASIC
+#define WWTP_BASIC
+
+
+#include "WWTP/Basic/wwtp.general.msl"
+
+#include "WWTP/Basic/wwtp.definitions.msl"
+#include "WWTP/Basic/wwtp.reactions.msl"
+
+#include "WWTP/Basic/wwtp.base.msl"
+
+// Level 1
+#include "WWTP/Basic/wwtp.base.splitters_combiners.msl"
+#include "WWTP/Basic/wwtp.base.buffertanks.msl"
+#include "WWTP/Basic/wwtp.base.activated_sludge_units.msl"
+#include "WWTP/Basic/wwtp.SBR.msl"
+#include "WWTP/Basic/wwtp.base.SBR.msl"
+#include "WWTP/Basic/wwtp.base.clarifier.msl"
+#include "WWTP/Basic/wwtp.base.primary_clarifier.msl"
+#include "WWTP/Basic/wwtp.base.secondary_clarifier.msl"
+#include "WWTP/Basic/wwtp.base.sensors.msl"
+#include "WWTP/Basic/wwtp.base.controllers.msl"
+#include "WWTP/Basic/wwtp.base.timers.msl"
+#include "WWTP/wwtp.base.loopbreaker.msl"
+#include "WWTP/Basic/wwtp.base.process_calculator.msl"
+#include "WWTP/Basic/wwtp.base.evaluator.msl"
+//
+#include "WWTP/Basic/wwtp.base.dosing_units.msl"
+#include "WWTP/Basic/wwtp.base.sludge_dewatering.msl"
+#include "WWTP/wwtp.base.ADM1.msl"
+//on-hold #include "WWTP/wwtp.aeration.msl"
+//
+#include "WWTP/Basic/wwtp.transformers.msl"
+
+#endif //WWTP_BASIC

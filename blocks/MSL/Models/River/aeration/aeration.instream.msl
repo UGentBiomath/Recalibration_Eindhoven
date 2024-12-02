@@ -1,0 +1,48 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:25$
+ *
+ ******************************************************************************/
+
+#ifndef RIVER_AERATION_AERATIONINSTREAM
+#define RIVER_AERATION_AERATIONINSTREAM
+
+
+CLASS Aeration_InStream (* icon = "River_aeration" *) "A dosing unit model"
+EXTENDS RiverAeration_Base WITH 
+{:
+
+  comments <- "..";
+  
+  interface <-
+  {
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutRiverTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+  };
+  
+  equations <-
+  {
+    interface.Outflow[H2O] = - interface.Q_Dose / parameters.WWTPSpecificVolume[H2O] ;
+    
+#if (defined ASM2dModTemp || defined IUWS1)
+    interface.Outflow[O2] = - interface.Q_Dose * parameters.C_Dose;
+#endif // ASM2dModTemp, IUWS1
+
+#ifdef IUWS2
+    interface.Outflow[rS_O2] = - interface.Q_Dose * parameters.C_Dose ;
+#endif // IUWS2
+  };
+
+:};
+
+
+#endif // RIVER_AERATION_AERATIONINSTREAM

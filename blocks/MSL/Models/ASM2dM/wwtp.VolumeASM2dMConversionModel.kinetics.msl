@@ -1,0 +1,25 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    state.Kinetics[AerGrowthOnSf] = state.mu_OHO_Temp * state.S_O_MonodTerm * state.S_F_MonodTerm * (state.C[S_F] / (state.C[S_F] + state.C[S_VFA])) * state.S_NH_MonodTerm * state.S_PO_MonodTerm * state.S_Alk_MonodTerm * state.C[X_OHO];
+    state.Kinetics[AerGrowthOnSvfa] = state.mu_OHO_Temp * state.S_O_MonodTerm * state.S_VFA_MonodTerm * (state.C[S_VFA] / (state.C[S_F] + state.C[S_VFA])) * state.S_NH_MonodTerm * state.S_PO_MonodTerm * state.S_Alk_MonodTerm * state.C[X_OHO];
+    state.Kinetics[AerGrowthOnXPHA] = state.mu_PAO_Temp * state.S_O_MonodTerm * state.S_NH_MonodTerm * state.S_Alk_MonodTerm * state.S_PO_MonodTerm * state.X_PAO_Stor_MonodTerm * state.C[X_PAO];
+    state.Kinetics[AerHydrol] = state.k_h_Temp * state.S_O_MonodTerm * state.XC_B_MonodTerm * state.C[X_OHO];
+    state.Kinetics[AerStorageOfXPP] = state.Q_PP_Temp * state.S_O_MonodTerm * state.C[S_PO] / (state.C[S_PO] + parameters.K_PS) * state.S_Alk_MonodTerm * state.X_PAO_Stor_MonodTerm * (parameters.K_MAX - state.C[X_PAO_PP] / state.C[X_PAO]) / (parameters.K_IPP + parameters.K_MAX - state.C[X_PAO_PP] / state.C[X_PAO]) * state.C[X_PAO];
+    state.Kinetics[Aeration] = state.Kla_Actual * (state.S_O_Saturation - state.C[S_O]);
+    state.Kinetics[AnGrowthOnSf] = state.mu_OHO_Temp * parameters.n_NO_Het * state.S_O_InhibitionTerm * state.S_F_MonodTerm * (state.C[S_F] / (state.C[S_F] + state.C[S_VFA])) * state.S_NH_MonodTerm * state.S_NO_MonodTerm * state.S_PO_MonodTerm * state.S_Alk_MonodTerm * state.C[X_OHO];
+    state.Kinetics[AnGrowthOnSvfa] = state.mu_OHO_Temp * parameters.n_NO_Het * state.S_O_InhibitionTerm * state.S_VFA_MonodTerm * (state.C[S_VFA] / (state.C[S_F] + state.C[S_VFA])) * state.S_NH_MonodTerm * state.S_NO_MonodTerm * state.S_PO_MonodTerm * state.S_Alk_MonodTerm * state.C[X_OHO];
+    state.Kinetics[AnGrowthOnXPHA] = state.Kinetics[AerGrowthOnXPHA] * parameters.n_NO_PAO * (parameters.K_O / state.C[S_O]) * state.S_NO_MonodTerm;
+    state.Kinetics[AnHydrol] = state.k_h_Temp * parameters.n_NO_Hyd * state.S_O_InhibitionTerm * state.S_NO_MonodTerm * state.XC_B_MonodTerm * state.C[X_OHO];
+    state.Kinetics[AnStorageOfXPP] = state.Kinetics[AerStorageOfXPP] * parameters.n_NO_PAO * (parameters.K_O / state.C[S_O]) * state.S_NO_MonodTerm;
+    state.Kinetics[AnaerHydrol] = state.k_h_Temp * parameters.n_fe * state.S_O_InhibitionTerm * state.S_NO_InhibitionTerm * state.XC_B_MonodTerm * state.C[X_OHO];
+    state.Kinetics[Fermentation] = state.Q_fe_Temp * state.S_O_InhibitionTerm * state.S_NO_InhibitionTerm * (state.C[S_F] / (parameters.K_fe + state.C[S_F])) * state.S_Alk_MonodTerm * state.C[X_OHO];
+    state.Kinetics[GrowthOfAuto] = state.mu_ANO_Temp * state.C[S_O] / (state.C[S_O] + parameters.K_O_ANO) * state.C[S_NHx] / (state.C[S_NHx] + parameters.K_NH_ANO) * state.S_PO_MonodTerm * state.C[S_Alk] / (state.C[S_Alk] + parameters.K_Alk_ANO) * state.C[X_ANO];
+    state.Kinetics[LysisOfAuto] = state.b_ANO_Temp * (state.S_O_MonodTerm + parameters.n_NO_ANO_d * state.S_O_InhibitionTerm * state.S_NO_MonodTerm) * state.C[X_ANO];
+    state.Kinetics[LysisOfHetero] = state.b_OHO_Temp * (state.S_O_MonodTerm + parameters.n_NO_Het_d * state.S_O_InhibitionTerm * state.S_NO_MonodTerm) * state.C[X_OHO];
+    state.Kinetics[LysisOfXPAO] = state.b_PAO_Temp * (state.S_O_MonodTerm + parameters.n_NO_P_d * state.S_O_InhibitionTerm * state.S_NO_MonodTerm) * state.C[X_PAO] * state.S_Alk_MonodTerm;
+    state.Kinetics[LysisOfXPHA] = state.b_PAO_Stor_Temp * (state.S_O_MonodTerm + parameters.n_NO_P_d * state.S_O_InhibitionTerm * state.S_NO_MonodTerm) * state.C[X_PAO_Stor] * state.S_Alk_MonodTerm;
+    state.Kinetics[LysisOfXPP] = state.b_PP_Temp * (state.S_O_MonodTerm + parameters.n_NO_P_d * state.S_O_InhibitionTerm * state.S_NO_MonodTerm) * state.C[X_PAO_PP] * state.S_Alk_MonodTerm;
+    state.Kinetics[Precipitation] = parameters.k_PRE * state.C[S_PO] * state.C[X_MEOH];
+    state.Kinetics[Redissolution] = parameters.k_RED * state.C[X_MEP] * (state.C[S_Alk] / (parameters.K_Alk_ANO + state.C[S_Alk]));
+    state.Kinetics[StorageOfXPHA] = state.Q_PAO_Stor_Temp * state.S_VFA_MonodTerm * state.S_Alk_MonodTerm * (state.C[X_PAO_PP]) / (parameters.K_PP + state.C[X_PAO_PP] / state.C[X_PAO]);
+

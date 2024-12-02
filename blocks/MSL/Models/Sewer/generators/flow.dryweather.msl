@@ -1,0 +1,184 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:54$
+ *
+ ******************************************************************************/
+
+#ifndef SEWER_GENERATORS_FLOW_DRYWEATHER
+#define SEWER_GENERATORS_FLOW_DRYWEATHER
+
+
+CLASS DryWeatherFlow (* icon = "generator" *) "A dry weather flow generator for subcatchments in Kosim"
+EXTENDS SewerDWF_Base WITH //SewerFlow_Base
+{:
+
+  parameters <-
+  {
+    // General
+    OBJ Population (* is_favorite = "1" *) "Population" : Integer := {: value <- 3000; group <- "General" :};
+    OBJ WastewaterPerIE "Per-capita daily wastewater flow" : FlowRate := {: value <- 0.15; group <- "General" :};
+    OBJ Q_Industry "Flow from industry": FlowRate:= {: value <- 100; group <- "General" :} ;
+    OBJ NrPatternFlow (* is_favorite = "1" *) "Daily DWF pattern: 1 (0-5kPE), 2 (5k-10kPE), 3 (10k-50kPE), 4 (Spangen), 5 (Constant), 6 (Commercial), 0 (Custom)" : Integer :={: value <- 1; interval <- {: lowerBound <- 0; upperBound <- 6; :}; group <- "General" :};
+    OBJ NrPatternPollution (* is_favorite = "1" *) "Daily DWF pollution pattern: 1 (0-5kPE), 2 (5k-10kPE), 3 (10k-50kPE), 4 (Spangen), 5 (Constant), 6 (Commercial), 0 (Custom)" : Integer :={:value <- 1; interval <- {: lowerBound <- 0; upperBound <- 6; :}; group <- "General" :};
+    //
+    OBJ Qdwf_max (* is_favorite = "1" *) "Maximum dry weather flow": FlowRate ;
+    OBJ Qdwf_peak (* is_favorite = "1"; fixed = "1" *) "Peak dry weather flow relative to average": Real ; // to be checked, = max(pattern vector)?
+    OBJ Qavg_tot (* is_favorite = "1" *) "Average volume produced" : FlowRate;
+    // NEW (EURE 26/08/2014)
+    OBJ Help_PatternFlowAve (* hidden = "1" *) "Check for average of flow weights" : Real;
+    OBJ Help_PatternPollutionAve (* hidden = "1" *) "Check for average of pollution weights" : Real;
+    //
+    // Patterns
+    //#include "IUWS/Sewer/patterns.infiltration.msl"
+    #include "Sewer/patterns/patterns.flow.msl"
+    #include "Sewer/patterns/patterns.pollution.msl"
+  };
+
+  initial <-
+  {
+    parameters.Qdwf_peak = MSLUGetMax(ref(parameters.PatternFlow[1]), NrOfHourlyTimeVectorElements) ;
+    parameters.Qdwf_max = parameters.Qdwf_peak * parameters.Population * parameters.WastewaterPerIE ;
+    parameters.Qavg_tot = parameters.Population * parameters.WastewaterPerIE ;// / 1000000; //from 1/km2 to 1/m2
+    /*  
+    {FOREACH Month_Index IN {1 .. 12}: parameters.PatternInfiltration[Month_Index] =
+    IF (parameters.NrPatternInfiltration == 1) THEN parameters.InfiltrationCustom[Month_Index]
+    ELSE parameters.InfiltrationConstant[Month_Index] ; };
+    */	
+    {FOREACH Comp_Index IN {1 .. 24}: parameters.PatternFlow[Comp_Index] = 
+       IF (parameters.NrPatternFlow == 0) THEN parameters.CustomFlow[Comp_Index]
+         ELSE IF (parameters.NrPatternFlow == 1) THEN parameters.ATV0to5thIE[Comp_Index]
+           ELSE IF (parameters.NrPatternFlow == 2) THEN parameters.ATV5to10thIE[Comp_Index]
+             ELSE IF (parameters.NrPatternFlow == 3) THEN parameters.ATV10to50thIE[Comp_Index]
+               ELSE IF (parameters.NrPatternFlow == 4) THEN parameters.Spangen[Comp_Index]
+                 ELSE IF (parameters.NrPatternFlow == 5) THEN parameters.ConstantFlow[Comp_Index]
+                   ELSE parameters.Commercial8_18[Comp_Index] ; };
+     
+     {FOREACH Comp_Index IN {1 .. 24}: parameters.PatternPollution[Comp_Index] = 
+       IF (parameters.NrPatternPollution == 0) THEN parameters.CustomPollution[Comp_Index]
+         ELSE IF (parameters.NrPatternPollution == 1) THEN parameters.Stoff0to5thIE[Comp_Index]
+           ELSE IF (parameters.NrPatternPollution == 2) THEN parameters.Stoff5to10thIE[Comp_Index]
+             ELSE IF (parameters.NrPatternPollution == 3) THEN parameters.Stoff10to50thIE[Comp_Index]
+               ELSE IF (parameters.NrPatternPollution == 4) THEN parameters.SpangenPollution[Comp_Index]
+                 ELSE IF (parameters.NrPatternPollution == 5) THEN parameters.ConstantPollution[Comp_Index]
+                   ELSE parameters.PollutionCommercial8_18[Comp_Index] ; };
+
+    // NEW (EURE 26/08/2014)
+    parameters.Help_PatternFlowAve =
+      (parameters.PatternFlow[1] + parameters.PatternFlow[2] + parameters.PatternFlow[3] + 
+      parameters.PatternFlow[4] + parameters.PatternFlow[5] + parameters.PatternFlow[6] + 
+      parameters.PatternFlow[7] + parameters.PatternFlow[8] + parameters.PatternFlow[9] + 
+      parameters.PatternFlow[10] + parameters.PatternFlow[11] + parameters.PatternFlow[12] + 
+      parameters.PatternFlow[13] + parameters.PatternFlow[14] + parameters.PatternFlow[15] + 
+      parameters.PatternFlow[16] + parameters.PatternFlow[17] + parameters.PatternFlow[18] + 
+      parameters.PatternFlow[19] + parameters.PatternFlow[20] + parameters.PatternFlow[21] + 
+      parameters.PatternFlow[22] + parameters.PatternFlow[23] + parameters.PatternFlow[24])/24.0 ; 
+    
+    parameters.Help_PatternPollutionAve =
+      (parameters.PatternPollution[1] + parameters.PatternPollution[2] + parameters.PatternPollution[3] + 
+      parameters.PatternPollution[4] + parameters.PatternPollution[5] + parameters.PatternPollution[6] + 
+      parameters.PatternPollution[7] + parameters.PatternPollution[8] + parameters.PatternPollution[9] + 
+      parameters.PatternPollution[10] + parameters.PatternPollution[11] + parameters.PatternPollution[12] + 
+      parameters.PatternPollution[13] + parameters.PatternPollution[14] + parameters.PatternPollution[15] + 
+      parameters.PatternPollution[16] + parameters.PatternPollution[17] + parameters.PatternPollution[18] + 
+      parameters.PatternPollution[19] + parameters.PatternPollution[20] + parameters.PatternPollution[21] + 
+      parameters.PatternPollution[22] + parameters.PatternPollution[23] + parameters.PatternPollution[24])/24.0 ; 
+    
+    {FOREACH Comp_Index IN {1 .. 24}:
+      parameters.PatternFlow_Corr[Comp_Index] = parameters.PatternFlow[Comp_Index] / parameters.Help_PatternFlowAve ; } ; 
+    
+    {FOREACH Comp_Index IN {1 .. 24}:
+      parameters.PatternPollution_Corr[Comp_Index] = parameters.PatternPollution[Comp_Index] / parameters.Help_PatternPollutionAve ; } ; 
+    // END-NEW
+  };
+
+
+  equations <-
+  { 
+    state.Help_Flow = IF ((state.NrDayYear < parameters.Tourist_Start)||(state.NrDayYear > parameters.Tourist_End)) THEN
+      IF ((state.NrDayWeek == parameters.FirstDayYear) || (state.NrDayWeek == parameters.FirstDayYear+1)) THEN
+        parameters.f_we_water * (state.Help_Pattern_Flow * parameters.Qavg_tot) + state.Q_Infiltration + parameters.Q_Industry
+        ELSE (state.Help_Pattern_Flow * parameters.Qavg_tot) + state.Q_Infiltration + parameters.Q_Industry
+      ELSE IF ((state.NrDayWeek == parameters.FirstDayYear) || (state.NrDayWeek == parameters.FirstDayYear+1)) THEN
+        parameters.f_tourist_water * parameters.f_we_water *(state.Help_Pattern_Flow * parameters.Qavg_tot) + state.Q_Infiltration + parameters.Q_Industry
+        ELSE parameters.f_tourist_water * (state.Help_Pattern_Flow * parameters.Qavg_tot) + state.Q_Infiltration + parameters.Q_Industry ;
+    
+    state.Help_Pollution = IF ((state.NrDayYear < parameters.Tourist_Start)||(state.NrDayYear > parameters.Tourist_End)) THEN
+      IF ((state.NrDayWeek == parameters.FirstDayYear) || (state.NrDayWeek == parameters.FirstDayYear+1)) THEN
+        parameters.f_we_pollution * state.Help_Pattern_Pollution * (state.Help_Pattern_Flow * parameters.Qavg_tot) //parameters.Qavg_tot
+        ELSE state.Help_Pattern_Pollution * (state.Help_Pattern_Flow * parameters.Qavg_tot) //parameters.Qavg_tot
+      ELSE IF ((state.NrDayWeek == parameters.FirstDayYear) || (state.NrDayWeek == parameters.FirstDayYear+1)) THEN
+        parameters.f_tourist_pollution * parameters.f_we_pollution * state.Help_Pattern_Pollution * (state.Help_Pattern_Flow * parameters.Qavg_tot) //parameters.Qavg_tot
+        ELSE parameters.f_tourist_pollution * state.Help_Pattern_Pollution * (state.Help_Pattern_Flow * parameters.Qavg_tot) ; //parameters.Qavg_tot ;
+  };
+
+:};
+
+
+// ====
+// New models, version 2017
+// ====
+
+CLASS DryWeatherFlow2 (* class = "generator" *) "A dry weather flow generator, with patterns from matrix"
+EXTENDS SewGenerator_DWF WITH // EXTENDS SewGenerator2 WITH
+{:
+
+  comments <- "A dry weather flow generator, with patterns from matrix";
+  
+  parameters <-
+  {
+    // General
+    OBJ Population (* is_favorite = "1" *) "Number of inhabitants" : Integer := {: value <- 3000; interval <- {: lowerBound <- 0 :}; group <- "General" :};
+    OBJ WastewaterPerIE "Per-capita daily wastewater flow" : FlowRate := {: value <- 0.15; group <- "General" :};
+    OBJ Q_Industry "Flow from industry (constant)": FlowRate:= {: value <- 100; group <- "General" :} ;
+    OBJ Qavg_tot (* is_favorite = "1"; fixed = "1" *) "Average volume produced" : FlowRate;
+    // Catchment
+    OBJ PatternFlow (* hidden = "1" *) "Flow pattern according to the daily mean value" : HourlyDailyPattern := {: group <- "General" :}; 
+    OBJ PatternPollution (* hidden = "1" *) "Daily pollution pattern depending on population" : HourlyDailyPattern := {: group <- "General" :}; 
+    OBJ FlowPropertiesMatrix (* hidden = "1" *) "ID of the matrix with flow properties. Value -1 indicates an error!!!" : Real ;
+  };
+
+  state <- 
+  {
+    OBJ TimeInHours (* hidden = "1" *) "Hour of the day" : Real; //Daytime
+    OBJ Timestep (* hidden = "1" *) "Hour of the day" : Integer;
+  };
+
+  initial <-
+  {
+    parameters.Qavg_tot := parameters.Population * parameters.WastewaterPerIE ;
+
+    parameters.FlowPropertiesMatrix = MSLUMatrixLoad(1) ;
+
+    {FOREACH Comp_Index IN {1 .. 24}: 
+      parameters.PatternFlow[Comp_Index] = MSLUMatrixGetValue1(parameters.FlowPropertiesMatrix, Comp_Index, 1) ; }; 
+
+    {FOREACH Comp_Index IN {1 .. 24}: 
+      parameters.PatternPollution[Comp_Index] = MSLUMatrixGetValue1(parameters.FlowPropertiesMatrix, Comp_Index, 2) ;};
+  };
+
+  equations <-
+  { 
+    state.TimeInHours = (independent.t - floor(independent.t)) * 24 ;
+    state.Timestep = floor(state.TimeInHours) + 1 ;
+
+    state.Help_Flow = (1 + parameters.PatternFlow[state.Timestep]) * parameters.Qavg_tot + state.Tot_Inf + parameters.Q_Industry ; //add noise
+
+    state.Help_Pollution_S = (1 + parameters.PatternFlow[state.Timestep]) * parameters.Population ; //add noise
+    
+    state.Help_Pollution_X = (1 + parameters.PatternPollution[state.Timestep]) * parameters.Population ; //add noise
+  };
+
+:};
+
+
+#endif // SEWER_GENERATORS_FLOW_DRYWEATHER

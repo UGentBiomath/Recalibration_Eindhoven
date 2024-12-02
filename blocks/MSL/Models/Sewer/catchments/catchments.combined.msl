@@ -1,0 +1,140 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:28$
+ *
+ ******************************************************************************/
+
+
+#ifndef CATCHMENTS_COMBINED
+#define CATCHMENTS_COMBINED
+
+
+CLASS Catchment_Combined_3R (* icon = "Catchment" *) "Catchment model with evaporation and runoff (3-tank in series runoff model)"
+SPECIALISES CoupledModelType :=
+{:
+
+  comments <- "Catchment model with evaporation and runoff (3-tank in series runoff model)";
+
+  interface <-
+  {
+    // EURE 11/05/2016 OBJ Inflow -> Rain & DATATYPE: Real -> Rainfall (mm) OR RainfallIntensity (mm/d) ???
+    OBJ Rain (* terminal = "in_2"; manip = "1" *) "Rainfall intensity" : Rainfall := {: causality <- "CIN"; group <- "Data" :},
+    OBJ Accumulation (* terminal = "in_1" *) "Accumulation of pollutants" : Kosim1SurfaceFlux := {: causality <- "CIN"; group <- "Accumulation" :},
+    OBJ Outflow (* terminal = "out_1" *) "Outflow from dry weather + wet weather" : OutSewTerminal := {:causality <- "COUT"; group <- "Outflow":},
+  };
+
+  parameters <-
+  {
+    // TotalEvaporation -> YearlyEvaporation , startday -> FirstDayYear
+    OBJ StartDay (* hidden = "1" *) "Day of the year when the simulation starts" : Integer := {: value <- 0; group <- "Simulation":};
+    OBJ YearlyEvaporation "Average yearly potential evaporation (mm/year)" : Real := {: value <- 660; group <- "Runoff" :};
+    OBJ k "linear reservoir constant" : Time := {: value <- 0.005787; group <- "Runoff" :};
+    OBJ m "exponent (1 = linearity)" : Real := {: value <- 1.0; group <- "Runoff" :};
+    OBJ Inhabitants (* is_favorite = "1" *) "Number of inhabitants" : Real := {: value <- 150; group <- "DWF" :};
+    OBJ FirstDayYear (* hidden = "1" *) "Week day at the start of the year, Saturday = 2": Integer := {: value <- 2; group <- "Simulation" :};
+    OBJ WastewaterPerIE (* is_favorite = "1" *) "Wastewater produced per inhabitant per day" : FlowRate := {: value <- 0.15; group <- "DWF" :};
+    OBJ Infiltration "Water infiltration flow (l/s/ha)" : Real := {: value <- 0.11; group <- "Runoff" :};
+    OBJ f_we_water (* is_favorite = "1" *) "Correction factor for flow rate during weekends": Real := {: value <- 0.7; group <- "DWF" :} ;
+    OBJ f_we_pollution (* is_favorite = "1" *) "Correction factor for concentration during week-end": Real :={:value <- 0.5; group <- "DWF":};
+    OBJ f_tourist_water (* is_favorite = "1" *) "Correction factor for flow rate in tourist season": Real :={:value <- 1; group <- "DWF":};
+    OBJ f_tourist_pollution (* is_favorite = "1" *) "Correction factor for concentration in tourist season": Real :={:value <- 1.1; group <- "DWF" :} ;
+    OBJ Tourist_Start (* hidden = "1" *) "Start of tourist season (day nr)": Integer :={:value <- 162; group <- "DWF":};
+    OBJ Tourist_End (* hidden = "1" *) "End of tourist season (day nr)": Integer :={:value <- 300; group <- "DWF":};
+    OBJ NrPatternFlow (* is_favorite = "1" *) "Daily DWF pattern: 1 (0-5kPE), 2 (5k-10kPE), 3 (10k-50kPE), 4 (Spangen), 5 (Constant), 6 (Commercial), 0 (Custom)" : Integer :={: value <- 1; interval <- {: lowerBound <- 0; upperBound <- 6; :}; group <- "General" :};
+    OBJ NrPatternPollution (* is_favorite = "1" *) "Daily DWF pollution pattern: 1 (0-5kPE), 2 (5k-10kPE), 3 (10k-50kPE), 4 (Spangen), 5 (Constant), 6 (Commercial), 0 (Custom)" : Integer :={:value <- 1; interval <- {: lowerBound <- 0; upperBound <- 6; :}; group <- "General" :};
+    OBJ NrPatternInfiltration "Seasonal infiltration pattern: 0 (Custom), 1 (constant)" : Integer := {: value <- 0; interval <- {: lowerBound <- 0; upperBound <- 1; :}; group <- "Catchment" :};
+    OBJ Qdwf_peak (* is_favorite = "1"; fixed = "1" *) "Peak dry weather flow relative to average": Real := {:value <- 2.0; group <- "Catchment":};
+    OBJ Q_Industry (* hidden = "1" *) "Flow from industry": FlowRate := {: value <- 0.0; group <- "DWF" :};
+    OBJ TotalArea (* is_favorite = "1" *) "Area of the subcatchment" : Area := {: value <- 100000; group <- "Catchment" :};
+    OBJ PerviousFraction "Fraction of the catchment that is pervious" : Fraction := {: value <- 0.8; group <- "Runoff":};
+    OBJ MaxRunoff "Maximum runoff coefficient Psi_e, for impervious areas" : Fraction := {: value <- 1.0; group <- "Runoff" :};
+    OBJ MaxRunoff_P "Maximum runoff coefficient for pervious areas" : Fraction := {: value <- 0.3; group <- "Runoff" :};
+    OBJ MaxWettingLosses "Maximum wetting losses" : Rainfall := {: value <- 0.5; group <- "Runoff" :};
+    OBJ MaxDepressionStorage "Maximum depression storage for impervious areas" : Rainfall := {: value <- 1.8; group <- "Runoff" :};
+    OBJ MaxInfiltration "Initial infiltration capacity" : RainfallIntensity := {: value <- 1440; group <- "Runoff" :};  
+    OBJ MinInfiltration "Minimum infiltration capacity" : RainfallIntensity := {: value <- 69; group <- "Runoff" :};
+    OBJ MaxWettingLosses_P "Wetting and interception losses for pervious areas" : Rainfall := {: value <- 5 ; group <- "Runoff" :} ;
+    OBJ k_deg "Degeneration rate of infiltration capacity during wet phase" : Rate := {: value <- 72; group <- "Runoff" :}; 
+    OBJ k_D "Regeneration constant of infiltration capacity during dry phase" : Rate := {: value <- 0.432; group <- "Runoff" :} ;
+    OBJ MaxDepressionStorage_P "Maximum depression storage for pervious areas" : Rainfall := {: value <- 3.5; group <- "Runoff" :};
+    OBJ opt_AccumulWash "Surface accumulation and washoff (1=active)" : Integer := {: value <- 1; group <- "Washoff"; interval  <- {: lowerBound <- 0; upperBound <- 1 :}; :}; 
+    OBJ opt_AccumulWashInput "Input for surface accumulation and washoff, parameters if = 1, interface if = 0" : Integer := {: value <- 1; group <- "Washoff"; interval  <- {: lowerBound <- 0; upperBound <- 1 :}; :};
+    OBJ DailyEvaporation "Mean evaporation per day in the year" : RainfallIntensity := {: value <- 1.8; group <- "Runoff" :}; 
+//MIUWS    OBJ Ke "Washoff rate (1/mm)" : Real := {: value <- 0.18; group <- "Washoff" :};
+    OBJ Ke "Wash-off rate" : SpecificAreaVolume := {: value <- 180; group <- "Washoff" :}; 
+  };
+
+  sub_models <-
+  {
+    OBJ Evaporation : EvaporationFlow ;
+    OBJ CRunoff : Tanks03_Cascade_Runoff ; //runoff_conc
+    //   OBJ comb : KosimInputTransformer;
+    OBJ Combi : SewTwoCombiner; //MIUWS comb2 : SewTwoCombiner 
+    OBJ DWF : DryWeatherFlow ; //dwf
+    OBJ ARunoff : Runoff_Accumulation ; //runoff
+  };
+
+  coupling <-
+  {
+    // parameter coupling
+    sub_models.Evaporation.parameters.StartDay.value := parameters.StartDay.value,
+    sub_models.Evaporation.parameters.Evap_Year.value := parameters.YearlyEvaporation.value,
+    sub_models.CRunoff.parameters.k.value := parameters.k.value,
+    sub_models.CRunoff.parameters.m.value := parameters.m.value,
+    //   sub_models.comb.parameters.InfluentTimestep.value := parameters.InfluentTimestep.value,
+    sub_models.DWF.parameters.Population.value := parameters.Inhabitants.value,
+    sub_models.DWF.parameters.WastewaterPerIE.value := parameters.WastewaterPerIE.value,
+    sub_models.DWF.parameters.Infiltration.value := parameters.Infiltration.value,
+    sub_models.DWF.parameters.FirstDayYear.value := parameters.FirstDayYear.value,
+    sub_models.DWF.parameters.f_we_water.value := parameters.f_we_water.value,
+    sub_models.DWF.parameters.f_we_pollution.value := parameters.f_we_pollution.value,
+    sub_models.DWF.parameters.Tourist_Start.value := parameters.Tourist_Start.value,
+    sub_models.DWF.parameters.Tourist_End.value := parameters.Tourist_End.value,
+    sub_models.DWF.parameters.f_tourist_water.value := parameters.f_tourist_water.value,
+    sub_models.DWF.parameters.f_tourist_pollution.value := parameters.f_tourist_pollution.value,
+    sub_models.DWF.parameters.NrPatternFlow.value := parameters.NrPatternFlow.value,
+    sub_models.DWF.parameters.NrPatternPollution.value := parameters.NrPatternPollution.value,
+    sub_models.DWF.parameters.NrPatternInfiltration.value := parameters.NrPatternInfiltration.value,
+    sub_models.DWF.parameters.Qdwf_peak.value := parameters.Qdwf_peak.value,
+    sub_models.DWF.parameters.Q_Industry.value := parameters.Q_Industry.value,
+    sub_models.DWF.parameters.TotalArea.value := parameters.TotalArea.value,
+    sub_models.ARunoff.parameters.TotalArea.value := parameters.TotalArea.value,
+    sub_models.ARunoff.parameters.PerviousFraction.value := parameters.PerviousFraction.value,
+    sub_models.ARunoff.parameters.MaxRunoff.value := parameters.MaxRunoff.value,
+    sub_models.ARunoff.parameters.MaxRunoff_P.value := parameters.MaxRunoff_P.value,
+    sub_models.ARunoff.parameters.MaxWettingLosses.value := parameters.MaxWettingLosses.value,
+    sub_models.ARunoff.parameters.MaxDepressionStorage.value := parameters.MaxDepressionStorage.value,
+    sub_models.ARunoff.parameters.MaxInfiltration.value := parameters.MaxInfiltration.value,
+    sub_models.ARunoff.parameters.MinInfiltration.value := parameters.MinInfiltration.value,
+    sub_models.ARunoff.parameters.MaxWettingLosses_P.value := parameters.MaxWettingLosses_P.value,
+    sub_models.ARunoff.parameters.k.value := parameters.k_deg.value,
+    sub_models.ARunoff.parameters.k_D.value := parameters.k_D.value,
+    sub_models.ARunoff.parameters.MaxDepressionStorage_P.value := parameters.MaxDepressionStorage_P.value,
+    sub_models.ARunoff.parameters.DailyEvaporation.value := parameters.DailyEvaporation.value,
+    sub_models.ARunoff.parameters.opt_AccumulWash.value := parameters.opt_AccumulWash.value,
+    sub_models.ARunoff.parameters.opt_AccumulWashInput.value := parameters.opt_AccumulWashInput.value, 
+    sub_models.ARunoff.parameters.Ke.value := parameters.Ke.value,
+    // sub-model coupling
+    connect(interface.Rain, sub_models.ARunoff.interface.Rain),
+    connect(sub_models.Evaporation.interface.Evaporation, sub_models.ARunoff.interface.Evaporation),
+    connect(interface.Accumulation, sub_models.ARunoff.interface.Accumulation),
+    connect(sub_models.ARunoff.interface.Outflow, sub_models.CRunoff.interface.Inflow),
+    connect(sub_models.CRunoff.interface.Outflow, sub_models.Combi.interface.Inflow1),
+    connect(sub_models.DWF.interface.Outflow, sub_models.Combi.interface.Inflow2),
+    connect(sub_models.Combi.interface.Outflow, interface.Outflow),
+  };
+
+:};
+
+
+#endif // CATCHMENTS_COMBINED

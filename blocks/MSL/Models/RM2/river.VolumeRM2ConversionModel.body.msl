@@ -1,0 +1,134 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+  interface <-
+  {
+    #include "RM2/river.VolumeRM2Model.interface.msl"
+  };
+
+  parameters <-
+  {
+    #include "RM2/river.VolumeRM2ConversionModel.parameters.msl"
+  };
+
+  state <-
+  {
+    #include "RM2/river.VolumeRM2ConversionModel.state.msl"
+  };
+
+  initial <-
+  {
+    // Params
+
+    parameters.COD_OM_S_I := 8.0 * (parameters.AlfaC_S_I / 3.0 + parameters.AlfaH_S_I - parameters.AlfaO_S_I / 8.0 - 3.0 * parameters.AlfaN_S_I / 14.0 + 5.0 * parameters.AlfaP_S_I / 31.0 + parameters.AlfaX_S_I * (parameters.beta_plus - parameters.beta_hydro + parameters.beta_nul / 8.0));
+    parameters.COD_OM_S_S := 8.0* (parameters.AlfaC_S_S / 3.0 + parameters.AlfaH_S_S - parameters.AlfaO_S_S / 8.0 - 3.0 * parameters.AlfaN_S_S / 14.0 + 5.0 * parameters.AlfaP_S_S / 31.0 + parameters.AlfaX_S_S * (parameters.beta_plus - parameters.beta_hydro + parameters.beta_nul / 8.0));
+    parameters.COD_OM_X_ALG := 8.0 * (parameters.AlfaC_X_ALG / 3.0 + parameters.AlfaH_X_ALG - parameters.AlfaO_X_ALG / 8.0 - 3.0 * parameters.AlfaN_X_ALG / 14.0 + 5.0 * parameters.AlfaP_X_ALG / 31.0 + parameters.AlfaX_X_ALG * (parameters.beta_plus - parameters.beta_hydro + parameters.beta_nul / 8.0));
+    parameters.COD_OM_X_H := 8.0 * (parameters.AlfaC_X_H / 3.0 + parameters.AlfaH_X_H - parameters.AlfaO_X_H / 8.0 - 3.0 * parameters.AlfaN_X_H / 14.0 + 5.0 * parameters.AlfaP_X_H / 31.0 + parameters.AlfaX_X_H * (parameters.beta_plus - parameters.beta_hydro + parameters.beta_nul / 8.0));
+    parameters.COD_OM_X_I := 8.0 * (parameters.AlfaC_X_I / 3.0 + parameters.AlfaH_X_I - parameters.AlfaO_X_I / 8.0 - 3.0 * parameters.AlfaN_X_I / 14.0 + 5.0 * parameters.AlfaP_X_I / 31.0 + parameters.AlfaX_X_I * (parameters.beta_plus - parameters.beta_hydro + parameters.beta_nul / 8.0));
+    parameters.COD_OM_X_II := 8.0 * (parameters.AlfaC_X_II / 3.0 + parameters.AlfaH_X_II - parameters.AlfaO_X_II / 8.0 - 3.0 * parameters.AlfaN_X_II / 14.0 + 5.0 * parameters.AlfaP_X_II / 31.0 + parameters.AlfaX_X_II * (parameters.beta_plus - parameters.beta_hydro + parameters.beta_nul / 8.0));
+    parameters.COD_OM_X_N1 := 8.0 * (parameters.AlfaC_X_N1 / 3.0 + parameters.AlfaH_X_N1 - parameters.AlfaO_X_N1 / 8.0 - 3.0 * parameters.AlfaN_X_N1 / 14.0 + 5.0 * parameters.AlfaP_X_N1 / 31.0 + parameters.AlfaX_X_N1 * (parameters.beta_plus - parameters.beta_hydro + parameters.beta_nul / 8.0));
+    parameters.COD_OM_X_N2 := 8.0 * (parameters.AlfaC_X_N2 / 3.0 + parameters.AlfaH_X_N2 - parameters.AlfaO_X_N2 / 8.0 - 3.0 * parameters.AlfaN_X_N2 / 14.0 + 5.0 * parameters.AlfaP_X_N2 / 31.0 + parameters.AlfaX_X_N2 * (parameters.beta_plus - parameters.beta_hydro + parameters.beta_nul / 8.0));
+    parameters.COD_OM_X_S := 8.0 * (parameters.AlfaC_X_S / 3.0 + parameters.AlfaH_X_S - parameters.AlfaO_X_S / 8.0 - 3.0 * parameters.AlfaN_X_S / 14.0 + 5.0 * parameters.AlfaP_X_S / 31.0 + parameters.AlfaX_X_S * (parameters.beta_plus - parameters.beta_hydro + parameters.beta_nul / 8.0));
+    parameters.z01 := 1.0 / parameters.Y_H_aer;
+    parameters.z04 := parameters.AlfaO_S_S / parameters.Y_H_aer - parameters.AlfaO_X_H;
+    parameters.z05 := parameters.AlfaH_S_S / parameters.Y_H_aer - parameters.AlfaH_X_H;
+    parameters.z06 := parameters.AlfaC_S_S / parameters.Y_H_aer - parameters.AlfaC_X_H;
+    parameters.z07 := parameters.AlfaN_S_S / parameters.Y_H_aer - parameters.AlfaN_X_H;
+    parameters.z08 := parameters.AlfaP_S_S / parameters.Y_H_aer - parameters.AlfaP_X_H;
+    parameters.z09a := 1.0 / parameters.Y_H_anox_NO3;
+    parameters.z09b := 1.0 / parameters.Y_H_anox_NO2;
+    parameters.z10a := parameters.AlfaO_S_S / parameters.Y_H_anox_NO3 - parameters.AlfaO_X_H;
+    parameters.z10b := parameters.AlfaO_S_S / parameters.Y_H_anox_NO2 - parameters.AlfaO_X_H;
+    parameters.z11a := parameters.AlfaH_S_S / parameters.Y_H_anox_NO3 - parameters.AlfaH_X_H;
+    parameters.z11b := parameters.AlfaH_S_S / parameters.Y_H_anox_NO2 - parameters.AlfaH_X_H;
+    parameters.z12a := parameters.AlfaC_S_S / parameters.Y_H_anox_NO3 - parameters.AlfaC_X_H;
+    parameters.z12b := parameters.AlfaC_S_S / parameters.Y_H_anox_NO2 - parameters.AlfaC_X_H;
+    parameters.z13a := parameters.AlfaP_S_S / parameters.Y_H_anox_NO3 - parameters.AlfaP_X_H;
+    parameters.z13b := parameters.AlfaP_S_S / parameters.Y_H_anox_NO2 - parameters.AlfaP_X_H;
+    parameters.z14a := parameters.AlfaN_S_S / parameters.Y_H_anox_NO3 - parameters.AlfaN_X_H;
+    parameters.z14b := parameters.AlfaN_S_S / parameters.Y_H_anox_NO2 - parameters.AlfaN_X_H;
+    parameters.z15 := parameters.AlfaN_X_H - parameters.f_I_H * parameters.AlfaN_X_I;
+    parameters.z16 := parameters.AlfaP_X_H - parameters.f_I_H * parameters.AlfaP_X_I;
+    parameters.z17 := parameters.AlfaO_X_H - parameters.f_I_H * parameters.AlfaO_X_I;
+    parameters.z18 := parameters.AlfaH_X_H - parameters.f_I_H * parameters.AlfaH_X_I;
+    parameters.z19 := parameters.AlfaC_X_H - parameters.f_I_H * parameters.AlfaC_X_I;
+    parameters.z20 := 1.0 / parameters.Y_N1;
+    parameters.z21 := 1.0 / parameters.Y_N2;
+    parameters.z22 := parameters.AlfaN_X_N1 - parameters.f_I_N1 * parameters.AlfaN_X_I;
+    parameters.z23 := parameters.AlfaP_X_N1 - parameters.f_I_N1 * parameters.AlfaP_X_I;
+    parameters.z24 := parameters.AlfaO_X_N1 - parameters.f_I_N1 * parameters.AlfaO_X_I;
+    parameters.z25 := parameters.AlfaH_X_N1 - parameters.f_I_N1 * parameters.AlfaH_X_I;
+    parameters.z26 := parameters.AlfaC_X_N1 - parameters.f_I_N1 * parameters.AlfaC_X_I;
+    parameters.z27 := parameters.AlfaN_X_N2 - parameters.f_I_N2 * parameters.AlfaN_X_I;
+    parameters.z28 := parameters.AlfaP_X_N2 - parameters.f_I_N2 * parameters.AlfaP_X_I;
+    parameters.z29 := parameters.AlfaO_X_N2 - parameters.f_I_N2 * parameters.AlfaO_X_I;
+    parameters.z30 := parameters.AlfaH_X_N2 - parameters.f_I_N2 * parameters.AlfaH_X_I;
+    parameters.z31 := parameters.AlfaC_X_N2 - parameters.f_I_N2 * parameters.AlfaC_X_I;
+    parameters.z32 := parameters.AlfaN_X_ALG - parameters.f_I_ALG * parameters.AlfaN_X_I;
+    parameters.z33 := parameters.AlfaP_X_ALG - parameters.f_I_ALG * parameters.AlfaP_X_I;
+    parameters.z34 := parameters.AlfaO_X_ALG - parameters.f_I_ALG * parameters.AlfaO_X_I;
+    parameters.z35 := parameters.AlfaH_X_ALG - parameters.f_I_ALG * parameters.AlfaH_X_I;
+    parameters.z36 := parameters.AlfaC_X_ALG - parameters.f_I_ALG * parameters.AlfaC_X_I;
+    parameters.z47 := parameters.AlfaN_X_S - parameters.Y_hyd * parameters.AlfaN_S_S;
+    parameters.z48 := parameters.AlfaP_X_S - parameters.Y_hyd * parameters.AlfaP_S_S;
+    parameters.z49 := parameters.AlfaH_X_S - parameters.Y_hyd * parameters.AlfaH_S_S;
+    parameters.z50 := parameters.AlfaC_X_S - parameters.Y_hyd * parameters.AlfaC_S_S;
+    parameters.z51 := parameters.AlfaN_X_ALG - (1.0 - parameters.f_I_ALG) * parameters.Y_ALG_death * parameters.AlfaN_X_S - parameters.f_I_ALG * parameters.Y_ALG_death * parameters.AlfaN_X_I;
+    parameters.z52 := parameters.AlfaP_X_ALG - (1.0 - parameters.f_I_ALG) * parameters.Y_ALG_death * parameters.AlfaP_X_S - parameters.f_I_ALG * parameters.Y_ALG_death * parameters.AlfaP_X_I;
+    parameters.z53 := parameters.AlfaO_X_ALG - (1.0 - parameters.f_I_ALG) * parameters.Y_ALG_death * parameters.AlfaO_X_S - parameters.f_I_ALG * parameters.Y_ALG_death * parameters.AlfaO_X_I;
+    parameters.z54 := parameters.AlfaH_X_ALG - (1.0 - parameters.f_I_ALG) * parameters.Y_ALG_death * parameters.AlfaH_X_S - parameters.f_I_ALG * parameters.Y_ALG_death * parameters.AlfaH_X_I;
+    parameters.z55 := parameters.AlfaC_X_ALG - (1.0 - parameters.f_I_ALG) * parameters.Y_ALG_death * parameters.AlfaC_X_S - parameters.f_I_ALG * parameters.Y_ALG_death * parameters.AlfaC_X_I;
+
+    // StateVars
+
+
+    // Extra
+
+
+    // Stoichiometry
+
+    #include "RM2/river.VolumeRM2ConversionModel.stoichiometry.msl"
+  };
+
+  equations <-
+  {
+    // StateVars
+
+    state.I = MSLUGetMax2(state.I_seasonal / 3 + 2 * (state.I_seasonal / 3) * sin(3 * 3.14159/2 + 2 * 3.14159 * independent.t), 0);
+    state.I_seasonal = parameters.I_average + (parameters.I_amplitude * sin((2.0 * 3.14 / 364.0) * (independent.t - 81.0)));
+    state.S_DOC = parameters.AlfaC_S_S * state.C_w[rS_S] / parameters.COD_OM_S_S + parameters.AlfaC_S_I * state.C_w[rS_I] / parameters.COD_OM_S_I;
+    state.S_O_sat = 14.65 - 0.41 * state.T_water + 0.00799 * pow(state.T_water, 2.0) - 0.0000778 * pow(state.T_water, 3.0);
+    state.S_POC = parameters.AlfaC_X_H * state.C[rX_H] / parameters.COD_OM_X_H + parameters.AlfaC_X_I * state.C[rX_I] / parameters.COD_OM_X_I + parameters.AlfaC_X_N1 * state.C[rX_N1] / parameters.COD_OM_X_N1 + parameters.AlfaC_X_N2 * state.C[rX_N2] / parameters.COD_OM_X_N2 + parameters.AlfaC_X_S * state.C[rX_S] / parameters.COD_OM_X_S + parameters.AlfaC_X_ALG * state.C[rX_ALG] / parameters.COD_OM_X_ALG;
+    state.X_TSS = state.C[rX_H] / parameters.COD_OM_X_H + state.C[rX_I] / parameters.COD_OM_X_I + state.C[rX_N1] / parameters.COD_OM_X_N1 + state.C[rX_N2] / parameters.COD_OM_X_N2 + state.C[rX_S] / parameters.COD_OM_X_S + state.C[rX_ALG] / parameters.COD_OM_X_ALG;
+    state.diff_ALK = parameters.K_L_ALK * state.A_b * state.C_w[rS_ALK];
+    state.diff_NH = parameters.K_L_NH * state.A_b * state.C_w[rS_NH];
+    state.diff_NO2 = parameters.K_L_NO2 * state.A_b * state.C_w[rS_NO2];
+    state.diff_NO3 = parameters.K_L_NO3 * state.A_b * state.C_w[rS_NO3];
+    state.diff_PO = parameters.K_L_PO * state.A_b * state.C_w[rS_PO];
+    state.diff_SI = parameters.K_L_SI * state.A_b * state.C_w[rS_I];
+    state.diff_SO = parameters.K_L_SO * state.A_b * state.C_w[rS_O2];
+    state.diff_SS = parameters.K_L_SS * state.A_b * state.C_w[rS_S];
+    state.e_beta_ALG = exp(parameters.beta_ALG * (state.T_water - parameters.T_0));
+    state.e_beta_H = exp(parameters.beta_H * (state.T_water - parameters.T_0));
+    state.e_beta_Hyd = exp(parameters.beta_hyd * (state.T_water - parameters.T_0));
+    state.e_beta_N1 = exp(parameters.beta_N1 * (state.T_water - parameters.T_0));
+    state.e_beta_N2 = exp(parameters.beta_N2 * (state.T_water - parameters.T_0));
+    state.k_gro_ALG_T = parameters.k_gro_ALG * state.e_beta_ALG;
+    state.k_gro_H_aer_T = parameters.k_gro_H_aer * state.e_beta_H;
+    state.k_gro_H_anox_T = parameters.k_gro_H_anox * state.e_beta_H;
+    state.k_gro_N1_T = parameters.k_gro_N1 * state.e_beta_N1;
+    state.k_gro_N2_T = parameters.k_gro_N2 * state.e_beta_N2;
+    state.mu_w = (pow(10, (1301 / (998.333 + 8.1855 * (state.T_water - 20) + 0.00585 * pow((state.T_water - 20), 2))) - 3.30233)) / 10;
+    state.nue = state.mu_w * parameters.RivSpecificVolume[H2O] * 1000;
+
+    // Extra
+
+
+    // Kinetics
+
+    #include "RM2/river.VolumeRM2ConversionModel.kinetics.msl"
+
+    // InterfaceVars
+
+    #include "RM2/river.VolumeRM2Model.sensors.msl"
+  };
+

@@ -1,0 +1,29 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ I_NH_limit (* *) "Function to limit growth due to lack of inorganic nitrogen" : InhibitionTerm := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics : Inhibition"; :};
+    OBJ I_h2_c4 (* *) "Hydrogen inhibition for C4+ degradation" : InhibitionTerm := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics : Inhibition"; :};
+    OBJ I_h2_fa (* *) "Hydrogen inhibition for LCFA degradation" : InhibitionTerm := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics : Inhibition"; :};
+    OBJ I_h2_pro (* *) "Hydrogen inhibition for propionate" : InhibitionTerm := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics : Inhibition"; :};
+    OBJ I_nh3_ac (* *) "NH3 inhibition of acetoclastic methanogenesis" : InhibitionTerm := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics : Inhibition"; :};
+    OBJ I_pH_ac (* *) "pH inhibition of acetate degrading organisms" : InhibitionTerm := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics : Inhibition"; :};
+    OBJ I_pH_bac (* *) "pH inhibition of acetogens and acidogens" : InhibitionTerm := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics : Inhibition"; :};
+    OBJ I_pH_h2 (* *) "pH inhibition of hydrogen degrading organisms" : InhibitionTerm := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics : Inhibition"; :};
+    OBJ KH_ch4 (* *) "Henry's law constant (T-dep) for CH4" : Ratio := {: group <- "System"; :};
+    OBJ KH_co2 (* *) "Henry's law constant (T-dep) for CO2" : Ratio := {: group <- "System"; :};
+    OBJ KH_h2 (* *) "Henry's coefficient for H2 with temperature correction" : Ratio := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "System"; :};
+    OBJ Ka_ic (* *) "Inorganic carbon acidity constant" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "System"; :};
+    OBJ Ka_in (* *) "Inorganic nitrogen acidity constant" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "System"; :};
+    OBJ Kw (* *) "Water acidity constant" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "System"; :};
+    OBJ S_co2 (* *) "Carbon dioxide" : MolConcentration := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Concentration"; :};
+    OBJ S_h_ion (* *) "Hydrogen ion" : MolConcentration := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Concentration"; :};
+    OBJ S_nh4_ion (* *) "Ammonium ion" : MolConcentration := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Concentration"; :};
+    OBJ charge_balance (* *) "Left hand-side of charge balance" : Real := {: group <- "Concentration"; :};
+    OBJ help_T_op (* hidden = "1"; *) "Temperature" : KelvinTemperature := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ n_ac (* *) "state needed in Hill function" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ n_bac (* *) "state needed in Hill function" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ n_h2 (* *) "state needed in Hill function" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ pHLim_ac (* hidden = "1"; *) "state needed in Hill function" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ pHLim_bac (* hidden = "1"; *) "state needed in Hill function" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ pHLim_h2 (* hidden = "1"; *) "state needed in Hill function" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ pH_ (* *) "pH" : pH := {: group <- "Operational"; :};
+

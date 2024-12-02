@@ -1,0 +1,48 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:56$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_CONTROLLERS_RASWAS_FLOW
+#define WWTP_CONTROLLERS_RASWAS_FLOW
+
+
+CLASS Ctl_Qas_Flow (* icon = "controller_ratio" *)
+//CLASS RAS_WAS_Flow (* icon = "controller_ratio" *)
+"Flow rate-based controller for ML, RAS and WAS in an AS system"
+//EXTENDS RAS_WAS_Base WITH
+EXTENDS Ctl_Qas_Base WITH
+{:
+  comments <- "Flow rate-based controller for ML, RAS and WAS in an AS system";
+  
+  interface <-
+  {
+    OBJ q_ML (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Desired ML flow" : FlowRate := {: causality <- "CIN" ; value <- 60000 ; group <- "Operation" :};
+    OBJ q_RAS (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Desired RAS flow" : FlowRate := {: causality <- "CIN"; value <- 20000 ; group <- "Operation" :};
+    OBJ q_WAS (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Desired WAS flow" : FlowRate := {: causality <- "CIN"; value <- 400 ; group <- "Operation" :};
+  };
+  
+  equations <-
+  {
+    interface.Q_ML = interface.q_ML ;
+    interface.Q_Under = interface.q_WAS + interface.q_RAS ;
+    interface.Q_RAS = interface.q_RAS ;    
+    interface.Q_WAS = interface.q_WAS ;
+  };
+  
+:};
+ 
+ 
+#endif // WWTP_CONTROLLERS_RASWAS_FLOW

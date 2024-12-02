@@ -1,0 +1,86 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$ EURE
+ * $Date: 30. september 2019 12:19:54$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_SENSORS
+#define WWTP_BASE_SENSORS
+
+CLASS Sensor "Base class for generic (WWTP) sensor"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent":};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent":};
+  };
+
+  parameters <- 
+  {
+    OBJ WWTPSpecificVolume (* hidden = "1" *) "The specific volumes (= 1/density) of the components" : SpecificVolumeVector ;
+  };
+  
+  independent <- 
+  {
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+  };
+  
+  state <- 
+  {
+    OBJ InFluxPerComponent (* hidden = "1" *) "Vector containing incoming fluxes for all the components" : MassFluxVector ;
+    OBJ Q_In "Influent flow rate" : FlowRate := {: group <- "Operational" :};
+    OBJ C "Vector containing concentrations for all the components" : ConcentrationVector := {: group <- "State vector - concentrations" :};
+  };
+
+  initial <- 
+  {
+    parameters.WWTPSpecificVolume[IndexOfSolvent] := 0.000001;
+  };
+  
+  equations <- 
+  {
+    {FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}:
+      state.InFluxPerComponent[Comp_Index] =
+      SUMOVER In_Terminal IN {SelectByType(interface,InWWTPTerminal)}: (In_Terminal[Comp_Index]) ; };
+    
+    {FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}:
+      interface.Outflow[Comp_Index] = - state.InFluxPerComponent[Comp_Index] ; }; 
+    
+    {FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}:
+      state.C[Comp_Index] = IF (state.Q_In <= 0.0) THEN 0.0 ELSE state.InFluxPerComponent[Comp_Index] / state.Q_In ; }; 
+    
+    state.Q_In = parameters.WWTPSpecificVolume[IndexOfSolvent] * state.InFluxPerComponent[IndexOfSolvent] ;
+  };
+
+:};
+
+//(EURE 10/01/2019) obsolete
+/*
+#include "WWTP/sensor/wwtp.base.sensors.sensor_flow.msl"
+#include "WWTP/sensor/wwtp.base.sensors.sensor_do.msl"
+#include "WWTP/sensor/wwtp.base.sensors.sensor_nh4.msl"
+#include "WWTP/sensor/wwtp.base.sensors.sensor_no3.msl"
+#include "WWTP/sensor/wwtp.base.sensors.sensor_tss.msl"
+#include "WWTP/sensor/wwtp.base.sensors.sensor_cod.msl"
+#include "WWTP/sensor/wwtp.base.sensors.sensor_bod.msl"
+#include "WWTP/sensor/wwtp.base.sensors.sensor_tn.msl"
+#include "WWTP/sensor/wwtp.base.sensors.sensor_tkn.msl"
+#include "WWTP/sensor/wwtp.base.sensors.sensor_tp.msl"
+#include "WWTP/sensor/wwtp.base.sensors.sensor_po4.msl"
+*/
+#include "WWTP/sensor/wwtp.base.sensors.sensor_multi.msl"
+
+
+#endif // WWTP_BASE_SENSORS

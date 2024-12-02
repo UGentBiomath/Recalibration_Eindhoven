@@ -1,0 +1,56 @@
+/*******************************************************************************
+ *
+ * $Revision: 1$
+ * $Date: 5. december 2016 11:05:31$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_ASTAGE_THREECOMBINER
+#define WWTP_ASTAGE_THREECOMBINER
+
+
+#ifdef ASM1Temp
+
+
+CLASS A_3Combiner (* icon = "three_combiner" *) "3-way combiner for ASM1 A-stage only"
+EXTENDS A_AtomicModelWithoutVolume WITH
+{:
+
+  comments <- "3-way combiner for ASM1 A-stage only";
+  
+  interface <-
+  { 
+    OBJ Inflow1 (* terminal = "in_1" *) "Inflow1" : ASM1_ABInWWTPTerminal := {: causality <- "CIN" ; group <- "Influent 1":};
+    OBJ Inflow2 (* terminal = "in_2" *) "Inflow2" : ASM1_ABInWWTPTerminal := {: causality <- "CIN" ; group <- "Influent 2":};
+    OBJ Inflow3 (* terminal = "in_3" *) "Inflow3" : ASM1_ABInWWTPTerminal := {: causality <- "CIN" ; group <- "Influent 3":};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : ASM1_ABOutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent":};
+  };
+ 
+  state <-  
+  {
+    OBJ Q_In1 (* is_favorite = "1" *) "Influent flow rate from flow 1" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_In2 (* is_favorite = "1" *) "Influent flow rate from flow 2" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_In3 (* is_favorite = "1" *) "Influent flow rate from flow 3" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Out (* is_favorite = "1" *) "Effluent flow rate" : FlowRate := {: group <- "Operational" :};
+  };   
+
+  equations <-
+  {
+    {FOREACH Comp_Index IN {1 .. ASM1_ABNrOfComponents}: interface.Outflow[Comp_Index] =
+      - state.InFluxPerComponent[Comp_Index];};   
+    
+    state.Q_In1 = interface.Inflow1[1] * 1E-06 ;
+    state.Q_In2 = interface.Inflow2[1] * 1E-06 ;
+    state.Q_In3 = interface.Inflow3[1] * 1E-06 ;
+    
+    state.Q_Out = 1E-06 * state.InFluxPerComponent[1] ;
+  }; 
+
+:};
+
+
+#endif // ASM1Temp
+
+
+#endif // WWTP_ASTAGE_THREECOMBINER

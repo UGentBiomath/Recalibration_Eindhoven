@@ -1,0 +1,60 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 15:21:59$
+ *
+ ******************************************************************************/
+
+#ifndef IUWS_SPLITTERS_COMBINERS
+#define IUWS_SPLITTERS_COMBINERS
+
+
+CLASS AbsTwoSplitter_Atomic
+"Base class for absolute wwtp splitters"
+EXTENDS Splitter_Base WITH
+{:
+
+  interface <-
+  {
+   OBJ Q_Out2 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Flow rate for outflow No.2" : FlowRate := {: causality <- "CIN" ; value <- 20000; group <- "Operational" :};
+  };
+
+:};
+
+
+CLASS Splitter_Base
+"Base class for wwtp splitters"
+EXTENDS WWTPAtomicModelWithoutVolume WITH
+{:
+
+  interface <-
+  {
+   OBJ Inflow (* terminal = "in_1" *) "Inflow" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+   OBJ Outflow1 (* terminal = "out_1" *) "Outflow No.1" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 1" :};
+   OBJ Outflow2 (* terminal = "out_2" *) "Outflow No.2" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 2" :};
+  };
+
+  state <-
+  {
+   OBJ Q_Out_1 (* is_favorite = "1" *) "Actual flow rate No.1" : FlowRate := {: group <- "Operational" :};
+   OBJ Q_Out_2 (* is_favorite = "1" *) "Actual flow rate No.2" : FlowRate := {: group <- "Operational" :};
+  };
+  
+:};
+
+
+#include "SplittersCombiners/iuws.abstwosplitter.maxq1.msl"
+#include "SplittersCombiners/iuws.abstwosplitter.minq1.msl"
+#include "SplittersCombiners/kosim.transformer.msl"
+
+
+#endif // IUWS_SPLITTERS_COMBINERS

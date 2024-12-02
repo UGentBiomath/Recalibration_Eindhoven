@@ -1,0 +1,4 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ T_op (*manip = "1"; terminal = "in_2"; *) "Operating temperature" : CelsiusTemperature := {: causality <- "CIN"; value <- 35.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Operational"; :};
+

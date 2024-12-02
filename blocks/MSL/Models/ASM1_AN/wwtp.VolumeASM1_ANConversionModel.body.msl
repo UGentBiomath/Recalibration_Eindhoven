@@ -1,0 +1,67 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+  interface <-
+  {
+    #include "ASM1_AN/wwtp.VolumeASM1_ANModel.interface.msl"
+  };
+
+  parameters <-
+  {
+    #include "ASM1_AN/wwtp.VolumeASM1_ANConversionModel.parameters.msl"
+  };
+
+  state <-
+  {
+    #include "ASM1_AN/wwtp.VolumeASM1_ANConversionModel.state.msl"
+  };
+
+  initial <-
+  {
+    // Params
+
+
+    // StateVars
+
+
+    // Extra
+
+
+    // Stoichiometry
+
+    #include "ASM1_AN/wwtp.VolumeASM1_ANConversionModel.stoichiometry.msl"
+  };
+
+  equations <-
+  {
+    // StateVars
+
+    state.K_HNO2_NO_Temp = parameters.K_HNO2_NO * (1 + (state.Ke_HNO2 / pow(10, - parameters.pH_tank)));
+    state.K_NH3_NH_Temp = parameters.K_NH3_NH * (1 + (pow(10, - parameters.pH_tank) / state.Ke_NH4));
+    state.Ke_HNO2 = exp(- 2300 / (273 + state.Temp_Actual));
+    state.Ke_NH4 = exp(- 6344 / (273 + state.Temp_Actual));
+    state.X_TSS = (state.C[X_H] + state.C[X_NH] + state.C[X_NO] + state.C[X_AN] + state.C[X_I] + state.C[X_S]) * parameters.F_TSS_COD;
+    state.b_AN_Temp = parameters.b_AN * exp(parameters.theta_b_AN * (state.Temp_Actual - parameters.Temp_Ref));
+    state.b_H_Temp = parameters.b_H * exp(parameters.theta_b_H * (state.Temp_Actual - parameters.Temp_Ref));
+    state.b_NH_Temp = parameters.b_NH * exp(parameters.theta_b_NH * (state.Temp_Actual - parameters.Temp_Ref));
+    state.b_NO_Temp = parameters.b_NO * exp(parameters.theta_b_NO * (state.Temp_Actual - parameters.Temp_Ref));
+    state.k_h_Temp = parameters.k_h * exp(parameters.theta_k_h * (state.Temp_Actual - parameters.Temp_Ref));
+    state.mu_AN_Temp = parameters.mu_AN * exp(parameters.theta_mu_AN * (state.Temp_Actual - parameters.Temp_Ref));
+    state.mu_H_Temp = parameters.mu_H * exp(parameters.theta_mu_H * (state.Temp_Actual - parameters.Temp_Ref));
+    state.mu_NH_Temp = parameters.mu_NH * exp(parameters.theta_mu_NH * (state.Temp_Actual - parameters.Temp_Ref));
+    state.mu_NO_Temp = parameters.mu_NO * exp(parameters.theta_mu_NO * (state.Temp_Actual - parameters.Temp_Ref));
+
+    // Extra
+
+      // TT 3768 Obsolete
+      // state.S_O_Saturation = 14.65 - 0.41 * state.Temp_Actual + 0.00799 * state.Temp_Actual * state.Temp_Actual - 7.78e-005 * state.Temp_Actual * state.Temp_Actual * state.Temp_Actual ;
+      state.S_O_Saturation = 290326 * exp(- 66.7354 + 87.4755 / ((state.Temp_Actual + 273.15) / 100.0) + 24.4526 * log((state.Temp_Actual + 273.15) / 100.0)) ;
+
+    // Kinetics
+
+    #include "ASM1_AN/wwtp.VolumeASM1_ANConversionModel.kinetics.msl"
+
+    // InterfaceVars
+
+    #include "ASM1_AN/wwtp.VolumeASM1_ANModel.sensors.msl"
+  };
+

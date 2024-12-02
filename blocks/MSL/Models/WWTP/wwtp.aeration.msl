@@ -1,0 +1,78 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:54$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_AERATION
+#define WWTP_AERATION
+
+
+CLASS Aerator_Base "Base model for aeration" SPECIALISES PhysicalDAEModelType :=
+{:
+
+  comments <- "Base model for aeration" ;
+
+  interface <-
+  {
+    OBJ O2_tank (* terminal = "in_1" *) "DO concentration in the aeration tank" : Concentration := {: causality <- "CIN" ; group <- "Measurement data" :};
+    OBJ Kla (* terminal = "out_1" *) "Computed Oxygen Transfer Coefficient" : OxygenTransferCoefficient := {: causality <- "COUT" ; group <- "Control action" :};
+    OBJ Vol_tank (* terminal = "in_2"; manip = "1" *) "Volume of the aeration tank" : Volume := {: causality <- "CIN" ; value <- 1000 ; group <- "Measurement data" :};
+    OBJ T_water (* terminal = "in_2"; manip = "1" *) "Water temperature": CelsiusTemperature := {: causality <- "CIN" ; value <- 15.0 ; group <- "Local conditions" :};
+    OBJ T_air (* terminal = "in_2"; manip = "1" *) "Air temperature": CelsiusTemperature := {: causality <- "CIN" ; value <- 15.0 ; group <- "Local conditions" :};
+  };
+
+  independent <-
+  {
+    OBJ t "Time" : Time := {: group <- "Time" :};
+  };
+
+  parameters <-
+  {
+		OBJ P_st_atm (* hidden = "1" *) "Standard atmospheric pressure": Pressure := {: value <- 101325 :};
+    OBJ R_Gas (* hidden = "1" *) "Universal gas constant" : Real := {: unit <- "J/(mol*K)"; value <- 8.314510; :};
+    OBJ H "Altitude": Length := {: value <- 10 ; group <- "Conditions" :};
+  };
+  
+  state <-
+  {
+    OBJ O2_sat "Oxygen saturation (T-water-dependent)": Concentration := {: group <- "Conditions" :};
+		OBJ P_atm (* hidden = "1" *) "Atmospheric pressure": Pressure := {: group <- "Conditions" :};
+		OBJ MVol_air (* hidden = "1" *) "Molar volume of air (m3 air / mol air)": Real ;
+  };
+
+  initial <- 
+  {
+  	state.P_atm := -12 * parameters.H + parameters.P_st_atm ; // parameters.P_st_atm ; // simplification
+  	// (EURE 06/07/2017) for some reason, it does not need to be divided by 1,000 in order to yield the correct MVol_air
+  	state.MVol_air := parameters.R_Gas * (interface.T_air + 273.15) / (state.P_atm) ; // (state.P_atm / 1000) ;
+  };
+
+  equations <-
+  {
+    state.O2_sat = 14.65 - 0.41 * interface.T_water + 0.00799 * pow(interface.T_water,2) - 0.0000778 * pow(interface.T_water,3) ;
+  };
+
+:};
+
+
+#include "WWTP/aeration/wwtp.irvine_carbon_footprint.msl"
+//
+// New models, version 2014
+#include "WWTP/aeration/wwtp.surface_aerator.msl"
+//
+// New models, 2019
+#include "WWTP/aeration/wwtp.aerator.ideal.msl"
+
+
+#endif // WWTP_AERATION

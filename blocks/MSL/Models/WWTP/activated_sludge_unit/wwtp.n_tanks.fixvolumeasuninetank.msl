@@ -1,0 +1,51 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:55$
+ *
+ ******************************************************************************/
+
+#ifndef N_TANKS_FIXVOLUMEASUNINETANK
+#define N_TANKS_FIXVOLUMEASUNINETANK
+
+CLASS  FixVolumeASUNineTank
+(* icon = "activated_sludge_unit" *)
+SPECIALISES FixVolumeNineTank:=
+{:
+ comments <- "A coupled model for nine activated sludge units in series";
+
+  interface <-
+  {
+    OBJ V_Tot (* terminal = "out_2"; is_favorite = "1" *) "Total volume" : Volume := {: causality <- "COUT" ; group <- "Measurement data" :};
+    OBJ TSS_Tot (* terminal = "out_2"; is_favorite = "1" *) "Average TSS concentration" : Concentration := {: causality <- "COUT" ; group <- "Measurement data" :};
+  };
+
+  equations <-
+  {
+    interface.V_Tot = sub_models.ASU1.state.V + sub_models.ASU2.state.V + sub_models.ASU3.state.V + sub_models.ASU4.state.V + sub_models.ASU5.state.V +
+      sub_models.ASU6.state.V + sub_models.ASU7.state.V + sub_models.ASU8.state.V + sub_models.ASU9.state.V ;
+    interface.TSS_Tot = IF (interface.V_Tot <= 0.0) THEN 0.0
+      ELSE ((sub_models.ASU1.state.V * sub_models.ASU1.interface.TSS) + (sub_models.ASU2.state.V * sub_models.ASU2.interface.TSS) +
+      (sub_models.ASU3.state.V * sub_models.ASU3.interface.TSS) + (sub_models.ASU4.state.V * sub_models.ASU4.interface.TSS) + (sub_models.ASU5.state.V * sub_models.ASU5.interface.TSS) +
+      (sub_models.ASU6.state.V * sub_models.ASU6.interface.TSS) + (sub_models.ASU7.state.V * sub_models.ASU7.interface.TSS) + (sub_models.ASU8.state.V * sub_models.ASU8.interface.TSS) +
+      (sub_models.ASU9.state.V * sub_models.ASU9.interface.TSS)) / interface.V_Tot ;
+  };
+
+ coupling <-
+ {
+  // sub-model coupling
+  connect(sub_models.ASU9.interface.Outflow, interface.Outflow),
+ };
+:};
+
+#endif // N_TANKS_FIXVOLUMEASUNINETANK
+

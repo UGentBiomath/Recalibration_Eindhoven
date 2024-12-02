@@ -1,0 +1,55 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:58$
+ *
+ ******************************************************************************/
+ 
+#ifndef WWTP_TIMERS_TIMER21_RT2
+#define WWTP_TIMERS_TIMER21_RT2
+
+
+CLASS Timer21_RT2 (* icon = "timer" *) "Timer with 2 phases and 1 2nd-order response-time output"
+EXTENDS Base_RT21 WITH
+{:
+  
+  comments <- "Timer with 2 phases and (one) 2nd-order response-time output" ;
+
+  interface <-
+  {
+    OBJ u11 (* terminal = "in_2"; manip = "1" *) "Output in the first period" : Real := {: causality <- "CIN" ; value <- 10 ; group <- "Operational" :};
+    OBJ u12 (* terminal = "in_2"; manip = "1" *) "Output in the second period" : Real := {: causality <- "CIN" ; value <- 50 ; group <- "Operational" :};    
+    OBJ T1 (* terminal = "in_2"; manip = "1" *) "First period" : Time := {:causality <- "CIN" ; value <- 0.125 ; group <- "Operational" :};
+    OBJ T2 (* terminal = "in_2"; manip = "1" *) "Second period" : Time := {:causality <- "CIN" ; value <- 0.125 ; group <- "Operational" :};
+  };
+
+  state <-
+  {
+    OBJ Prev_t (* hidden = "1" *) "Help variable to calculate the begin of each period" : Time ;
+    OBJ T "Total cycle" : Time := {: group <- "Operational" :};
+  };
+
+  equations <-
+  {
+    state.T = interface.T1 + interface.T2 ;
+    
+    state.Prev_t = IF (independent.t - previous(state.Prev_t) < (state.T))
+      THEN previous(state.Prev_t) ELSE previous(state.Prev_t) + state.T ;
+
+    state.Help_u1 = IF (independent.t - state.Prev_t < interface.T1)
+      THEN interface.u11 ELSE interface.u12 ;
+  };
+
+:};
+
+
+#endif // WWTP_TIMERS_TIMER21_RT2

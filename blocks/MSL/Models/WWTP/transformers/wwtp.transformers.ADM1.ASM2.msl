@@ -1,0 +1,407 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 22. september 2020 14:54:01$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_TRANSFORMERS_ADM1_ASM2
+#define WWTP_TRANSFORMERS_ADM1_ASM2
+
+
+CLASS ASM2toADM1 "ASM2 to IWA ADM1 anaerobic model states flow transformer for use in BSM2"
+EXTENDS Base_ASMtoADM1 WITH
+{:
+
+  comments <- "Transforms a ASM2 influent to a ADM1 anaerobic influent type";
+  
+  parameters <-
+  {
+    OBJ i_N_S_F "Nitrogen content of soluble substrate S_F" : NitrogenConversionFactor := {:value <- 0.03 ; group <- "Composition parameters" :};
+    OBJ i_N_X_S "Nitrogen content of particulate substrate X_S" : NitrogenConversionFactor := {:value <- 0.04 ; group <- "Composition parameters" :};
+  };
+
+  state <-
+  {
+    OBJ ASM1_S_I (* hidden = "1" *) "S_I concentration" : Real ; 
+    OBJ ASM1_S_S (* hidden = "1" *) "S_S concentration" : Real ; 
+    OBJ ASM1_S_O (* hidden = "1" *) "S_O concentration" : Real ; 
+    OBJ ASM1_S_NO (* hidden = "1" *) "S_NO concentration" : Real ; 
+    OBJ ASM1_S_ND (* hidden = "1" *) "S_ND concentration" : Real ; 
+    OBJ ASM1_S_NH (* hidden = "1" *) "S_NH concentration" : Real ; 
+    OBJ ASM1_S_ALK (* hidden = "1" *) "S_ALK concentration" : Real ; 
+    OBJ ASM1_X_I (* hidden = "1" *) "X_I concentration" : Real ; 
+    OBJ ASM1_X_S (* hidden = "1" *) "X_S concentration" : Real ; 
+    OBJ ASM1_X_BH (* hidden = "1" *) "X_BH concentration" : Real ; 
+    OBJ ASM1_X_BA (* hidden = "1" *) "X_BA concentration" : Real ; 
+    OBJ ASM1_X_P (* hidden = "1" *) "X_P concentration" : Real ; 
+    OBJ ASM1_X_ND (* hidden = "1" *) "X_ND concentration" : Real ;
+  };
+
+  equations <-
+  {
+    state.ASM1_S_I = state.InflowConcentration[S_I];
+    state.ASM1_S_S = state.InflowConcentration[S_A] + state.InflowConcentration[S_F];
+    state.ASM1_S_O = state.InflowConcentration[S_O];
+    #if (defined ASM2dModTemp || defined IUWS1 || defined IUWS2)
+    state.ASM1_S_NO = state.InflowConcentration[S_NO];
+    #endif
+    #if (defined ASM2dM)
+    state.ASM1_S_NO = state.InflowConcentration[S_NOx];
+    #endif
+
+    state.ASM1_S_ND = parameters.i_N_S_F * state.InflowConcentration[S_F] ;
+    state.ASM1_S_NH = state.InflowConcentration[S_NH];
+    state.ASM1_S_ALK = state.InflowConcentration[S_ALK];
+    state.ASM1_X_I = state.InflowConcentration[X_I];
+    state.ASM1_X_S = state.InflowConcentration[X_S] + state.InflowConcentration[X_PHA];
+    #if (defined ASM2dModTemp || defined IUWS1 || defined IUWS2)
+    state.ASM1_X_BH = state.InflowConcentration[X_H] + state.InflowConcentration[X_PAO];
+    state.ASM1_X_BA = state.InflowConcentration[X_AUT]; //[X_AOB];
+    #endif
+    #if (defined ASM2dM)
+    state.ASM1_X_BH = state.InflowConcentration[X_OHO] + state.InflowConcentration[X_PAO];
+    state.ASM1_X_BA = state.InflowConcentration[X_ANO];
+    #endif
+    state.ASM1_X_P = 0.0 ;
+    state.ASM1_X_ND = parameters.i_N_X_S * state.InflowConcentration[X_S] ;
+  
+    //STEP1: remove O2 and NO3
+    //Calculation of ASM1 COD's
+    state.COD_Demand = state.ASM1_S_O + 2.86 * state.ASM1_S_NO ;
+    
+    // due to COD_demand, S_S, X_S, X_BH, X_BA are decreased in that sequence    
+    state.temp1 = state.ASM1_S_S ;
+    state.temp2 = state.ASM1_S_S + state.ASM1_X_S ;
+    state.temp3 = state.ASM1_S_S + state.ASM1_X_S + state.ASM1_X_BH ;
+    state.temp4 = state.ASM1_S_S + state.ASM1_X_S + state.ASM1_X_BH + state.ASM1_X_BA ;
+    
+    state.S_S_reduced = IF (state.COD_Demand > state.temp1) THEN 0.0  //all S_S consumed
+      ELSE state.ASM1_S_S - state.COD_Demand ;  //S_S partly consumed
+    
+    state.X_S_reduced = IF (state.COD_Demand > state.temp2) THEN 0.0
+      ELSE IF (state.COD_Demand > state.temp1) THEN state.ASM1_X_S - state.COD_Demand + state.ASM1_S_S
+        ELSE state.ASM1_X_S ;
+    
+    state.X_BH_reduced =  IF(state.COD_Demand > state.temp3) THEN 0.0
+      ELSE IF (state.COD_Demand > state.temp2) THEN state.ASM1_X_BH - state.COD_Demand + state.ASM1_S_S + state.ASM1_X_S
+        ELSE state.ASM1_X_BH ;
+    
+    state.X_BA_reduced = IF (state.COD_Demand > state.temp4) THEN 0.0 //this means not enough carbon is present in the system! ERROR
+      ELSE IF (state.COD_Demand > state.temp3) THEN state.ASM1_X_BA - state.COD_Demand + state.ASM1_S_S + state.ASM1_X_S + state.ASM1_X_BH
+        ELSE state.ASM1_X_BA ;
+        
+    // If biomass is used, its nitrogen fraction should be added to NH4 to avoid a N-leak
+    state.S_NH_changed_1 = state.ASM1_S_NH + parameters.nbac * (state.ASM1_X_BA - state.X_BA_reduced + state.ASM1_X_BH - state.X_BH_reduced);
+    
+    //STEP2:Mapping of solubles                
+    // Map all S_ND in S_aa. The remaining COD, if any, is mapped to S_su
+    state.S_ND_reduced_1 = state.ASM1_S_ND ;
+    //  IF(ASM1_S_S == 0)
+    //     THEN 0
+    //     ELSE state.S_S_reduced / ASM1_S_S * ASM1_S_ND; //correct for denitrification
+    state.X_ND_reduced_1 = state.ASM1_X_ND ;
+    //  IF(ASM1_X_S == 0)
+    //     THEN 0
+    //     ELSE state.X_S_reduced / ASM1_X_S * ASM1_X_ND; //correct for denitrification
+    
+    //Saa equivalent to Snd
+    state.ReqCODs = state.ASM1_S_ND / parameters.naa ;
+    
+
+
+
+    state.su_from_ss = IF (state.S_S_reduced <= state.ReqCODs) THEN 0.0
+    ELSE (state.S_S_reduced-state.ReqCODs) ;  //excess Ss is mapped to Ssu
+    
+    state.S_ND_reduced_2 = IF (state.S_S_reduced <= state.ReqCODs) THEN state.S_ND_reduced_1 - state.S_S_reduced * parameters.naa   //Snd only partly removed
+      ELSE 0.0;  //all Snd removed
+    
+    // denitrification leads to NH4 formation
+    state.S_NH_den_1 = IF (state.ASM1_S_S <= 0.0) THEN state.ASM1_S_ND
+      ELSE (state.ASM1_S_S - state.S_S_reduced) * state.ASM1_S_ND / state.ASM1_S_S ;
+    
+    state.S_NH_den_2 = IF (state.ASM1_X_S <= 0.0) THEN state.ASM1_X_ND
+      ELSE (state.ASM1_X_S - state.X_S_reduced) * state.ASM1_X_ND / state.ASM1_X_S ;    
+    
+    state.S_NH_changed_2 = state.S_NH_changed_1 ;// + state.S_NH_den_1 + state.S_NH_den_2;
+    
+    //STEP3&4: Mapping of remaining COD. Here mapping is not to X_c but to X_ch, X_pr, X_li   
+    //Carbohydrates, proteins and lipids present in X_S, X_BA and X_BH are calculated first and then summed
+    // Proteins
+    state.prot_XS = IF (state.X_S_reduced <= state.X_ND_reduced_1 / parameters.naa)  //not all Xnd fits into Prot
+      THEN state.X_S_reduced  //all Xs to Prot
+      ELSE state.X_ND_reduced_1 / parameters.naa ;  //not all Xs to Prot, remainder --> Ch and Lip
+    
+    //remaining Xnd
+    state.X_ND_reduced_2 = IF (state.X_S_reduced <= state.X_ND_reduced_1 / parameters.naa) //not all Xnd fits into Prot
+      THEN state.X_ND_reduced_1 - state.X_S_reduced * parameters.naa
+      ELSE 0.0 ;
+    
+    state.biomass = state.ASM1_X_BA + state.ASM1_X_BH ;
+    state.biomass_nobio = state.biomass * (1 - parameters.frxs) ;
+    state.biomass_bioN = parameters.nbac * state.biomass - state.biomass_nobio * parameters.nxi ;
+    state.prot_biom = IF (state.biomass_bioN / parameters.naa <= (state.biomass - state.biomass_nobio)) THEN //only part of biomass can be converted due to lack of N
+      IF (state.X_ND_reduced_2 / parameters.naa > (state.biomass - state.biomass_nobio - state.biomass_bioN / parameters.naa)) //use remaining Xnd
+        THEN state.biomass_bioN / parameters.naa + (state.biomass - state.biomass_nobio - state.biomass_bioN / parameters.naa) //all biomass N used + additional Xnd
+        ELSE state.biomass_bioN / parameters.naa + state.X_ND_reduced_2 / parameters.naa //state.biomass_bioN / parameters.N_aa //not enough Xnd left, use everything
+      ELSE state.biomass - state.biomass_nobio ;
+    
+    state.X_ND_reduced_3 = IF (state.biomass_bioN / parameters.naa <= (state.biomass - state.biomass_nobio)) THEN 
+      IF (state.X_ND_reduced_2 / parameters.naa > (state.biomass - state.biomass_nobio - state.biomass_bioN / parameters.naa))
+        THEN state.X_ND_reduced_2 - (state.biomass - state.biomass_nobio - state.biomass_bioN / parameters.naa)*parameters.naa
+        ELSE 0.0
+      ELSE state.X_ND_reduced_2 + state.biomass * parameters.nbac - state.biomass_nobio*parameters.nxi - (state.biomass - state.biomass_nobio)*parameters.naa;
+    
+    // Carbohydrates
+    state.ch_XS = IF (state.X_S_reduced <= state.prot_XS) THEN 0.0
+      ELSE (state.X_S_reduced - state.prot_XS) * (1 - parameters.frlixs) ;
+      
+    state.ch_biom = IF (parameters.frxs * state.biomass <= state.prot_biom) //is there any biomass COD unmapped?
+      THEN 0.0
+      ELSE (parameters.frxs * state.biomass - state.prot_biom) * (1 - parameters.frlixb) ;
+    
+    // Lipids
+    state.li_XS = IF (state.X_S_reduced < state.prot_XS) THEN 0.0
+      ELSE (state.X_S_reduced - state.prot_XS) * parameters.frlixs ;
+    
+    state.li_biom = IF (parameters.frxs * state.biomass < state.prot_biom) //is there any biomass COD unmapped?
+      THEN 0.0
+      ELSE (parameters.frxs * state.biomass - state.prot_biom) * parameters.frlixb ;     
+    
+    //STEP5: Mapping of inerts
+    // Particulate
+    interface.Outflow[X_Inert] = ((1 - parameters.fdegrade) * (state.ASM1_X_P + state.ASM1_X_I) + state.biomass_nobio) / 1000 ;
+    // Soluble inerts - direct mapping not possible due to difference in N-content of Si in ASM and ADM
+    // Lack of N is taken from Snd, Xnd and Snh (in that sequence)
+    state.inertS = IF (state.ASM1_S_I * parameters.nsi < state.ASM1_S_I * parameters.nsi_adm) THEN 
+      IF (state.S_ND_reduced_2 < (state.ASM1_S_I * (1 - parameters.nsi / parameters.nsi_adm) * parameters.nsi_adm)) THEN
+        IF (state.X_ND_reduced_3 < (state.ASM1_S_I * (1 - parameters.nsi / parameters.nsi_adm) - state.S_ND_reduced_2 / parameters.nsi_adm) * parameters.nsi_adm) THEN
+          IF (state.S_NH_changed_2 < (state.ASM1_S_I * (1 - parameters.nsi / parameters.nsi_adm) - state.S_ND_reduced_2 / parameters.nsi_adm - state.X_ND_reduced_3 / parameters.nsi_adm) * parameters.nsi_adm) THEN
+            state.ASM1_S_I * parameters.nsi / parameters.nsi_adm + state.S_ND_reduced_2 / parameters.nsi_adm + state.X_ND_reduced_3 / parameters.nsi_adm + state.S_NH_changed_2 / parameters.nsi_adm
+            ELSE state.ASM1_S_I
+          ELSE state.ASM1_S_I
+        ELSE state.ASM1_S_I
+      ELSE state.ASM1_S_I ;
+    
+
+    //This affects states of Snd,Xnd and Snh
+    state.S_ND_reduced_3=
+    IF (state.ASM1_S_I*parameters.nsi < state.ASM1_S_I*parameters.nsi_adm)
+    THEN 
+    IF (state.S_ND_reduced_2 < (state.ASM1_S_I*(1-parameters.nsi/parameters.nsi_adm)*parameters.nsi_adm))
+    THEN  0  
+    ELSE state.S_ND_reduced_2 - (state.ASM1_S_I*(1-parameters.nsi/parameters.nsi_adm))*parameters.nsi_adm  
+    ELSE state.S_ND_reduced_2 + state.ASM1_S_I*(parameters.nsi-parameters.nsi_adm);
+    
+    state.X_ND_reduced_4=
+    IF (state.ASM1_S_I*parameters.nsi < state.ASM1_S_I*parameters.nsi_adm)
+    THEN 
+    IF (state.S_ND_reduced_2 < (state.ASM1_S_I*(1-parameters.nsi/parameters.nsi_adm)*parameters.nsi_adm))
+    THEN
+    IF (state.X_ND_reduced_3 < (state.ASM1_S_I*(1-parameters.nsi/parameters.nsi_adm)-state.S_ND_reduced_2/parameters.nsi_adm)*parameters.nsi_adm)
+    THEN 0
+    ELSE state.X_ND_reduced_3 - (state.ASM1_S_I*(1-parameters.nsi/parameters.nsi_adm)-state.S_ND_reduced_2/parameters.nsi_adm)*parameters.nsi_adm     
+    ELSE state.X_ND_reduced_3  
+    ELSE state.X_ND_reduced_3;
+    
+    state.S_NH_changed_3=
+    IF (state.ASM1_S_I*parameters.nsi < state.ASM1_S_I*parameters.nsi_adm)
+    THEN 
+    IF (state.S_ND_reduced_2 < (state.ASM1_S_I*(1-parameters.nsi/parameters.nsi_adm)*parameters.nsi_adm))
+    THEN
+    IF (state.X_ND_reduced_3 < (state.ASM1_S_I*(1-parameters.nsi/parameters.nsi_adm)-state.S_ND_reduced_2/parameters.nsi_adm)*parameters.nsi_adm)
+    THEN
+    IF (state.S_NH_changed_2 <(state.ASM1_S_I*(1-parameters.nsi/parameters.nsi_adm)-state.S_ND_reduced_2/parameters.nsi_adm-state.X_ND_reduced_3/parameters.nsi_adm)*parameters.nsi_adm)
+    THEN 0
+    ELSE state.S_NH_changed_2 - (state.ASM1_S_I*(1-parameters.nsi/parameters.nsi_adm)-state.S_ND_reduced_2/parameters.nsi_adm-state.X_ND_reduced_3/parameters.nsi_adm)*parameters.nsi_adm
+    ELSE state.S_NH_changed_2     
+    ELSE state.S_NH_changed_2  
+    ELSE state.S_NH_changed_2; 
+    
+    // In case all nitrogen is depleted, remaining Si is mapped to ch
+    state.su_from_si = 
+    IF (state.ASM1_S_I*parameters.nsi < state.ASM1_S_I*parameters.nsi_adm)
+    THEN 
+    IF (state.S_ND_reduced_2 < (state.ASM1_S_I*(1-parameters.nsi/parameters.nsi_adm)*parameters.nsi_adm))
+    THEN
+    IF (state.X_ND_reduced_3 < (state.ASM1_S_I*(1-parameters.nsi/parameters.nsi_adm)-state.S_ND_reduced_2/parameters.nsi_adm)*parameters.nsi_adm)
+    THEN
+    IF (state.S_NH_changed_2 <(state.ASM1_S_I*(1-parameters.nsi/parameters.nsi_adm)-state.S_ND_reduced_2/parameters.nsi_adm-state.X_ND_reduced_3/parameters.nsi_adm)*parameters.nsi_adm)
+    THEN (state.ASM1_S_I*(1-parameters.nsi/parameters.nsi_adm)-state.S_ND_reduced_2/parameters.nsi_adm-state.X_ND_reduced_3/parameters.nsi_adm-state.S_NH_changed_2/parameters.nsi_adm)
+    ELSE 0
+    ELSE 0    
+    ELSE 0  
+    ELSE 0;
+    
+        
+        
+    // Mass balance check for COD, N and charge
+    // Incoming COD
+    state.COD_in = state.ASM1_S_I + state.ASM1_S_S + state.ASM1_X_I + state.ASM1_X_S +
+    state.ASM1_X_BH + state.ASM1_X_BA + state.ASM1_X_P;
+
+
+    // Incoming N
+    state.N_in = state.ASM1_S_NO + state.ASM1_S_NH + state.ASM1_S_ND + state.ASM1_X_ND +
+    parameters.nbac * ( state.ASM1_X_BH + state.ASM1_X_BA)  +
+    parameters.nsi*state.ASM1_S_I+ parameters.nxi * (state.ASM1_X_P + state.ASM1_X_I);
+
+    // N balance    
+    state.N_balance = state.N_in - state.ASM1_S_NO - state.N_out * 1000;
+    
+    
+    #if (defined ASM2dModTemp)
+    state.alfa_no = -1.0/14000.0;
+    #endif
+
+
+    // calculation of Sic based on charge balance
+    interface.Outflow[S_IC] = (((state.ASM1_S_ALK * state.alfa_alk + state.ASM1_S_NH * state.alfa_nh + state.ASM1_S_NO * state.alfa_no) -
+      (interface.Outflow[S_ac] * state.alfa_ac + interface.Outflow[S_pro] * state.alfa_pro + interface.Outflow[S_bu] * state.alfa_bu + 
+      interface.Outflow[S_va] * state.alfa_va + interface.Outflow[S_INN] * state.alfa_in_adm)) / state.alfa_ic) ; 
+  };
+
+:};
+
+
+CLASS ADM1toASM2 "ADM1 to ASM2 model states flow transformer" EXTENDS Base_ADM1toASM WITH
+{:
+
+  comments <- "Transforms a ADM1 influent to a ASM2 anaerobic influent type";
+
+  parameters <-
+  {
+    OBJ SF_SS "Fraction of S_F in S_S" : Fraction := {: value <- 0.5; group <- "" :};
+    
+    #if (defined ASM2dModTemp || defined ASM2dM || defined IUWS1 || defined IUWS2) 
+    OBJ i_TSS_BM "TSS to biomass ratio for X_H, X_PAO, X_AUT" : ConversionFactor := {: value <- 0.9; group <- "Composition parameters"; :};
+    OBJ i_TSS_X_S "TSS to X_S ratio" : ConversionFactor := {: value <- 0.75; group <- "Composition parameters"; :};
+    OBJ i_TSS_X_I "TSS to X_I ratio" : ConversionFactor := {: value <- 0.75; group <- "Composition parameters"; :};
+    #endif
+  };
+
+  state <-
+  {
+    OBJ ASM1_S_I (* hidden = "1" *) "S_I concentration" : Real ; 
+    OBJ ASM1_S_S (* hidden = "1" *) "S_S concentration" : Real ; 
+    OBJ ASM1_S_O (* hidden = "1" *) "S_O concentration" : Real ; 
+    OBJ ASM1_S_NO (* hidden = "1" *) "S_NO concentration" : Real ; 
+    OBJ ASM1_S_ND (* hidden = "1" *) "S_ND concentration" : Real ; 
+    OBJ ASM1_S_NH (* hidden = "1" *) "S_NH concentration" : Real ; 
+    OBJ ASM1_S_ALK (* hidden = "1" *) "S_ALK concentration" : Real ; 
+    OBJ ASM1_X_I (* hidden = "1" *) "X_I concentration" : Real ; 
+    OBJ ASM1_X_S (* hidden = "1" *) "X_S concentration" : Real ; 
+    OBJ ASM1_X_BH (* hidden = "1" *) "X_BH concentration" : Real ; 
+    OBJ ASM1_X_BA (* hidden = "1" *) "X_BA concentration" : Real ; 
+    OBJ ASM1_X_P (* hidden = "1" *) "X_P concentration" : Real ; 
+    OBJ ASM1_X_ND (* hidden = "1" *) "X_ND concentration" : Real ;
+  };
+
+  equations <-
+  {
+//    state.Q_In = interface.Inflow[H2O] ;
+    
+    state.OutflowConcentration[S_I] = state.ASM1_S_I ;
+    state.OutflowConcentration[S_O] = state.ASM1_S_O ; 
+    state.OutflowConcentration[S_N2] = 0.0 ; 
+    state.OutflowConcentration[S_F] = state.ASM1_S_S * parameters.SF_SS ; 
+    state.OutflowConcentration[S_A] = state.ASM1_S_S * (1 - parameters.SF_SS) ; 
+
+    #if (defined ASM2dModTemp || defined IUWS1 || defined IUWS2)
+    state.OutflowConcentration[S_NO] = state.ASM1_S_NO ; 
+    #endif
+    #if (defined ASM2dM)
+    state.OutflowConcentration[S_NOx] = state.ASM1_S_NO ; 
+    #endif
+
+    state.OutflowConcentration[S_PO] = 0.0 ; 
+    state.OutflowConcentration[S_NH] = state.ASM1_S_NH ;
+    state.OutflowConcentration[S_ALK] = state.ASM1_S_ALK ; 
+    state.OutflowConcentration[X_I] = state.ASM1_X_I ; 
+    state.OutflowConcentration[X_S] = state.ASM1_X_S ; 
+    state.OutflowConcentration[X_PAO] = 0.0 ; 
+
+    #if (defined ASM2dModTemp || defined IUWS1 || defined IUWS2)
+    state.OutflowConcentration[X_PP] = 0.0 ; 
+    state.OutflowConcentration[X_PHA] = 0.0 ; 
+    state.OutflowConcentration[X_H] = state.ASM1_X_BH ; 
+    state.OutflowConcentration[X_AUT] = state.ASM1_X_BA ; 
+    //LB    state.OutflowConcentration[X_TSS] = 0.0 ; 
+    state.OutflowConcentration[X_TSS] = 
+      (state.OutflowConcentration[X_I] * parameters.i_TSS_X_I + state.OutflowConcentration[X_S] * parameters.i_TSS_X_S +
+      (state.OutflowConcentration[X_H] + state.OutflowConcentration[X_PAO] + state.OutflowConcentration[X_AUT]) * parameters.i_TSS_BM +
+      state.OutflowConcentration[X_PP] * 3.23 + state.OutflowConcentration[X_PHA] * 0.6 + state.OutflowConcentration[X_MEOH] * 1.0 +
+      state.OutflowConcentration[X_MEP] * 1.0) ;
+    #endif
+    #if (defined ASM2dM)
+    state.OutflowConcentration[X_PAO_PP] = 0.0 ; 
+    state.OutflowConcentration[X_PAO_Stor] = 0.0 ; 
+    state.OutflowConcentration[X_OHO] = state.ASM1_X_BH ; 
+    state.OutflowConcentration[X_ANO] = state.ASM1_X_BA ; 
+    state.OutflowConcentration[X_TSS] = 
+      (state.OutflowConcentration[X_I] * parameters.i_TSS_X_I + state.OutflowConcentration[X_S] * parameters.i_TSS_X_S +
+      (state.OutflowConcentration[X_OHO] + state.OutflowConcentration[X_PAO] + state.OutflowConcentration[X_ANO]) * parameters.i_TSS_BM +
+      state.OutflowConcentration[X_PAO_PP] * 3.23 + state.OutflowConcentration[X_PAO_Stor] * 0.6 + state.OutflowConcentration[X_MEOH] * 1.0 +
+      state.OutflowConcentration[X_MEP] * 1.0) ;
+    #endif
+
+    state.OutflowConcentration[X_MEOH] = 0.0 ; 
+    state.OutflowConcentration[X_MEP] = 0.0 ; 
+
+
+    state.ASM1_X_P = state.X_P_temp ; 
+
+    state.ASM1_X_S = (interface.Inflow[X_c] + interface.Inflow[X_ch] + interface.Inflow[X_pr] + interface.Inflow[X_li]) * 1000 + state.XS_temp ;                
+
+    state.ASM1_X_I = state.inertX ;
+
+    state.ASM1_S_I =  state.inertS * 1000 ;
+    state.ASM1_S_NH = state.S_INN_reduced2 * 14000 ;   
+    
+    // S_S in ASM is the sum of S_AC, S_PRO, S_AS and S_FA
+    state.ASM1_S_S = (interface.Inflow[S_su] + interface.Inflow[S_aa] + interface.Inflow[S_fa] + interface.Inflow[S_va] + interface.Inflow[S_bu] +
+    interface.Inflow[S_pro] + interface.Inflow[S_ac]) * 1000 ;                                          
+
+    // Amino acids and soluble inerts of ADM1 contain some biodegradable nitrogen
+    state.ASM1_S_ND = parameters.naa * interface.Inflow[S_aa] * 1000 ;
+    
+    state.ASM1_X_ND = parameters.nxc * (state.XS_temp) + (parameters.nxc * interface.Inflow[X_c] + parameters.naa * interface.Inflow[X_pr]) * 1000 ;
+
+    state.ASM1_S_O= 0; 
+    state.ASM1_S_NO= 0;              
+    state.ASM1_X_BH= 0;              
+    state.ASM1_X_BA= 0;              
+
+    state.ASM1_S_ALK = ((interface.Inflow[S_ac] * state.alfa_ac + interface.Inflow[S_pro] * state.alfa_pro +
+      interface.Inflow[S_bu] * state.alfa_bu + interface.Inflow[S_va] * state.alfa_va + interface.Inflow[S_INN] * state.alfa_in_adm +
+      interface.Inflow[S_IC] * state.alfa_ic) - (state.ASM1_S_NH * state.alfa_nh + state.ASM1_S_NO * state.alfa_no)) / state.alfa_alk ;
+
+    #if (defined ASM2dModTemp)
+    state.alfa_no = -1.0/14000.0;
+    #endif
+
+    // Mass balance check for COD, N and charge
+
+    // Incoming COD
+    state.COD_out = state.ASM1_S_I + state.ASM1_S_S + state.ASM1_X_I + state.ASM1_X_S + state.ASM1_X_BH + state.ASM1_X_BA + state.ASM1_X_P ;
+
+    // Incoming N
+    state.N_out = state.ASM1_S_NO + state.ASM1_S_NH + state.ASM1_S_ND + state.ASM1_X_ND + parameters.nbac *
+      (state.ASM1_X_BH + state.ASM1_X_BA) + parameters.nsi * state.ASM1_S_I + parameters.nxi * (state.ASM1_X_P + state.ASM1_X_I) ;
+  };
+
+:};
+
+
+#endif // WWTP_TRANSFORMERS_ADM1_ASM2

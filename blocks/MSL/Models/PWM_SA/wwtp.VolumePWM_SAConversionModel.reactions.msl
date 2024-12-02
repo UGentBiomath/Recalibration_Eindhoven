@@ -1,0 +1,31 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE Reactions "The reactions between the components considered" = 
+ENUM
+{
+  XB_InfHydrol,
+  XB_OrgHydrol,
+  AerGrowthOnSf,
+  AerGrowthOnSa,
+  AnGrowthOnSfDenitrif,
+  AnGrowthOnSaDenitrif,
+  Fermentation,
+  LysisOfHetero,
+  StorageOfXPHA,
+  StorageOfXPP,
+  AerGrowthOnXPHA,
+  LysisOfXPAO,
+  LysisOfXPP,
+  LysisOfXPHA,
+  GrowthOfAuto,
+  LysisOfAuto,
+  Struvite_diss,
+  CaP_diss,
+  MgKP_diss,
+  Cal_diss,
+  Mag_diss,
+  Newb_diss,
+  Aeration,
+  ASCO2evol
+};
+

@@ -1,0 +1,96 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 15:21:58$
+ *
+ ******************************************************************************/
+
+#ifndef IUWS_CONTROLLERS_AERATION
+#define IUWS_CONTROLLERS_AERATION
+
+CLASS Aeration_Blower
+  (* icon = "Controller" *)
+  "Bubble aeration model"
+  // Calculates the Kla-values for ASM-models; actuator is airflow
+  SPECIALISES PhysicalDAEModelType :=
+  {:
+
+  comments <- "A model that calculates Kla based on airflow rate, aerator design and other parameters";
+
+  interface <-
+  {
+   OBJ O2_tank (* terminal = "in_1" *) "Actual oxygen concentration in the aeration tank" : Concentration := {: causality <- "CIN" ; group <- "Measurement data" :};
+   OBJ Vol_tank (* terminal = "in_1" *) "Volume of the aeration tank" : Volume := {: causality <- "CIN" ; group <- "Measurement data" :};
+   OBJ Kla (* terminal = "out_1" *) "Calculated kLa" : OxygenTransferCoefficient := {: causality <- "COUT" ; group <- "Control action" :};
+   OBJ O2_rsat_ave (* terminal = "out_1" *) "Average oxygen saturation f(T_water; Depth) for bubble aeration" : Concentration := {: causality <- "COUT" ; group <- "Control action" :};
+   // DOsat: unnecessary
+   OBJ Q_air (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Air flow rate under Standard Conditions": FlowRate := {: causality <- "CIN" ; value <- 1000 ; group <- "Operational" :};
+   OBJ Temp (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Temperature": CelsiusTemperature := {: causality <- "CIN" ; value <- 20.0 ; group <- "Operational" :};
+   OBJ TSS (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "TSS in the tank": Concentration := {: causality <- "CIN" ; value <- 3500.0 ; group <- "Operational" :};
+  };
+
+  parameters <-
+  {
+   OBJ g (* hidden = "1" *) "Gravity acceleration on earth (m/s2)": Real := {: value <- 9.82 :};
+   OBJ Rho_air "Air density": Concentration := {: value <- 1230 ; group <- "Operational" :};
+   OBJ Rho_sludge "Sludge density": Concentration := {: value <- 1020000 ; group <- "Sludge" :};
+   OBJ P_atm (* hidden = "1" *) "Standard atmospheric pressure": Pressure := {: value <- 101325; group <- "Local conditions" :};
+   OBJ O2_air "O2 conc. in the atmosphere (%)": Real := {: value <- 20.85 ; group <- "Local conditions"; interval <- {: lowerBound <- 0; upperBound <- 100; :}; :};
+   OBJ Beta "Empirical factor": Real := {: value <- 0.95 ; group <- "Sludge" :};
+   OBJ Phi (* hidden = "1" *) "Empirical factor for temperature correction": Real := {: value <- 1.024 ; group <- "Sludge" :};
+   OBJ Omega "Exponential coeff to determine the alpha factor": Real := {: value <- 0.083 ; group <- "Operational" :};
+   OBJ Depth_air "Depth of the aerator below the water surface": Length := {: value <- 5.0 ; group <- "Tank geometry" :};
+   OBJ Depth "Depth of the tank": Length := {: value <- 6.0 ; group <- "Tank geometry" :};
+   OBJ Fouling "Fouling factor for bubble aeration": Real := {: value <- 1.0 ; group <- "Operational" :};
+   // SOTE_fine (0.045), SOTE_coarse (0.015) -> SOTE
+   OBJ SOTE "Standard Oxygen Transfer Efficiency per unit depth": Real := {: value <- 0.045 ; group <- "Operational"; interval <- {: lowerBound <- 0 :}; :};
+   OBJ O2_sat20 "Oxygen saturation of water under Standard Conditions (1 atm, 20 °C) and no salts": Concentration := {: value <- 9.08 ; group <- "Operational" :};
+  };
+
+  independent <-
+  {
+   OBJ t "Time": Time ;
+  };
+
+  state <-
+  {
+   OBJ Alpha (* hidden = "1" *) "Empirical factor ": Real := {: group <- "Operational" :};
+   OBJ SOTR (* is_favorite = "1" *) "Standard Oxygen Transfer Rate": MassFlux := {: group <- "Aeration" :};
+   OBJ AOTR (* is_favorite = "1" *) "Actual Oxygen Transfer Rate": MassFlux := {: group <- "Aeration" :};
+   OBJ O2_out (* is_favorite = "1" *) "Concentration of oxygen in air leaving the tank": Concentration := {: group <- "Operational" :};
+   OBJ O2_rsat "Oxygen saturation at the water temperature": Concentration := {: group <- "Local conditions" :};
+   OBJ P_bottom "Pressure at the bottom of the tank": Pressure := {: group <- "Site" :};
+  };
+
+  equations <-
+  {
+   state.Alpha = exp((interface.TSS / 1000) * parameters.Omega * (-1));
+   
+   state.O2_rsat = 14.65 - 0.41 * (interface.Temp) + 0.00799 * pow(interface.Temp,2) - 0.0000778 * pow(interface.Temp,3);
+   
+   // this expression is different from that in Irvine model - but overall is ok, see O2_rsat_ave
+   state.P_bottom = (parameters.Rho_sludge/1000.0) * parameters.g * parameters.Depth + parameters.P_atm;
+   
+   state.O2_out = parameters.O2_air - (parameters.SOTE * parameters.Depth_air) * parameters.O2_air * state.Alpha; // rough approximation
+   
+   interface.O2_rsat_ave = state.O2_rsat * (state.P_bottom / parameters.P_atm + state.O2_out / parameters.O2_air) / 2 ;
+   
+   state.SOTR =  interface.Q_air * (parameters.Rho_air) * (parameters.SOTE * parameters.Depth_air/100) * (parameters.O2_air/100);
+   
+   state.AOTR = state.SOTR * (parameters.Beta * interface.O2_rsat_ave - interface.O2_tank) / parameters.O2_sat20 * pow(parameters.Phi,(interface.Temp-20)) * state.Alpha * parameters.Fouling ;
+   
+   interface.Kla = state.AOTR / ((interface.O2_rsat_ave - interface.O2_tank) * interface.Vol_tank);
+  };
+
+ :};
+
+#endif // IUWS_CONTROLLERS_AERATION

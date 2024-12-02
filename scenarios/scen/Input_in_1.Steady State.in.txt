@@ -1,3 +1,0 @@
-#.t	Operator_low
-#d	g/m3
-0	3350

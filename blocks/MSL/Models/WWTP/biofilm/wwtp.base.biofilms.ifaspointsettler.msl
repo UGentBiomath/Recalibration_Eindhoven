@@ -1,0 +1,155 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:56$
+ *
+ ******************************************************************************/
+
+#ifndef IFASPointSettler_CLASS
+#define IFASPointSettler_CLASS
+
+CLASS IFASPointSettler (* class = "ifas"; is_default = "true" *) SPECIALISES CoupledModelType :=
+{:
+
+  comments <- "A model for an IFAS unit. Detachment when d>dmax and proportional to (d-dmax)^2";
+
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InWWTPTerminal := {: causality <- CIN ; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutWWTPTerminal := {: causality <- COUT ; group <- "Effluent" :};
+    OBJ Underflow (* terminal = "out_2" *) "Underflow" : OutWWTPTerminal := {: causality <- COUT ; group <- "Underflow" :};
+    //manip + sensors
+    OBJ Kla (* terminal = "in_2"; manip = "1" *) "Oxygen transfer coefficient" : OxygenTransferCoefficient := {: causality <- "CIN" ; value <- 750 ; group <- "Operational" :};
+    #ifdef StandardCategoryModels
+    OBJ Temp (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Temperature of the activated sludge" : CelsiusTemperature  := {: causality <- "CIN" ; value <- 15 ; group <- "Operational" :}; 
+    #endif
+    OBJ Q_Under (* terminal = "in_2"; manip = "1" *) "Underflow flow rate" : FlowRate := {: causality <- "CIN" ; value <- 10 ; group <- "Operational" :};
+    OBJ Q_Excess (* terminal = "in_2"; manip = "1" *) "Excess sludge flow rate" : FlowRate := {: causality <- "CIN" ; value <- 50 ; group <- "Operational" :};
+    
+    OBJ DO (* terminal = "out_3" *) "Dissolved oxygen concentration" : DissolvedOxygen := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ NH4 (* terminal = "out_3" *) "Ammonium concentration" : Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ NO3 (* terminal = "out_3" *) "Nitrate+Nitrite concentration" :Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ TSS (* terminal = "out_3" *) "Total suspended solids" :Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ V_ASU (* terminal = "out_3" *)"Volume measurement data" : Volume := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ OUR_ASU (* terminal = "out_3" *)"Oxygen Uptake Rate measurement data" : OxygenUptakeRate := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ NUR (* terminal = "out_3" *)"Nitrate Uptake Rate measurement data" : NitrateUptakeRate := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ NPR (* terminal = "out_3" *)"Nitrate Production Rate measurement data" : NitrateProductionRate := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ AUR (* terminal = "out_3" *)"Ammonium Uptake Rate measurement data" : AmmoniumUptakeRate := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ Kla_ASU (* terminal = "out_3" *)"Kla measurement data" : OxygenTransferCoefficient := {: causality <- "COUT" ; group <- "Sensor data" :};
+    
+    #if (defined ASM1Temp || defined ASM2dModTemp || defined ASM3Temp || defined ASM3P_EAWAG)
+    OBJ OnlineCOD (* terminal = "out_3" *) "Chemical Oxygen Demand" :Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ OfflineBOD (* terminal = "out_3" *) "Biological Oxygen Demand" :Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ OnlineTN (* terminal = "out_3" *) "Total nitrogen concentration" :Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ OfflineTKN (* terminal = "out_3" *) "Total Kjeldal nitrogen concentration" :Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    #endif
+    #if (defined ASM2dM)
+    OBJ COD (* terminal = "out_3" *) "Chemical Oxygen Demand" :Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ BOD5 (* terminal = "out_3" *) "BOD5 - Biological Oxygen Demand" :Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ BOD20 (* terminal = "out_3" *) "BOD20 - Biological Oxygen Demand" :Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ TN (* terminal = "out_3" *) "Total nitrogen concentration" :Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ TKN (* terminal = "out_3" *) "Total Kjeldal nitrogen concentration" :Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ VSS (* terminal = "out_3" *) "Volatile suspended solids" :Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ ISS (* terminal = "out_3" *) "Inert suspended solids" :Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    #endif
+    #if (defined ASM2dModTemp || defined ASM2dM)
+    OBJ PO4 (* terminal = "out_3" *)" Phosphorous concentration" :Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ TP (* terminal = "out_3" *) "Total phosphorous concentration" :Concentration := {: causality <- "COUT" ; group <- "Sensor data" :};
+    OBJ PUR (* terminal = "out_3" *)"Phosphate Uptake Rate" : PhosphateUptakeRate := {: causality <- "COUT" ; group <- "Sensor data" :};
+    #endif
+    
+    //
+    OBJ AerationEnergy (* terminal = "out_3" *)"Aeration energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ AerationPower (* terminal = "out_3" *) "Aeration power" : Power := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ MixingEnergy (* terminal = "out_3" *)"Mixing energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ MixingPower (* terminal = "out_3" *) "Mixing power" : Power := {: causality <- "COUT"; group <- "Energy" :};
+    //OBJ PumpingEnergy (* terminal = "out_3" *)"Pumping energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+  };
+  
+  parameters <-
+  {
+    OBJ f_ns "Non-settleable fraction of suspended solids" : Fraction := {: value <- 0.005 ; group <- "Settling" :};
+  };
+
+  sub_models <-
+  {
+    OBJ Tank_IFAS : MBBR;
+    OBJ Settler_IFAS : SecondaryPointSettler;
+    OBJ Loop_IFAS : DifferentialLoopBreaker;
+    OBJ Well_IFAS : TwoCombiner;
+    OBJ ExcessSludge_IFAS : AbsTwoSplitter;
+  };
+
+  coupling <-
+  {
+    //interface vars (manip)
+    connect(interface.Kla, sub_models.Tank_IFAS.interface.Kla),
+    connect(interface.Temp, sub_models.Tank_IFAS.interface.Temp),
+    connect(interface.Q_Under, sub_models.Settler_IFAS.interface.Q_Under),
+    connect(interface.Q_Excess, sub_models.ExcessSludge_IFAS.interface.Q_Out2),
+    //parameters
+    sub_models.Settler_IFAS.parameters.f_ns.value := parameters.f_ns.value,
+    
+    //interface vars (sensors)
+    connect(sub_models.Tank_IFAS.interface.AerationEnergy, interface.AerationEnergy),
+    connect(sub_models.Tank_IFAS.interface.AerationPower, interface.AerationPower),
+    connect(sub_models.Tank_IFAS.interface.MixingEnergy, interface.MixingEnergy),
+    connect(sub_models.Tank_IFAS.interface.MixingPower, interface.MixingPower),
+    //connect(sub_models.Settler_IFAS.interface.PumpingEnergy, interface.PumpingEnergy),
+    //
+    connect(sub_models.Tank_IFAS.interface.DO, interface.DO),
+    connect(sub_models.Tank_IFAS.interface.NH4, interface.NH4),
+    connect(sub_models.Tank_IFAS.interface.NO3, interface.NO3),
+    connect(sub_models.Tank_IFAS.interface.TSS, interface.TSS),
+    connect(sub_models.Tank_IFAS.interface.V_ASU, interface.V_ASU),
+    connect(sub_models.Tank_IFAS.interface.OUR_ASU, interface.OUR_ASU),
+    connect(sub_models.Tank_IFAS.interface.NUR, interface.NUR),
+    connect(sub_models.Tank_IFAS.interface.NPR, interface.NPR),
+    connect(sub_models.Tank_IFAS.interface.AUR, interface.AUR),
+    connect(sub_models.Tank_IFAS.interface.Kla_ASU, interface.Kla_ASU),
+    #if (defined ASM1Temp || defined ASM2dModTemp || defined ASM3Temp || defined ASM3P_EAWAG)
+    connect(sub_models.Tank_IFAS.interface.OnlineCOD, interface.OnlineCOD),
+    connect(sub_models.Tank_IFAS.interface.OfflineBOD, interface.OfflineBOD),
+    connect(sub_models.Tank_IFAS.interface.OnlineTN, interface.OnlineTN),
+    connect(sub_models.Tank_IFAS.interface.OfflineTKN, interface.OfflineTKN),
+    #endif
+    #if (defined ASM2dM)
+    connect(sub_models.Tank_IFAS.interface.COD, interface.COD),
+    connect(sub_models.Tank_IFAS.interface.BOD5, interface.BOD5),
+    connect(sub_models.Tank_IFAS.interface.BOD20, interface.BOD20),
+    connect(sub_models.Tank_IFAS.interface.TN, interface.TN),
+    connect(sub_models.Tank_IFAS.interface.TKN, interface.TKN),
+    connect(sub_models.Tank_IFAS.interface.VSS, interface.VSS),
+    connect(sub_models.Tank_IFAS.interface.ISS, interface.ISS),
+    #endif    
+    #if (defined ASM2dModTemp || defined ASM2dM)
+    connect(sub_models.Tank_IFAS.interface.PO4, interface.PO4),
+    connect(sub_models.Tank_IFAS.interface.TP, interface.TP),
+    connect(sub_models.Tank_IFAS.interface.PUR, interface.PUR),
+    #endif
+    //connections
+    connect(sub_models.Loop_IFAS.interface.Outflow, sub_models.Well_IFAS.interface.Inflow2),
+    connect(sub_models.Tank_IFAS.interface.Outflow, sub_models.Settler_IFAS.interface.Inflow),
+    connect(sub_models.Well_IFAS.interface.Outflow, sub_models.Tank_IFAS.interface.Inflow),
+    connect(sub_models.Settler_IFAS.interface.Underflow, sub_models.ExcessSludge_IFAS.interface.Inflow),
+    connect(sub_models.ExcessSludge_IFAS.interface.Outflow1, sub_models.Loop_IFAS.interface.Inflow),
+    connect(interface.Inflow, sub_models.Well_IFAS.interface.Inflow1),
+    connect(sub_models.ExcessSludge_IFAS.interface.Outflow2, interface.Underflow),
+    connect(sub_models.Settler_IFAS.interface.Outflow, interface.Outflow),
+  };
+
+:};
+
+
+#endif
+
+// ********************************************************************************

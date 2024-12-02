@@ -1,0 +1,183 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:28$
+ *
+ ******************************************************************************/
+ 
+#ifndef SEWER_GENERATORS_RUNOFF_FLUX
+#define SEWER_GENERATORS_RUNOFF_FLUX
+
+
+CLASS Runoff_Flux (* icon = "generator" *) "A run off calculator for basins" //(* icon = "Connector" *)
+EXTENDS Runoff_Base WITH
+{:
+
+  equations <-
+  { 
+    // Run-off volume
+    state.Q_Imp = IF (state.Runoff > 0)
+      THEN state.Runoff * parameters.TotalArea / 1000
+      ELSE 0;
+    
+    interface.Outflow[H2O] = - state.Q_Imp / parameters.SewSpecificVolume[H2O];
+    
+    {FOREACH Comp_Index IN {Kosim1IndexOfFirstParticulateComponent .. Kosim1IndexOfLastParticulateComponent}: 
+      interface.Outflow[Comp_Index] = - state.Q_Imp * parameters.ConcImp[Comp_Index] ; };
+  };
+
+:};
+
+
+CLASS Runoff_Flux2 (* icon = "generator" *) "A run off calculator for basins: no wetting losses variation"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  comments <- "A run off calculator for basins: no wetting losses variation" ;
+  
+  interface <-
+  {
+    OBJ Rain (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Rainfall" : RainfallIntensity := {: causality <- "CIN"; group <- "Inflow" :}; 
+    OBJ Evaporation (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Evaporation intensity" : RainfallIntensity := {: causality <- "CIN"; group <- "Inflow" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {: causality <- "COUT"; group <- "Outflow" :};    
+  };
+  
+  parameters <-
+  {
+    OBJ TotalArea (* is_favorite = "1" *) "Impervious area of the subcatchment" : Area := {: value <- 1.0 ; unit <- "ha" ; group <- "Catchment" :};    
+    // Impervious areas
+    OBJ Area_Imp (* fixed = "1" *) "Impervious area of the subcatchment" : Area := {: value <- 1; unit <- "ha" ; group <- "Catchment" :};
+    OBJ Help_Imp (* hidden= "1"; fixed = "1" *) "Impervious area of the subcatchment" : Real := {: value <- 10000 ; unit <- "m2" ; group <- "Catchment" :};
+    OBJ f_Imp "Impervious fraction" : Fraction := {: value <- 1.0:};
+    OBJ MaxRunoffImp "Maximum runoff coefficient Psi_e, for impervious areas" : Fraction := {: value <- 1.0 ; group <- "Catchment" :};
+    OBJ MaxDepressionStorage_Imp "Maximum depression storage for impervious areas" : Rainfall := {: value <- 0.6 ; group <- "Catchment" :};
+    OBJ ConcImp "Pollutant concentrations coming from the impervious areas" : Kosim1ConcentrationVector
+      := [{:value <- 1000000:}, {: value <- 0.001 :},{: value <- 0.001 :},{: value <- 0.001 :},{: value <- 0.001 :},{: value <- 0.001 :} ; ];
+    // accu_ -> r_acc
+    OBJ r_acc_XTSS "Accumulation rate of XTSS (kg/ha/day)" : Real := {: value <- 1.5 :}; 
+    OBJ r_acc_XCOD "Accumulation rate of XCOD (kg/ha/day)" : Real := {: value <- 1 :};
+    OBJ r_acc_SCOD "Accumulation rate of SCOD (kg/ha/day)" : Real := {: value <- 1 :};
+    OBJ r_acc_NH4 "Accumulation rate of NH4 (kg/ha/day)" : Real := {: value <- 1 :};
+    OBJ r_acc_PO4 "Accumulation rate of PO4 (kg/ha/day)" : Real := {: value <- 1 :};
+    OBJ Ke "Wash-off rate" : Real := {: value <- 0.15 ; unit <- "1/mm"; group <- "Catchment" :};
+    OBJ t_acc_max "Max number of days for accumulation" : Time := {: value <- 5; group <- "Catchment" :};
+    OBJ f_Rain "Rain factor" : Real := {: value <- 1.0 :};
+    OBJ opt_AccumulWash "Surface accumulation and washoff (1=active, 0=fixed EMC)" : Integer := {: value <- 1; group <- "Catchment"; interval  <- {: lowerBound <- 0; upperBound <- 1 :}; :}; 
+  };
+  
+  independent <- 
+  {
+    OBJ t : Time;
+  };
+  
+  state <-
+  {
+    OBJ FillingDepressionImp "Filling degree of the depression storage for impervious areas" : Fraction := {: value <- 1; group <- "Catchment" :};
+    OBJ FillingChangeRateImp (* hidden = "1" *) "Rate of change in depression storage filling degree" : Rate := {: group <- "Catchment" :};
+    OBJ RunoffImp "Water runoff after wetting and depressions": RainfallIntensity := {: group <- "Catchment" :};
+    OBJ Q_Imp (* is_favorite = "1" *) "Flow rate from the impervious areas" : FlowRate := {: group <- "Catchment" :};
+    OBJ Ma_XTSS "Accumulated XTSS at the surface" : Mass := {: value <- 1000 ; group <- "Mass" :};
+    OBJ Ma_XCOD "Accumulated XCOD at the surface" : Mass := {: value <- 1000 ; group <- "Mass" :};
+    OBJ Ma_SCOD "Accumulated SCOD at the surface" : Mass := {: value <- 1000 ; group <- "Mass" :};
+    OBJ Ma_NH4 "Accumulated NH4 at the surface" : Mass := {: value <- 1000 ; group <- "Mass" :};
+    OBJ Ma_PO4 "Accumulated PO4 at the surface" : Mass := {: value <- 1000 ; group <- "Mass" :};
+    OBJ Help_XTSS (* hidden = "1" *) "" : Real := {: unit <- "g/d" :} ;
+    OBJ Help_XCOD (* hidden = "1" *) "" : Real := {: unit <- "g/d" :} ;
+    OBJ Help_SCOD (* hidden = "1" *) "" : Real := {: unit <- "g/d" :} ;
+    OBJ Help_NH4 (* hidden = "1" *) "" : Real := {: unit <- "g/d" :} ;
+    OBJ Help_PO4 (* hidden = "1" *) "" : Real := {: unit <- "g/d" :} ;
+  };
+  
+  initial <-
+  {
+    parameters.Area_Imp := parameters.TotalArea * parameters.f_Imp ;
+    parameters.Help_Imp := 1000 * parameters.Area_Imp ; // 1000 is for kg to g in accu
+  };
+  
+  equations <-
+  { 
+    // Depression filling degree (no units and lying between 0 and 1) 	
+    state.FillingChangeRateImp = IF (interface.Rain > 0.0) THEN
+      IF (state.FillingDepressionImp < 1.0) THEN interface.Rain * parameters.f_Rain / parameters.MaxDepressionStorage_Imp
+        ELSE 0.0
+      ELSE - interface.Evaporation * state.FillingDepressionImp / parameters.MaxDepressionStorage_Imp ;      
+    
+    DERIV(state.FillingDepressionImp,[independent.t]) = state.FillingChangeRateImp ;
+
+    //Water runoff after wetting and depressions
+    state.RunoffImp = IF ((interface.Rain > 0.0) && (state.FillingDepressionImp >= 1.0)) THEN
+      parameters.MaxRunoffImp * interface.Rain * parameters.f_Rain
+      ELSE 0.0 ;
+    
+    // Run-off volume
+    state.Q_Imp = IF (state.RunoffImp > 0.0) THEN state.RunoffImp * parameters.Area_Imp / 1000 * 10000 // from mm/d to m/d and from ha to m2
+      ELSE 0.0 ;
+
+    interface.Outflow[H2O] = - state.Q_Imp * 1E-06 ;
+
+    //Accumulation and washoff
+    state.Help_XTSS = parameters.Ke * state.RunoffImp * state.Ma_XTSS ;
+    state.Help_XCOD = parameters.Ke * state.RunoffImp * state.Ma_XCOD ;
+    state.Help_SCOD = parameters.Ke * state.RunoffImp * state.Ma_SCOD ;
+    state.Help_NH4 = parameters.Ke * state.RunoffImp * state.Ma_NH4 ;
+    state.Help_PO4 = parameters.Ke * state.RunoffImp * state.Ma_PO4 ;
+
+    DERIV (state.Ma_XTSS,[independent.t])= IF (state.Ma_XTSS < parameters.r_acc_XTSS * parameters.Help_Imp * parameters.t_acc_max)
+      THEN parameters.r_acc_XTSS * parameters.Help_Imp - state.Help_XTSS
+      ELSE - state.Help_XTSS ;
+    
+    DERIV (state.Ma_XCOD,[independent.t])= IF (state.Ma_XCOD < parameters.r_acc_XCOD * parameters.Help_Imp * parameters.t_acc_max)
+      THEN parameters.r_acc_XCOD * parameters.Help_Imp - state.Help_XCOD
+      ELSE - state.Help_XCOD ;
+    
+    DERIV (state.Ma_SCOD,[independent.t])= IF (state.Ma_SCOD < parameters.r_acc_SCOD * parameters.Help_Imp * parameters.t_acc_max)
+      THEN parameters.r_acc_SCOD * parameters.Help_Imp - state.Help_SCOD
+      ELSE - state.Help_SCOD ;
+    
+    DERIV (state.Ma_NH4,[independent.t])= IF (state.Ma_NH4 < parameters.r_acc_NH4 * parameters.Help_Imp * parameters.t_acc_max)
+      THEN parameters.r_acc_NH4 * parameters.Help_Imp - state.Help_NH4
+      ELSE - state.Help_NH4 ;
+    
+    DERIV (state.Ma_PO4,[independent.t])= IF (state.Ma_PO4 < parameters.r_acc_PO4 * parameters.Help_Imp * parameters.t_acc_max)
+      THEN parameters.r_acc_PO4 * parameters.Help_Imp - state.Help_PO4
+      ELSE - state.Help_PO4 ;
+
+    interface.Outflow[XTSS] = IF (parameters.opt_AccumulWash == 1) THEN
+      IF (state.RunoffImp > 0) THEN - state.Help_XTSS
+        ELSE 0.0
+      ELSE - state.Q_Imp * parameters.ConcImp[XTSS] ;
+    
+    interface.Outflow[XCOD] = IF (parameters.opt_AccumulWash == 1) THEN
+      IF (state.RunoffImp > 0) THEN - state.Help_XCOD
+        ELSE 0.0
+      ELSE - state.Q_Imp * parameters.ConcImp[XCOD] ;
+
+    interface.Outflow[SCOD] = IF (parameters.opt_AccumulWash == 1) THEN
+      IF (state.RunoffImp > 0) THEN - state.Help_SCOD
+        ELSE 0.0
+      ELSE - state.Q_Imp * parameters.ConcImp[SCOD] ;
+
+    interface.Outflow[NH4] = IF (parameters.opt_AccumulWash == 1) THEN
+      IF (state.RunoffImp > 0) THEN - state.Help_NH4
+        ELSE 0.0
+      ELSE - state.Q_Imp * parameters.ConcImp[NH4] ;
+
+    interface.Outflow[PO4] = IF (parameters.opt_AccumulWash == 1) THEN
+      IF (state.RunoffImp > 0) THEN - state.Help_PO4
+        ELSE 0.0
+      ELSE - state.Q_Imp * parameters.ConcImp[PO4] ;
+  };
+
+:};
+
+
+#endif //SEWER_GENERATORS_RUNOFF_FLUX

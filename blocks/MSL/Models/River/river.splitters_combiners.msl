@@ -1,0 +1,60 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:25$
+ *
+ ******************************************************************************/
+
+#ifndef RIVER_SPLITTERS_COMBINERS
+#define RIVER_SPLITTERS_COMBINERS
+
+
+CLASS River_TwoSplitter_Base "Base class for absolute river splitters"
+EXTENDS RivAtomicModelWithoutVolume WITH
+{:
+
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InRiverTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Outflow1 (* terminal = "out_1" *) "Outflow No.1" : OutRiverTerminal := {: causality <- "COUT" ; group <- "Effluent 1" :};
+    OBJ Outflow2 (* terminal = "out_2" *) "Outflow No.2" : OutRiverTerminal := {: causality <- "COUT" ; group <- "Effluent 2" :};
+  };
+  
+  state <-
+  {
+    OBJ Q_Out_1 (* is_favorite = "1" *) "Actual flow rate No.1" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Out_2 (* is_favorite = "1" *) "Actual flow rate No.2" : FlowRate := {: group <- "Operational" :};
+  };
+
+:};
+
+
+CLASS River_AbsTwoSplitter_Base "Base class for absolute sewer splitters"
+EXTENDS River_TwoSplitter_Base WITH
+{:
+
+  interface <-
+  {
+    OBJ Q_Out2 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Flow rate for outflow No.2" : FlowRate := {: causality <- "CIN" ; value <- 20000; group <- "Operational" :};
+  };
+
+:};
+
+
+#include "River/splitters_combiners/river.abstwosplitter.msl"
+#include "River/splitters_combiners/river.absthreesplitter.msl"
+#include "River/splitters_combiners/river.reltwosplitter.msl"
+#include "River/splitters_combiners/river.relthreesplitter.msl"
+#include "River/splitters_combiners/river.combiners.msl"
+
+
+#endif // RIVER_SPLITTERS_COMBINERS

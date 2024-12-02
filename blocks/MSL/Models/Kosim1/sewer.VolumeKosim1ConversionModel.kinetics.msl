@@ -1,0 +1,7 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    state.Kinetics[Removal_NH4] = IF (state.WaterLevel < parameters.H_Min) THEN 0.0 ELSE state.rate04;
+    state.Kinetics[Removal_PO4] = IF (state.WaterLevel < parameters.H_Min) THEN 0.0 ELSE state.rate03;
+    state.Kinetics[Removal_SCOD] = IF (state.WaterLevel < parameters.H_Min) THEN 0.0 ELSE state.rate02;
+    state.Kinetics[Removal_XCOD] = IF (state.WaterLevel < parameters.H_Min) THEN 0.0 ELSE state.rate01;
+

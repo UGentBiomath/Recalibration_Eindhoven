@@ -1,0 +1,64 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:49$
+ *
+ ******************************************************************************/
+
+ 
+#ifndef PRIMARYCLARIFIER_CEPT_DOSINGUNITS_CEPT_ALKALINITY
+#define PRIMARYCLARIFIER_CEPT_DOSINGUNITS_CEPT_ALKALINITY
+
+#if (defined StandardCategoryModels)
+
+#ifndef PWM_SA
+
+ CLASS CEPT_Alkalinity
+ (* icon = "dosing_unit_alkalinity" *)
+ "A dosing unit model for the addition of alkalinity"
+ EXTENDS DosingUnit_Base WITH
+ {:
+ 
+  comments <- "A dosing unit model for the addition of alkalinity";
+
+  interface <-
+  {
+   OBJ C_final (* terminal = "in_1"; manip = "1" *) "Concentration in the PST (dry mass)" : Concentration := {: causality <- "CIN"; value <- 30 ; group <- "Operational" :};
+   OBJ Q_water_in (* terminal = "in_1"; manip = "1" *) "Flow rate at the inlet" : FlowRate := {: causality <- "CIN" ; group <- "Operational" :};
+   OBJ Q_Dose (* terminal = "out_2" *) "Flow rate of the solution" : FlowRate := {: causality <- "COUT" ; group <- "Operational" :};
+   OBJ M_Alk (* terminal = "out_2" *) "Amount of alkalinity dosed" : MassFlux := {: causality <- "COUT" ; group <- "Measurement data" :};
+   OBJ Q_Alk (* terminal = "out_2" *) "Flow rate of alkalinity dosed" : FlowRate := {: causality <- "COUT" ; group <- "Measurement data" :};
+  };
+
+  equations <-
+  {
+   // necessary as link to base class
+   state.Help_QDose = interface.Q_Dose ;
+#ifdef ASM2dM   
+   interface.Outflow[S_Alk] = - interface.Q_Dose * interface.C_Dose ;
+#else
+  interface.Outflow[S_ALK] = - interface.Q_Dose * interface.C_Dose ;
+#endif   
+   interface.M_Alk = interface.Q_Dose * interface.C_Dose ;
+   interface.Q_Alk = interface.Q_Dose ;
+   
+   interface.Q_Dose = interface.C_final * interface.Q_water_in / interface.C_Dose ;
+  };
+
+ :};
+
+#endif // PWM_SA
+
+#endif //(defined StandardCategoryModels)
+
+
+#endif // PRIMARYCLARIFIER_CEPT_DOSINGUNITS_CEPT_ALKALINITY

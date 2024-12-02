@@ -1,0 +1,129 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:30$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_TANKS_TANK_FREEFLOW
+#define SEWER_TANKS_TANK_FREEFLOW
+
+CLASS Tank_Freeflow (* icon = "Tank" *)
+"Retention volume of the system, free flow outflow + overflow, possibility to limit max flow"
+EXTENDS SewerAtomicModelWithVolume WITH
+{:
+ 
+  comments <- "Retention volume of the system, free flow outflow + overflow, possibility to limit max flow";
+
+  interface <-
+  {
+   OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {:causality <- "COUT"; group <- "Outflow":};
+   OBJ Overflow (* terminal = "out_2" *) "Overflow" : OutSewTerminal := {:causality <- "COUT"; group <- "Overflow":};
+   OBJ Valveflow (* terminal = "out_2" *) "Flow from the valve" : OutSewTerminal := {:causality <- "COUT"; group <- "Valveflow":};
+   OBJ FillingDegreeIn (* terminal = "in_2"; manip = "1" *) "Filling degree from downstream tank" : Real := {: causality <- "CIN"; group <- "Data" :};
+   OBJ Q_max (* terminal = "in_2"; manip = "1" *) "Max outflow if FD_In < FD_th (default)" : FlowRate := {: causality <- "CIN"; value <- 50.0; group <- "Flow" :};
+   OBJ Q_pump (* terminal = "in_2"; manip = "1" *) "Pumped outflow, valid if pump is active" : FlowRate := {: causality <- "CIN"; value <- 50.0; group <- "Flow" :};
+   OBJ Q_valve (* terminal = "in_2"; manip = "1" *) "Outflow from valve" : FlowRate := {: causality <- "CIN"; value <- 50.0; group <- "Flow" :};
+   //OBJ Q_out_sensor (* terminal = "out_3" *) "Q_out sensor" : FlowRate := {: causality <- "COUT" :};
+   OBJ FillingDegree (* terminal = "out_3" *) "Filling degree" : Real := {: causality <- "COUT"; group <- "Data" :};
+  };
+
+  parameters <-
+  {
+   // same as SewRetentionVolume CLASS
+   OBJ V_Max (* is_favorite = "1" *) "Maximum volume of the tank" : Volume := {: group <- "Tank characteristics"; value <- 10.0 :};
+   OBJ V_Min "Minimum volume of the tank" : Volume := {: group <- "Tank characteristics"; value <- 1.0 :};
+   // Overflow: Cd*(g^1/2)*B*(Du^3/2)
+   OBJ Cd "Coefficient to compute overflow" : Real := {: group <- "Tank characteristics"; value <- 1.0 :};
+   OBJ B "Coefficient to compute overflow" : Length := {: group <- "Tank characteristics"; value <- 20.0 :};
+   // END same as SewRetentionVolume CLASS
+   OBJ c_o "Throttle coefficient (1=total cross-section)" : Real := {: value <- 1.0 ; group <- "Control" :};
+   OBJ FD_th (* is_favorite = "1" *) "Filling degree threshold for downstream tank (>1 for no limitation)" : Real := {: value <- 2.0 ; group <- "Control" :};
+   OBJ FD_th_int (* is_favorite = "1" *) "Filling degree threshold for this tank (>1 for no limitation)" : Real := {: value <- 0.8 ; group <- "Control" :};
+   OBJ H_Pipe "Final height of the pipe" : Length := {: value <- 0.6 ; group <- "Tank characteristics" :};
+   OBJ Q_Max_Lim (* is_favorite = "1" *) "Maximum outflow if FD_In > FD_th" : FlowRate := {: value <- 50.0; group <- "Control" :};
+   OBJ f_on "Fraction of volume above which Qout=Qpump" : Fraction := {: value <- 0.05; group <- "Control" :};
+   OBJ IsPumpOn "Pump 0=off, 1=on" : Integer := {: interval  <- {: lowerBound <- 0 ; upperBound <- 1 :}; value <- 1; group <- "Control" :};
+  };
+
+  state <-
+  {
+   //  OBJ Q_Out "Actual effluent flow rate" : FlowRate ;
+   OBJ Help_Q_Out (* hidden = "1" *) "Actual effluent flow rate" : FlowRate := {: group <- "Flow" :};
+   OBJ Help_Q_Pump (* hidden = "1" *) "Pumped effluent flow rate" : FlowRate := {: group <- "Flow" :};
+   // same as SewRetentionVolume CLASS
+   OBJ Q_Over "Overflow flow rate" : FlowRate := {: group <- "Flow" :};
+   OBJ Du "Height above weir crest" : Real := {: unit <- "m"; group <- "Tank" :};
+   // END same as SewRetentionVolume CLASS
+   OBJ Q_Max_Actual "Actual maximum flow rate (when not pumping)" : FlowRate := {: group <- "Flow" :};
+   OBJ FD_Actual (* hidden = "1" *) "Filling degree" : Real := {: group <- "Tank" :};
+   //OBJ Q_over_int "Integral of Q_over" : Volume;
+  };
+
+  equations <-
+  {
+   state.Du = IF (parameters.V_Max / parameters.H_Pipe > 0.0)
+   		THEN (state.V - parameters.V_Max) / (parameters.V_Max / parameters.H_Pipe)
+		ELSE 0.0 ;
+
+   state.FD_Actual = state.V / parameters.V_Max ;
+   interface.FillingDegree = state.FD_Actual ;
+   
+   interface.Outflow[H2O] = - state.Q_Out / 1E-06 ;
+   interface.Overflow[H2O] = - state.Q_Over / 1E-06 ;
+   interface.Valveflow[H2O] = - interface.Q_valve / 1E-06 ;
+   //interface.Q_out_sensor = state.Q_Out ;
+   
+   state.V = state.SewM[H2O] * 1E-06 ;
+
+   state.Q_Max_Actual = IF ((interface.FillingDegreeIn < parameters.FD_th) || (state.FD_Actual > parameters.FD_th_int))
+   		THEN interface.Q_max
+		ELSE parameters.Q_Max_Lim ;
+
+   state.Help_Q_Out = IF (state.V < parameters.V_Min) THEN 0.0
+		ELSE sqrt(2 * parameters.H_Pipe * interface.FillingDegree * 9.81) * 86400 * 0.785 *
+			 pow(parameters.H_Pipe, 2) * interface.FillingDegree * parameters.c_o ;
+
+   state.Help_Q_Pump = IF (state.V < parameters.V_Min) THEN 0.0
+		ELSE IF ((state.Q_In > interface.Q_pump) || (state.V >= parameters.V_Max * parameters.f_on))
+			 THEN interface.Q_pump
+			 ELSE state.Q_In ;
+		
+   state.Q_Out = IF (parameters.IsPumpOn == 1) THEN state.Help_Q_Pump
+		ELSE IF (state.Help_Q_Out < state.Q_Max_Actual)
+			 THEN state.Help_Q_Out
+			 ELSE state.Q_Max_Actual ;
+   
+   // same as SewRetentionVolume CLASS
+   state.Q_Over = IF (state.V <= parameters.V_Max) THEN 0.0
+   		ELSE parameters.Cd * pow(9.81,0.5) * parameters.B * pow(state.Du, 1.5) * 3600 * 24 ;
+
+   {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}:
+		state.C[Comp_Index] = IF (state.V == 0.0) THEN 0.0 ELSE state.SewM[Comp_Index] / state.V ; };
+
+   {FOREACH Comp_Index IN {2 .. Kosim1NrOfComponents}:
+   		interface.Outflow[Comp_Index] = - state.C[Comp_Index] * state.Q_Out ; };
+
+   {FOREACH Comp_Index IN {2 .. Kosim1NrOfComponents}:
+   		interface.Overflow[Comp_Index] = - state.C[Comp_Index] * state.Q_Over ; };
+   // END same as SewRetentionVolume CLASS
+
+   {FOREACH Comp_Index IN {2 .. Kosim1NrOfComponents}:
+   		interface.Valveflow[Comp_Index] = - state.C[Comp_Index] * interface.Q_valve ; };
+
+   // DERIV(state.Q_Over_int,[independent.t])= state.Q_Over;
+  };
+
+:};
+
+#endif // SEWER_TANKS_TANK_FREEFLOW

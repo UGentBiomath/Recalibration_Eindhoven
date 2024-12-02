@@ -1,0 +1,189 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 15. april 2019 16:57:39$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASIC_BASE_CHEMICAL_DOSING_UNITS
+#define WWTP_BASIC_BASE_CHEMICAL_DOSING_UNITS
+
+ CLASS DosingUnit_Base
+ "A dosing unit model"
+ SPECIALISES PhysicalDAEModelType :=
+ {:
+
+  interface <-
+  {
+  // REMARK: by defining the Outflow as of WWTPTerminal, ie as flux,
+  // we'll also have to incorporate a C-to-F convertor within this Class
+  // This approach seemed preferable, to simplify the drawings
+  OBJ Outflow (* terminal = "out_1" *) "Outflow" :
+      OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+   OBJ PumpingEnergy (* terminal = "out_2" *)"Pumping energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+   OBJ PumpingPower (* terminal = "out_2" *) "Pumping power" : Power := {: causality <- "COUT"; group <- "Energy" :};
+  // WEST 2016
+  OBJ C_Dose (* terminal = "in_1"; manip = "1" *) "Concentration of the solution" : 
+      Concentration := {: causality <- "CIN"; value <- 10000 ; group <- "Operational" :};
+  };
+
+  parameters <-
+  {
+  OBJ WWTPSpecificVolume (* hidden = "1" *) "The specific volumes (= 1/density) of the components"
+        : SpecificVolumeVector;
+/* WEST 2014
+  OBJ C_Dose "Concentration of the solution" : 
+       Concentration := {: value <- 10000 ; group <- "Concentration" :};
+*/
+  OBJ MW (* hidden = "1" *) "Molecular weight of the chemical species dosed"
+        : Real := {: group <- "System" :};
+// PUMPING ENERGY
+    OBJ F_Energy_FlowRate "Conversion factor Energy needed/Pump flow rate" : EnergyForPumping := {: value <- 0.04 ; group <- "Energy":};
+  };
+
+  independent <-
+  {
+  OBJ t "Time": Time := {: group <- "Time" :};
+  };
+
+  state <-
+  {
+// PUMPING ENERGY
+    OBJ Integ_PE (* hidden = "1" *)"Integral Pumping energy" : ElectricalEnergy ;
+    OBJ Help_QDose (* hidden = "1" *) "Flow rate of the solution" : FlowRate ;
+  };
+  initial <-
+  {
+  parameters.WWTPSpecificVolume[IndexOfSolvent] := 0.000001;
+   state.Integ_PE = 0.0 ;
+  };
+
+  equations <-
+  {
+  interface.Outflow[IndexOfSolvent] = - state.Help_QDose
+      / parameters.WWTPSpecificVolume[IndexOfSolvent];
+
+// PUMPING ENERGY
+  interface.PumpingPower = 1E3 * parameters.F_Energy_FlowRate * state.Help_QDose / 24 ;
+  DERIV(state.Integ_PE,[independent.t])=  state.Help_QDose;
+  interface.PumpingEnergy = parameters.F_Energy_FlowRate * state.Integ_PE ;
+  };
+
+ :};
+
+
+ CLASS DosingUnit
+ "A dosing unit model"
+ EXTENDS DosingUnit_Base WITH
+ {:
+
+  interface <-
+  {
+  OBJ Q_Dose (* terminal = "in_1"; manip = "1" *) "Flow rate of the solution" : 
+      FlowRate := {: causality <- "CIN"; value <- 10 ; group <- "Operational" :};
+  };
+
+  equations <-
+  {
+  state.Help_QDose = interface.Q_Dose ;
+  };
+
+ :};
+
+#if (defined StandardCategoryModels)
+ CLASS AdditionOfFermentationProducts
+ "A dosing unit model for the addition of external source of carbon"
+ EXTENDS DosingUnit WITH
+ {:
+
+  parameters <-
+  {
+   OBJ COD (* hidden = "1" *) "COD equivalent of the chemical dosed"
+        : Real := {: group <- "System" :};
+  };
+
+  equations <-
+  {
+#if (defined ASM1Temp || defined ASM1_AN || defined ASMG1 || defined ASM3Temp || defined ASM3P_EAWAG)
+   interface.Outflow[S_S] = - interface.Q_Dose * interface.C_Dose *
+      (parameters.COD / parameters.MW) ;
+#endif
+    
+#if (defined ASM2dModTemp || defined ASMG2d || defined IUWS1 || defined IUWS2)
+   interface.Outflow[S_A] = - interface.Q_Dose * interface.C_Dose *
+      (parameters.COD / parameters.MW) ;
+#endif
+
+    #if (defined ASM2dM)
+      interface.Outflow[S_VFA] = - interface.Q_Dose * interface.C_Dose * (parameters.COD / parameters.MW) ;
+    #endif
+  };
+
+:};
+#endif // StandardCategoryModels
+
+#if (defined StandardCategoryModels)
+ CLASS AdditionOfFermentableCOD
+ "A dosing unit model for the addition of external source of carbon"
+ EXTENDS DosingUnit WITH
+ {:
+
+  parameters <-
+  {
+   OBJ COD (* hidden = "1" *) "COD equivalent of the chemical dosed"
+        : Real := {: group <- "System" :};
+  };
+
+  equations <-
+  {
+#if (defined ASM1Temp || defined ASM1_AN || defined ASMG1 || defined ASM3Temp || defined ASM3P_EAWAG)
+   interface.Outflow[S_S] = - interface.Q_Dose * interface.C_Dose *
+      (parameters.COD / parameters.MW) ;
+#endif
+    
+#if (defined ASM2dModTemp || defined ASMG2d || defined ASM2dM || defined IUWS1 || defined IUWS2)
+   interface.Outflow[S_F] = - interface.Q_Dose * interface.C_Dose *
+      (parameters.COD / parameters.MW) ;
+#endif
+  };
+
+:};
+#endif // StandardCategoryModels
+
+#if (defined ASM2dModTemp)
+CLASS P_Precipitation "A dosing unit model for the chemical precipitation of P"
+EXTENDS DosingUnit WITH
+{:
+
+  parameters <-
+  {
+    OBJ MW_FeOH (* hidden = "1" *) "Molecular weight of Ferric Hydroxyde" : Real := {: value <- 106.85 ; group <- "System" :};
+    OBJ Equiv_P "Molar equivalence to phosphorous" : Fraction := {: group <- "Operational" :};
+  };
+  
+  equations <-
+  {
+    interface.Outflow[X_MEOH] = - interface.Q_Dose * interface.C_Dose *
+      // parameters.Equiv_P * (parameters.MW_FeOH/parameters.MW) ;
+      // Mantis #4080
+      parameters.Equiv_P * (parameters.MW / parameters.MW_FeOH) ;
+  };
+
+:};
+#endif // ASM2dModTemp || defined ASMG2d || defined ASM2dM
+
+
+#include "WWTP/dosing_unit/wwtp.base.dosing_units.acetate.msl"
+#include "WWTP/dosing_unit/wwtp.base.dosing_units.alum.msl"
+
+
+#endif // WWTP_BASIC_BASE_CHEMICAL_DOSING_UNITS

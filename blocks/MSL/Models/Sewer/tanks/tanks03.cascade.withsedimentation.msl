@@ -1,0 +1,51 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:30$
+ *
+ ******************************************************************************/
+ 
+
+#ifndef SEWER_TANKS_TANKS03_CASCADE_WITHSEDIMENTATION
+#define SEWER_TANKS_TANKS03_CASCADE_WITHSEDIMENTATION
+
+
+CLASS Tanks03_Cascade_wSedimentation (* icon = "Tank" *)
+".."
+EXTENDS Base_Cascade_wSedimentation WITH
+{:
+
+  sub_models <-
+  { 
+   OBJ Tank3 : Tank_wSedimentation ;
+  }; 
+
+  coupling <-
+  { 
+   // parameter coupling
+   sub_models.Tank3.parameters.k.value := parameters.k.value,
+   sub_models.Tank3.parameters.m.value := parameters.m.value,
+   sub_models.Tank3.parameters.Qdwf_max.value := parameters.Qdwf_max.value,
+   sub_models.Tank3.parameters.CODmean.value := parameters.CODmean.value,
+   sub_models.Tank3.parameters.kstar.value := parameters.kstar.value,
+   sub_models.Tank3.parameters.kextra.value := parameters.kextra.value,
+   sub_models.Tank3.parameters.b1.value := parameters.b1.value,
+   sub_models.Tank3.parameters.bmax.value := parameters.bmax.value,
+   // sub-model coupling
+   connect(sub_models.Tank2.interface.Outflow, sub_models.Tank3.interface.Inflow),
+   connect(sub_models.Tank3.interface.Outflow, interface.Outflow),
+  };
+
+:};
+
+
+#endif //SEWER_TANKS_TANKS03_CASCADE_WITHSEDIMENTATION

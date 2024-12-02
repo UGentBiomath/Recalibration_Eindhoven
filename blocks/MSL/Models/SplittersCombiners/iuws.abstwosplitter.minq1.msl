@@ -1,0 +1,70 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 15:21:58$
+ *
+ ******************************************************************************/
+
+#ifndef IUWS_ABSTWOSPLITTER_MINQ1
+#define IUWS_ABSTWOSPLITTER_MINQ1
+
+
+CLASS AbsTwoSplitter_MinQ1
+  (* icon = "two_flow_splitter" *)
+  "2-way absolute splitter (pump)"
+  EXTENDS AbsTwoSplitter_Atomic WITH
+  {:
+
+  comments <- "2-way absolute splitter (pump)";
+
+  interface <-
+  {
+   OBJ Q_Out1_min (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Min flow rate for output No.1" : FlowRate := {: causality <- "CIN" ; value <- 50; group <- "Operational" :};
+   OBJ PumpingEnergy (* terminal = "out_3" *) "Pumping energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+  };
+
+  parameters <-
+  {
+   OBJ F_Energy_FlowRate "Conversion factor Energy needed/Pump flow rate" : EnergyForPumping := {: value <- 0.04 ; group <- "Energy":};
+  };
+   
+  state <-
+  {
+   OBJ f_Out2 (* hidden = "1" *) "Fraction of the influent flux going to outflow2" : Fraction ;
+   OBJ Integ_PE (* hidden = "1" *) "Integral Pumping energy" : ElectricalEnergy ;
+  };
+
+  equations <-
+  {
+   state.Q_Out_1 = IF(interface.Q_Out2 > (state.Q_In - interface.Q_Out1_min)) THEN interface.Q_Out1_min
+   		ELSE state.Q_In - state.Q_Out_2 ;
+
+   state.Q_Out_2 = IF(interface.Q_Out2 > (state.Q_In - interface.Q_Out1_min)) THEN (state.Q_In - interface.Q_Out1_min)
+		ELSE interface.Q_Out2 ;
+
+   state.f_Out2 = IF (state.Q_In == 0.0) THEN 0.0
+   		ELSE state.Q_Out_2 / state.Q_In ;
+ 
+   {FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}: interface.Outflow1[Comp_Index] =
+   		- state.InFluxPerComponent[Comp_Index] * (1 - state.f_Out2) ;};
+
+   {FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}: interface.Outflow2[Comp_Index] =
+   		- state.InFluxPerComponent[Comp_Index] * state.f_Out2 ;};
+ 
+   // PUMPING ENERGY
+   DERIV(state.Integ_PE,[independent.t])=  state.Q_Out_2;
+   interface.PumpingEnergy = parameters.F_Energy_FlowRate * state.Integ_PE ;    
+  };
+   
+ :};
+
+#endif // IUWS_ABSTWOSPLITTER_MINQ1

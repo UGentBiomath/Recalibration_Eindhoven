@@ -1,0 +1,86 @@
+/*******************************************************************************
+ *
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_TIMERS_TIMER44
+#define WWTP_TIMERS_TIMER44
+
+CLASS Timer44 (* icon = "timer" *)
+"Timer with 4 periods and 4 outputs"
+SPECIALISES PhysicalDAEModelType :=
+{:
+  interface <-
+  {
+    OBJ u1 (* terminal = "out_1" *) "Signal no.1" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+    OBJ u2 (* terminal = "out_1" *) "Signal no.2" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+    OBJ u3 (* terminal = "out_1" *) "Signal no.3" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+    OBJ u4 (* terminal = "out_1" *) "Signal no.4" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+    //
+    OBJ u11 (* terminal = "in_2"; manip = "1" *) "Signal no.1 / Period 1" : Real := {: causality <- "CIN" ; value <- 0.001 ; group <- "Operational" :};
+    OBJ u12 (* terminal = "in_2"; manip = "1" *) "Signal no.1 / Period 2" : Real := {: causality <- "CIN" ; value <- 0.001 ; group <- "Operational" :};   
+    OBJ u13 (* terminal = "in_2"; manip = "1" *) "Signal no.1 / Period 3" : Real := {: causality <- "CIN" ; value <- 0.001 ; group <- "Operational" :};
+    OBJ u14 (* terminal = "in_2"; manip = "1" *) "Signal no.1 / Period 4" : Real := {: causality <- "CIN" ; value <- 0.001 ; group <- "Operational" :}; 
+    OBJ u21 (* terminal = "in_2"; manip = "1" *) "Signal no.2 / Period 1" : Real := {: causality <- "CIN" ; value <- 0.001 ; group <- "Operational" :}; 
+    OBJ u22 (* terminal = "in_2"; manip = "1" *) "Signal no.2 / Period 2" : Real := {: causality <- "CIN" ; value <- 0.001 ; group <- "Operational" :};
+    OBJ u23 (* terminal = "in_2"; manip = "1" *) "Signal no.2 / Period 3" : Real := {: causality <- "CIN" ; value <- 0.001 ; group <- "Operational" :};   
+    OBJ u24 (* terminal = "in_2"; manip = "1" *) "Signal no.2 / Period 4" : Real := {: causality <- "CIN" ; value <- 0.001 ; group <- "Operational" :};         
+    OBJ u31 (* terminal = "in_2"; manip = "1" *) "Signal no.3 / Period 1" : Real := {: causality <- "CIN" ; value <- 2 ; group <- "Operational" :}; 
+    OBJ u32 (* terminal = "in_2"; manip = "1" *) "Signal no.3 / Period 2" : Real := {: causality <- "CIN" ; value <- 2 ; group <- "Operational" :};
+    OBJ u33 (* terminal = "in_2"; manip = "1" *) "Signal no.3 / Period 3" : Real := {: causality <- "CIN" ; value <- 2 ; group <- "Operational" :};   
+    OBJ u34 (* terminal = "in_2"; manip = "1" *) "Signal no.3 / Period 4" : Real := {: causality <- "CIN" ; value <- 2 ; group <- "Operational" :};         
+    OBJ u41 (* terminal = "in_2"; manip = "1" *) "Signal no.4 / Period 1" : Real := {: causality <- "CIN" ; value <- 2 ; group <- "Operational" :}; 
+    OBJ u42 (* terminal = "in_2"; manip = "1" *) "Signal no.4 / Period 2" : Real := {: causality <- "CIN" ; value <- 2 ; group <- "Operational" :};
+    OBJ u43 (* terminal = "in_2"; manip = "1" *) "Signal no.4 / Period 3" : Real := {: causality <- "CIN" ; value <- 2 ; group <- "Operational" :};   
+    OBJ u44 (* terminal = "in_2"; manip = "1" *) "Signal no.4 / Period 4" : Real := {: causality <- "CIN" ; value <- 2 ; group <- "Operational" :};         
+    //
+    OBJ T1 (* terminal = "in_2"; manip = "1" *) "Period 1" : Time := {:causality <- "CIN" ; value <- 0.125 ; group <- "Operational" :};
+    OBJ T2 (* terminal = "in_2"; manip = "1" *) "Period 2" : Time := {:causality <- "CIN" ; value <- 0.125 ; group <- "Operational" :};
+    OBJ T3 (* terminal = "in_2"; manip = "1" *) "Period 3" : Time := {:causality <- "CIN" ; value <- 0.0 ; group <- "Operational" :};
+    OBJ T4 (* terminal = "in_2"; manip = "1" *) "Period 4" : Time := {:causality <- "CIN" ; value <- 0.0 ; group <- "Operational" :};
+  };
+
+  independent <- 
+  { 
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+  };
+
+  state <-
+  {
+    OBJ Prev_t (* hidden = "1" *) "Help variable to calculate the begin of each period" : Time ;
+    OBJ T "Total cycle" : Time := {: group <- "Operational" :};
+  };
+
+  equations <-
+  {
+    state.T = interface.T1 + interface.T2 + interface.T3 + interface.T4 ;
+    
+    state.Prev_t = IF (independent.t - previous(state.Prev_t) < (state.T))
+      THEN previous(state.Prev_t)
+      ELSE previous(state.Prev_t) + state.T;
+    
+    interface.u1 = IF (independent.t - state.Prev_t < interface.T1) THEN interface.u11
+      ELSE IF (independent.t - state.Prev_t < (interface.T1 + interface.T2)) THEN interface.u12
+        ELSE IF (independent.t - state.Prev_t < (interface.T1 + interface.T2 + interface.T3)) THEN interface.u13
+        ELSE interface.u14 ;
+    
+    interface.u2 = IF (independent.t - state.Prev_t < interface.T1) THEN interface.u21
+      ELSE IF (independent.t - state.Prev_t < (interface.T1 + interface.T2)) THEN interface.u22
+        ELSE IF (independent.t - state.Prev_t < (interface.T1 + interface.T2 + interface.T3)) THEN interface.u23
+          ELSE interface.u24;
+
+    interface.u3 = IF (independent.t - state.Prev_t < interface.T1) THEN interface.u31
+      ELSE IF (independent.t - state.Prev_t < (interface.T1 + interface.T2)) THEN interface.u32
+        ELSE IF (independent.t - state.Prev_t < (interface.T1 + interface.T2 + interface.T3)) THEN interface.u33
+          ELSE interface.u34;
+
+    interface.u4 = IF (independent.t - state.Prev_t < interface.T1) THEN interface.u41
+      ELSE IF (independent.t - state.Prev_t < (interface.T1 + interface.T2)) THEN interface.u42
+        ELSE IF (independent.t - state.Prev_t < (interface.T1 + interface.T2 + interface.T3)) THEN interface.u43
+          ELSE interface.u44;
+  };
+
+:};
+
+  
+#endif // WWTP_TIMERS_TIMER44

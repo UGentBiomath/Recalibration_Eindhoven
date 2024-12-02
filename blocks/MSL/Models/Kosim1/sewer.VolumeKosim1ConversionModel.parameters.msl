@@ -1,0 +1,12 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ C0_NH4 (* *) "Background concentration for ammonia" : Concentration := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ C0_PO4 (* *) "Background concentration for phosphate" : Concentration := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ C0_SCOD (* *) "Background concentration for soluble COD" : Concentration := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ C0_XCOD (* *) "Background concentration for particulate COD" : Concentration := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ H_Min (* hidden = "1"; *) "Minimal water level to avoid numerical problems" : Length := {: value <- 0.01; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ k_NH4 (* *) "First order removal of ammonia" : ProcessRate := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ k_PO4 (* *) "First order removal of phosphate" : ProcessRate := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ k_SCOD (* *) "First order removal of soluble COD" : ProcessRate := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ k_XCOD (* *) "First order removal of particulate COD" : ProcessRate := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+

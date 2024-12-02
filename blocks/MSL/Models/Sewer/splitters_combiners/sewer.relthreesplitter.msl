@@ -1,0 +1,63 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+
+#ifndef SEWER_SPLITTERS_COMBINERS_SEWER_RELTHREESPLITTER
+#define SEWER_SPLITTERS_COMBINERS_SEWER_RELTHREESPLITTER
+
+
+CLASS SewRelThreeSplitter
+  (* icon = "three_fraction_splitter" *)
+  "3-way splitter (valve) for sewer"
+  EXTENDS Sewer_TwoSplitter_Base WITH
+  {:
+
+  comments <- "3-way splitter (valve) for sewer";
+
+  interface <-
+  {
+   OBJ Outflow3 (* terminal = "out_2" *) "Outflow No.3" : OutSewTerminal := {: causality <- "COUT" ; group <- "Effluent 3" :};
+   OBJ f_Out2 (* manip = "1"; terminal = "in_2" *) "Fraction of the influent flux going to Outflow No.2" : Fraction := {: causality <- "CIN"; value <- 0.1; group <- "Operational" :};
+   OBJ f_Out3 (* manip = "1"; terminal = "in_2" *) "Fraction of the influent flux going to Outflow No.3" : Fraction := {: causality <- "CIN"; value <- 0.8; group <- "Operational" :};
+  };
+
+  state <-
+  {
+   OBJ Q_Out_3 (* is_favorite = "1" *) "Actual flow rate No.3" : FlowRate := {: group <- "Operational" :};
+  };
+
+  equations <-
+  {
+   // REMARK: in this model, there is no check on fractions (i.e. that the sum be 1) or flow rate
+   state.Q_Out_1 = state.Q_In * (1 - (interface.f_Out2 + interface.f_Out3)) ;
+ 
+   state.Q_Out_2 = state.Q_In * (interface.f_Out2) ;
+
+   state.Q_Out_3 = state.Q_In * (interface.f_Out3) ;
+
+   {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}: interface.Outflow1[Comp_Index] =
+		- state.InFluxPerComponent[Comp_Index] * (1 - (interface.f_Out2 + interface.f_Out3)) ;};
+
+   {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}: interface.Outflow2[Comp_Index] =
+		- state.InFluxPerComponent[Comp_Index] * (interface.f_Out2) ;};
+
+   {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}: interface.Outflow2[Comp_Index] =
+		- state.InFluxPerComponent[Comp_Index] * (interface.f_Out3) ;};
+  };
+  
+  :};
+
+
+#endif // SEWER_SPLITTERS_COMBINERS_SEWER_RELTHREESPLITTER

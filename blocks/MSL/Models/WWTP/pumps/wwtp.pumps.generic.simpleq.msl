@@ -1,0 +1,60 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 5. december 2016 11:01:59$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_PUMPS_GENERIC_SIMPLEQ
+#define WWTP_PUMPS_GENERIC_SIMPLEQ
+
+
+// Pump for simple pumping energy calculation  
+CLASS SimpleQ (* icon = "pump" *) "Basic pump model: fixed head (static + others)"
+EXTENDS Pump_Base WITH
+{:
+  comments <- "Basic pump model: fixed head (static + others)";
+  
+  parameters <-
+  {
+    OBJ H_TS (* is_favorite = "1" *) "Static head loss": Length := {: value <- 5.0 ; group <- "Operational" :};
+    OBJ H_F (* is_favorite = "1" *) "Friction and minor head loss": Length := {: value <- 1.0; group <- "Operational" :};
+    OBJ Eta (* is_favorite = "1" *) "Efficiency of the pump": Fraction := {: value <- 0.667 ; group <- "Operational" :};
+  };
+  
+  state <-
+  {
+    OBJ Integ_PE (* hidden = "1" *) "Integral Pumping energy for pump " : ElectricalEnergy ;
+  };
+  
+  initial <-
+  {
+    state.Integ_PE = 0.0 ;
+    state.H_System = parameters.H_TS + parameters.H_F ;
+    state.Eta_Total = parameters.Eta ; // this is an extreme simplification
+  };
+  
+  equations <-
+  {
+    state.H = state.H_System ;
+    state.help_Q = IF (interface.IsOn == 0) THEN 0.0 ELSE interface.Q_Op ;
+    
+    // help_Energy needs to go inside the integral because TSS is t-dependent    
+    DERIV(state.Integ_PE,[independent.t])= (state.help_Energy / state.Eta_Total) * state.help_Q ; // / 86400 ; //check units!
+    interface.PumpingEnergy = state.Integ_PE ;
+  };
+
+:};
+
+
+#endif // WWTP_PUMPS_GENERIC_SIMPLEQ

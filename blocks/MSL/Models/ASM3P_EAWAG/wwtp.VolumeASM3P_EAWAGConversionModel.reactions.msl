@@ -1,0 +1,31 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE Reactions "The reactions between the components considered" = 
+ENUM
+{
+  P01_Hydrolysis,
+  P02_AerStorageOfXSTO,
+  P03_AnoxStorageOfXSTO,
+  P04_AerGrowthOfXH,
+  P05_AnoxGrowthOfXH,
+  P06_AerEndogRespOfXH,
+  P07_AnoxEndogRespOfXH,
+  P08_AerRespOfXSTO,
+  P09_AnoxRespOfXSTO,
+  P10_Nitrification,
+  P11_AerEndogRespOfXA,
+  P12_AnoxEndogRespOfXA,
+  PP01_StorageOfXPHA,
+  PP02_AerStorageOfXPP,
+  PP03_AnoxStorageOfXPP,
+  PP04_AerGrowthOfXPAO,
+  PP05_AnoxGrowthOfXPAO,
+  PP06_AerEndogRespOfXPAO,
+  PP07_AnoxEndogRespOfXPAO,
+  PP08_AerLysisOfXPP,
+  PP09_AnoxLysisOfXPP,
+  PP10_AerRespOfXPHA,
+  PP11_AnoxRespOfXPHA,
+  Aeration
+};
+

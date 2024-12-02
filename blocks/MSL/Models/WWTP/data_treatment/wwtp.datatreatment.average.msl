@@ -1,0 +1,53 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:48$
+ *
+ ******************************************************************************/
+ 
+#ifndef WWTP_DATATREATMENT_AVE
+#define WWTP_DATATREATMENT_AVE
+
+CLASS MovingAverage
+  (* icon = "data_treatment" *)
+  "Computes the moving average of a signal"
+  EXTENDS DataTreatment WITH 
+  {:
+    comments <- "A model to compute the moving average of a signal";
+
+    interface <-
+    {
+	OBJ T_Window (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Moving window": Time := {: causality <- "CIN" ; value <- 1 ; group <- "Operational" :};
+    };
+
+    state <-
+    {
+	OBJ ID (* hidden = "1" *) "dummy variable for buffer ID" : Real ;
+	OBJ temp (* hidden = "1" *) "dummy variable for initialisation" : Real ;
+	OBJ Signal_Out (* hidden = "1" *) "dummy variable for signal that is retrieved from buffer": Real ;
+    };
+	
+    initial <-
+    {
+	state.ID = MSLUBufferCreate(interface.T_Window, 0.001);
+    };
+	
+    equations <-
+    {
+    state.temp = MSLUBufferPut(state.ID, independent.t, state.signal);
+    state.Signal_Out = MSLUBufferGetMean(state.ID);
+	interface.y_M = state.Signal_Out ;   
+    };
+	
+  :};
+  
+#endif

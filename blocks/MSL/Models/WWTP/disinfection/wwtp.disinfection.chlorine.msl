@@ -1,0 +1,85 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 6. februar 2019 10:58:06$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_DISINFECTION_CHLORINE
+#define WWTP_DISINFECTION_CHLORINE
+
+
+CLASS ChlorineInv (* icon = "disinfection_unit" *) "Reverse model: computes required Cl concentration to achieve desired EColi removal" EXTENDS Base_Disinfection WITH
+{:
+
+  comments <- "Reverse model: computes required Cl concentration to achieve desired EColi removal" ;
+  
+  interface <-
+  {
+    OBJ EColi_Out (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "E-coli in the effluent" : Concentration := {: value <- 240; causality <- "CIN"; group <- "Operation"; :};
+    OBJ Cl_Tot (* terminal = "out_2"; is_favorite = "1" *) "Total concentration of chlorine" : Concentration := {: causality <- "COUT"; group <- "Operation"; :};
+  };
+  
+  parameters <-
+  {
+    OBJ b "Empirical coefficient" : Real := {: value <- 4.0; group <- "Model"; :};
+    OBJ n "Empirical coefficient" : Real := {: value <- 2.8; group <- "Model"; :};
+    OBJ Cl_Imm "Immediate request of chlorine" : Concentration := {: value <- 4.0; interval <- {: lowerBound <- 0; upperBound <- 50.0 :} ; group <- "Operation"; :};
+    OBJ Cl_Dec "Request of chlorine for decay" : Concentration := {: value <- 2.5; interval <- {: lowerBound <- 0; upperBound <- 20.0 :} ; group <- "Operation"; :};
+  };
+  
+  state <-
+  {
+    OBJ Cl_R (* is_favorite = "1" *) "Residual chlorine" : Concentration := {: group <- "Operation"; :};
+  };
+  
+  equations <-
+  {
+    state.Cl_R = IF (interface.EColi_Out <= 0.0 || state.In_EColi <= 0.0) THEN 0.0 ELSE pow(interface.EColi_Out / state.In_EColi, - 1 / parameters.n) * (parameters.b / (state.HRT * 60 * 24)) ; 
+    
+    interface.Cl_Tot = state.Cl_R + parameters.Cl_Imm + parameters.Cl_Dec ; 
+  };
+
+:};
+
+
+CLASS Chlorine (* icon = "disinfection_unit"; is_default = "true" *) "Basic Cl disinfection model: inactivation based on residual chlorine and contact time (Selleck, 1978)" EXTENDS DisinfectionEfficiency WITH
+{:
+
+  comments <- "Basic Cl disinfection model: inactivation based on residual chlorine and contact time (Selleck, 1978)";
+  
+  interface <-
+  {
+    OBJ Cl_R (* terminal = "out_2"; is_favorite = "1" *) "Residual chlorine" : Concentration := {: causality <- "COUT"; group <- "Operation"; :};
+  };
+  
+  parameters <-
+  {
+    OBJ b "Empirical coefficient" : Real := {: value <- 4.0; group <- "Model"; :};
+    OBJ n "Empirical coefficient" : Real := {: value <- 2.8; group <- "Model"; :};
+    OBJ Cl_Tot "Total concentration of chlorine" : Concentration := {: value <- 10.0; interval <- {: lowerBound <- 0; upperBound <- 50.0 :} ; group <- "Operation"; :};
+    OBJ Cl_Imm "Immediate request of chlorine" : Concentration := {: value <- 4.0; interval <- {: lowerBound <- 0; upperBound <- 50.0 :} ; group <- "Operation"; :};
+    OBJ Cl_Dec "Request of chlorine for decay" : Concentration := {: value <- 2.5; interval <- {: lowerBound <- 0; upperBound <- 20.0 :} ; group <- "Operation"; :};
+  };
+  
+  equations <-
+  {
+    interface.Cl_R = parameters.Cl_Tot - (parameters.Cl_Imm + parameters.Cl_Dec) ;
+    
+    // Mod. Selleck (1978)    
+    interface.EColi_Out = IF (interface.Cl_R * state.HRT <= 0.0) THEN 0.0 ELSE state.In_EColi * pow((interface.Cl_R * state.HRT * 60 * 24 / parameters.b), - parameters.n) ; 
+  };
+
+:};
+
+
+#endif // WWTP_DISINFECTION_CHLORINE

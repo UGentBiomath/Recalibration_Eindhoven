@@ -1,0 +1,54 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+  interface <-
+  {
+    #include "Kosim1/sewer.VolumeKosim1Model.interface.msl"
+  };
+
+  parameters <-
+  {
+    #include "Kosim1/sewer.VolumeKosim1ConversionModel.parameters.msl"
+  };
+
+  state <-
+  {
+    #include "Kosim1/sewer.VolumeKosim1ConversionModel.state.msl"
+  };
+
+  initial <-
+  {
+    // Params
+
+
+    // StateVars
+
+
+    // Extra
+
+
+    // Stoichiometry
+
+    #include "Kosim1/sewer.VolumeKosim1ConversionModel.stoichiometry.msl"
+  };
+
+  equations <-
+  {
+    // StateVars
+
+    state.rate01 = parameters.k_XCOD * (state.C[XCOD] - parameters.C0_XCOD);
+    state.rate02 = parameters.k_SCOD * (state.C[SCOD] - parameters.C0_SCOD);
+    state.rate03 = parameters.k_PO4 * (state.C[PO4] - parameters.C0_PO4);
+    state.rate04 = parameters.k_NH4 * (state.C[NH4] - parameters.C0_NH4);
+
+    // Extra
+
+
+    // Kinetics
+
+    #include "Kosim1/sewer.VolumeKosim1ConversionModel.kinetics.msl"
+
+    // InterfaceVars
+
+    #include "Kosim1/sewer.VolumeKosim1Model.sensors.msl"
+  };
+

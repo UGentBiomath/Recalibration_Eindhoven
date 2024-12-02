@@ -1,0 +1,343 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. november 2019 09:54:15$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_DIGESTER_ADM1
+#define WWTP_DIGESTER_ADM1
+
+#if (defined ASM1Temp || defined ASMG1 || defined ASM2dModTemp || defined IUWS1 || defined IUWS2)
+
+CLASS FixVolumeADU (* icon = "anaerobic_digester"; is_default = "true" *)
+SPECIALISES CoupledModelType :=
+{:
+
+  #if (defined ASM1Temp || defined ASMG1)
+  comments <- "ADM1 model for anaerobic digestion according to BSM2, including the interface transformers from and to ASM1";
+  #endif
+  #if (defined ASM2dModTemp || defined ASM2dM || defined IUWS1 || defined IUWS2)
+  comments <- "ADM1 model for anaerobic digestion according to BSM2, including the interface transformers from and to ASM2";
+  #endif
+
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+    //(EURE 20/11/2018) renamed for consistency:
+    OBJ pH_AS (* terminal = "in_2"; manip = "1" *) "pH of the activated sludge": pH :={: causality <- "CIN"; value <- 7; group <- "Operational" :};
+    //(EURE 20/11/2018) added:
+    OBJ pH_AD (* terminal = "in_2"; manip = "1" *) "pH of the digester": pH :={: causality <- "CIN"; value <- 6.8; group <- "Operational" :};
+    OBJ T_op (* terminal = "in_2"; manip = "1" *) "Operating temperature": CelsiusTemperature := {: causality <- "CIN"; value <- 35; group <- "Operational" :};
+    OBJ Gas_Outflow (* terminal = "out_3" *) "Biogas" : ADM1GasConcTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+    OBJ AD_C (* terminal = "out_4" *) "Concentration of soluble and particulate components in the digester" : ADM1ConcVector := {: causality <- "COUT"; group <- "Concentration" :};
+    OBJ AD_C_Ion (* terminal = "out_4" *) "Concentration of ionic species in the digester" : ADM1IonConcVector := {: causality <- "COUT"; group <- "Concentration" :};
+    OBJ AD_pH (* is_favorite = "1"; terminal = "out_4" *) "pH in the digester" : pH := {: causality <- "COUT"; group <- "System" :};
+    OBJ Gas_p_ch4 (* is_favorite = "1"; terminal = "out_4" *) "Methane partial pressure" : Pressure := {: unit <- "bar"; causality <- "COUT"; group <- "System" :};
+    OBJ Gas_p_h2 (* terminal = "out_4" *) "Hydrogen partial pressure" : Pressure := {: unit <- "bar"; causality <- "COUT"; group <- "System" :};
+    OBJ Gas_p_co2 (* is_favorite = "1"; terminal = "out_4" *) "CO2 partial pressure" : Pressure := {: unit <- "bar"; causality <- "COUT"; group <- "System" :};
+    OBJ Gas_p_tot (* terminal = "out_4" *) "Total headspace pressure" : Pressure := {: unit <- "bar"; causality <- "COUT"; group <- "System" :};
+    OBJ Gas_Q (* is_favorite = "1"; terminal = "out_4" *) "Biogas flow rate" : FlowRate := {: causality <- "COUT"; group <- "System" :};
+  };
+
+  parameters <-
+  {
+    OBJ mode (* is_favorite = "1"; *) "Fixed (0) vs. dynamic (1) pH" : Integer := {: value <- 0.0; interval <- {: lowerBound <- 0.0; upperBound <- 1.0; :}; group <- "Operational"; :};
+    OBJ pHss (* is_favorite = "1"; *) "Estimated pH at steady-state (for initialisation)" : Real := {: value <- 7.27; interval <- {: lowerBound <- 1.0; upperBound <- 13.0; :}; group <- "Operational"; :};
+    OBJ C_aa "Carbon content of amino acids" : CarbonContentPerUnitCOD := {: value <- 0.03; group <- "Stoichiometry" :};
+    OBJ C_pr "Carbon content of proteines" : CarbonContentPerUnitCOD := {: value <- 0.03; group <- "Stoichiometry" :};
+    OBJ C_ac "Carbon content of acetate" : CarbonContentPerUnitCOD := {: value <- 0.0313; group <- "Stoichiometry" :};
+    OBJ C_biom "Carbon content of biomass" : CarbonContentPerUnitCOD := {: value <- 0.0313; group <- "Stoichiometry" :};
+    OBJ C_bu "Carbon content of butyrate" : CarbonContentPerUnitCOD := {: value <- 0.025; group <- "Stoichiometry" :};
+    OBJ C_ch4 "Carbon content of methane" : CarbonContentPerUnitCOD := {: value <- 0.0156; group <- "Stoichiometry" :};
+    OBJ C_fa "Carbon content of long chain fatty acids" : CarbonContentPerUnitCOD := {: value <- 0.0217; group <- "Stoichiometry" :};
+    OBJ C_li "Carbon content of lipids" : CarbonContentPerUnitCOD := {: value <- 0.022; group <- "Stoichiometry" :};
+    OBJ C_pro "Carbon content of propionate" : CarbonContentPerUnitCOD := {: value <- 0.0268; group <- "Stoichiometry" :};
+    OBJ C_SI "Carbon content of soluble inert COD" : CarbonContentPerUnitCOD := {: value <- 0.03; group <- "Stoichiometry" :};
+    OBJ C_su "Carbon content of sugars" : CarbonContentPerUnitCOD := {: value <- 0.0313; group <- "Stoichiometry" :};
+    OBJ C_ch "Carbon content of carbohydrates" : CarbonContentPerUnitCOD := {: value <- 0.0313; group <- "Stoichiometry" :};
+    OBJ C_va "Carbon content of valerate" : CarbonContentPerUnitCOD := {: value <- 0.024; group <- "Stoichiometry" :};
+    OBJ C_Xc "Carbon content of complex particulate COD" : CarbonContentPerUnitCOD := {: value <- 0.02786; group <- "Stoichiometry" :};
+    OBJ C_XI "Carbon content of particulate inert COD" : CarbonContentPerUnitCOD := {: value <- 0.03; group <- "Stoichiometry" :};
+    OBJ N_aa "Nitrogen content of amino acids" : NitrogenContentPerUnitCOD := {: value <- 0.007; group <- "Stoichiometry" :};
+    OBJ N_biom "Nitrogen content of  biomass" : NitrogenContentPerUnitCOD := {: value <- 0.00571428571428571; group <- "Stoichiometry" :};
+    OBJ N_SI "Nitrogen content of soluble inert COD" : NitrogenContentPerUnitCOD := {: value <- 0.00428571428571429; group <- "Stoichiometry" :};
+    OBJ N_Xc "Nitrogen content of particulate degradable COD" : NitrogenContentPerUnitCOD := {: value <- 0.00268571428571429; group <- "Stoichiometry" :};
+    OBJ N_XI "Nitrogen content of particulate inert COD" : NitrogenContentPerUnitCOD := {: value <- 0.00428571428571429; group <- "Stoichiometry" :};
+    OBJ f_ac_su "Yield of acetate from sugar degradation" : Ratio := {: value <- 0.41; group <- "Stoichiometry" :};
+    OBJ f_ac_aa "Yield of acetate from amino acid degradation" : Ratio := {: value <- 0.4; group <- "Stoichiometry" :};
+    OBJ f_bu_aa "Yield of butyrate from amino acid degradation" : Ratio := {: value <- 0.26; group <- "Stoichiometry" :};
+    OBJ f_ch_xc "Yield of carbohydrates from disintegration of complex particulates" : Ratio := {: value <- 0.2; group <- "Stoichiometry" :};
+    OBJ f_fa_li "Yield of long chain fatty acids (as opposed to glycerol) from lipids" : Ratio := {: value <- 0.95; group <- "Stoichiometry" :};
+    OBJ f_h2_aa "Yield of hydrogen from amino acid degradation" : Ratio := {: value <- 0.06; group <- "Stoichiometry" :};
+    OBJ f_pro_aa "Yield of propionate from amino acid degradation" : Ratio := {: value <- 0.05; group <- "Stoichiometry" :};
+    OBJ f_pro_su "Yield of propionate from monosaccharide degradation" : Ratio := {: value <- 0.27; group <- "Stoichiometry" :};
+    OBJ f_pr_xc "Yield of proteins from disintegration of complex particulates" : Ratio := {: value <- 0.2; group <- "Stoichiometry" :};
+    OBJ f_SI_xc "Yield of soluble inerts from disintegration of complex particulates" : Ratio := {: value <- 0.1; group <- "Stoichiometry" :};
+    OBJ f_va_aa "Yield of valerate from amino acid degradation" : Ratio := {: value <- 0.23; group <- "Stoichiometry" :};
+    OBJ f_XI_xc "Yield of particulate inerts from disintegration of complex particulates" : Ratio := {: value <- 0.2; group <- "Stoichiometry" :};
+    OBJ f_bu_su "Yield of butyrate from monosaccharide degradation" : Ratio := {: value <- 0.13; group <- "Stoichiometry" :};
+    OBJ f_h2_su "Yield of hydrogen from monosaccharide degradation" : Ratio := {: value <- 0.19; group <- "Stoichiometry" :};
+    OBJ f_li_xc "Yield of lipids from disintegration of complex particulates" : Ratio := {: value <- 0.3; group <- "Stoichiometry" :};
+    OBJ Y_aa "Yield of biomass on uptake of amino acids" : Ratio := {: value <- 0.08; group <- "Stoichiometry" :};
+    OBJ Y_ac "Yield of biomass on uptake of acetate" : Ratio := {: value <- 0.05; group <- "Stoichiometry" :};
+    OBJ Y_c4 "Yield of biomass on uptake of valerate or butyrate" : Ratio := {: value <- 0.06; group <- "Stoichiometry" :};
+    OBJ Y_fa "Yield of biomass on uptake of long chain fatty acids" : Ratio := {: value <- 0.06; group <- "Stoichiometry" :};
+    OBJ Y_h2 "Yield of biomass on uptake of elemental hydrogen" : Ratio := {: value <- 0.06; group <- "Stoichiometry" :};
+    OBJ Y_pro "Yield of biomass on uptake of propionate" : Ratio := {: value <- 0.04; group <- "Stoichiometry" :};
+    OBJ Y_su "Yield of biomass on uptake of monosaccharides" : Ratio := {: value <- 0.1; group <- "Stoichiometry" :};
+    OBJ pH_ac_ll "pH level at which there is full inhibition of acetate degradation" : pH := {: value <- 6; group <- "Kinetics" :};
+    OBJ pH_ac_ul "pH level at which there is no inhibition of acetate degrading organisms" : pH := {: value <- 7; group <- "Kinetics" :};
+    OBJ pH_bac_ll "pH level at which there is full inhibition" : pH := {: value <- 4; group <- "Kinetics" :};
+    OBJ pH_bac_ul "pH level at which there is no inhibition" : pH := {: value <- 5.5; group <- "Kinetics" :};
+    OBJ pH_h2_ll "pH level at which there is full inhibition of hydrogen degrading organisms" : pH := {: value <- 5; group <- "Kinetics" :};
+    OBJ pH_h2_ul "pH level at which there is no inhibition of hydrogen degrading organisms" : pH := {: value <- 6; group <- "Kinetics" :};
+    OBJ KI_h2_fa "Hydrogen inhibitory concentration for FA degrading organisms" : Real := {: unit <- "kgCOD/m3"; value <- 5E-6; group <- "Kinetics" :};
+    OBJ KI_h2_c4 "Hydrogen inhibitory concentration for C4 degrading organisms" : Real := {: unit <- "kgCOD/m3"; value <- 1E-5; group <- "Kinetics" :};
+    OBJ KI_h2_pro "Inhibitory hydrogen concentration for propionate degrading organisms" : Real := {: unit <- "kgCOD/m3"; value <- 3.5E-6; group <- "Kinetics" :};
+    OBJ KI_nh3_ac "Inhibitory free ammonia concentration for acetate degrading organisms" : Real := {: unit <- "kgCOD/m3"; value <- 0.0018; group <- "Kinetics" :};
+    OBJ kdec_xaa "Decay rate for amino acid degrading organisms" : DecayCoefficient := {: value <- 0.02; group <- "Kinetics" :};
+    OBJ kdec_xac "Decay rate for acetate degrading organisms" : DecayCoefficient := {: value <- 0.02; group <- "Kinetics" :};
+    OBJ kdec_xc4 "Decay rate for butyrate and valerate degrading organisms" : DecayCoefficient := {: value <- 0.02; group <- "Kinetics" :};
+    OBJ kdec_xfa "Decay rate for long chain fatty acid degrading organisms" : DecayCoefficient := {: value <- 0.02; group <- "Kinetics" :};
+    OBJ kdec_xh2 "Decay rate for hydrogen degrading organisms" : DecayCoefficient := {: value <- 0.02; group <- "Kinetics" :};
+    OBJ kdec_xpro "Decay rate for propionate degrading organisms" : DecayCoefficient := {: value <- 0.02; group <- "Kinetics" :};
+    OBJ kdec_xsu "Decay rate for monosaccharide degrading organisms" : DecayCoefficient := {: value <- 0.02; group <- "Kinetics" :};
+    OBJ kdis "Complex particulate disintegration first order rate constant" : RateConstant := {: value <- 0.5; group <- "Kinetics" :};
+    OBJ khyd_ch "Carbohydrate hydrolysis first order rate constant" : RateConstant := {: value <- 10; group <- "Kinetics" :};
+    OBJ khyd_li "Lipid hydrolysis first order rate constant" : RateConstant := {: value <- 10; group <- "Kinetics" :};
+    OBJ khyd_pr "Protein hydrolysis first order rate constant" : RateConstant := {: value <- 10; group <- "Kinetics" :};
+    
+    OBJ kla "Gas liquid transfer coefficient" : OxygenTransferCoefficient := {: value <- 200; group <- "Operational" :};
+    OBJ km_aa "Maximum uptake rate amino acid degrading organisms" : MaxUptakeRate := {: value <- 50; group <- "Kinetics" :};
+    OBJ km_ac "Maximum uptake rate for acetate degrading organisms" : MaxUptakeRate := {: value <- 8; group <- "Kinetics" :};
+    OBJ km_c4 "Maximum uptake rate for c4 degrading organisms" : MaxUptakeRate := {: value <- 20; group <- "Kinetics" :};
+    OBJ km_fa "Maximum uptake rate for long chain fatty acid degrading organisms" : MaxUptakeRate := {: value <- 6; group <- "Kinetics" :};
+    OBJ km_h2 "Maximum uptake rate for hydrogen degrading organisms" : MaxUptakeRate := {: value <- 35; group <- "Kinetics" :};
+    OBJ km_pro "Maximum uptake rate for propionate degrading organisms" : MaxUptakeRate := {: value <- 13; group <- "Kinetics" :};
+    OBJ km_su "Maximum uptake rate for monosaccharide degrading organisms" : MaxUptakeRate := {: value <- 30; group <- "Kinetics" :};
+    OBJ Ks_aa "Half saturation constant for amino acid degradation" : Real := {: unit <- "kgCOD/m3"; value <- 0.3; group <- "Kinetics" :};
+    OBJ Ks_ac "Half saturation constant for acetate degradation" : Real := {: unit <- "kgCOD/m3"; value <- 0.15; group <- "Kinetics" :};
+    OBJ Ks_c4 "Half saturation constant for butyrate and valerate degradation" : Real := {: unit <- "kgCOD/m3"; value <- 0.2; group <- "Kinetics" :};
+    OBJ Ks_fa "Half saturation constant for long chain fatty acids degradation" : Real := {: unit <- "kgCOD/m3"; value <- 0.4; group <- "Kinetics" :};
+    OBJ Ks_h2 "Half saturation constant for uptake of hydrogen" : Real := {: unit <- "kgCOD/m3"; value <- 7E-6; group <- "Kinetics" :};
+    OBJ Ks_IN "Inorganic nitrogen concentration at which growth ceases" : Real := {: unit <- "M"; value <- 0.0001; group <- "Kinetics" :};
+    OBJ Ks_pro "Half saturation constant for propionate degradation" : Real := {: unit <- "kgCOD/m3"; value <- 0.1; group <- "Kinetics" :};
+    OBJ Ks_su "Half saturation constant for monosaccharide degradation" : Real := {: unit <- "kgCOD/m3"; value <- 0.5; group <- "Kinetics" :};
+    OBJ K_p "gas flow constant" : Real := {: value <- 50000; group <- "System" :};
+    OBJ P_atm "Pressure of atmosphere" : Pressure := {: unit <- "bar"; value <- 1.013; group <- "Operational" :};
+// excluded completely or only for ASM2 ???
+//    OBJ T "Temperature" : CelsiusTemperature := {: value <- 35; group <- "Operational" :};
+    OBJ V_gas "Volume of gas in the reactor" : Volume := {: value <- 300; group <- "Operational" :};
+    OBJ V_liq "Volume of liquid in the reactor" : Volume := {: value <- 3400; group <- "Operational" :};
+    OBJ f_X_Out "Fraction of the anaerobic particulate matter that leaves the reactor" : PhysicalQuantityType := {: value <- 1; group <- "Operational" :};
+    OBJ naa "Nitrogen content of amino acids (gN/gCOD)" : NitrogenContentPerUnitCOD := {: value <- 0.098; group <- "Stoichiometry" :};
+    OBJ nbac "nitrogen content of biomass (gN/gCOD)" : Fraction := {: value <- 0.08; group <- "Stoichiometry" :};
+    OBJ nxc "nitrogen content of composites (gN/gCOD)" : Fraction := {: value <- 0.0376; group <- "Stoichiometry" :};
+    OBJ nxi "nitrogen content of XI and XP (same in AS and AD) (gN/gCOD)" : Fraction := {: value <- 0.06; group <- "Stoichiometry" :};
+    OBJ nsi "nitrogen content of SI in ASM (gN/gCOD)" : Fraction := {: value <- 0; group <- "Stoichiometry" :};
+    OBJ nsi_adm "nitrogen content of SI in ADM (gN/gCOD)" : Fraction := {: value <- 0.06; group <- "Stoichiometry" :};
+    OBJ T_ref "Reference temperature (i.e. 25degC)" : CelsiusTemperature := {: value <- 25; group <- "Operational" :};
+    OBJ Ka_ac (* hidden ="1" *) "acetate acidity constant without temperature correction_M" : Real := {: unit <- "M"; value <- 1.74e-5 :}; 
+    OBJ Ka_bu (* hidden ="1" *) "butyrate acidity constant without temperature correction_M" : Real := {: unit <- "M"; value <- 1.5e-5 :};
+    OBJ Ka_pro (* hidden ="1" *) "propionate acidity constant without temperature correction_M" : Real := {: unit <- "M"; value <- 1.32e-5 :};
+    OBJ Ka_va (* hidden ="1" *) "valerate acidity constant without temperature correction" : Real := {: unit <- "M"; value <- 1.38e-5 :};
+    #if (defined ASMG1)
+    OBJ Ka_no2 (* hidden ="1" *) "Nitrous acid acidity constant with temperature correction": Real:= {: unit <- "M"; value <- 5.75E-4 :};
+    #endif
+    #if (defined ASM2dModTemp || defined ASM2dM || defined IUWS1 || defined IUWS2)
+    OBJ i_TSS_BM "TSS to biomass ratio for X_H, X_PAO, X_AUT" : ConversionFactor := {: value <- 0.9; group <- "Composition parameters"; :};
+    OBJ i_TSS_X_S "TSS to X_S ratio" : ConversionFactor := {: value <- 0.75; group <- "Composition parameters"; :};
+    OBJ i_TSS_X_I "TSS to X_I ratio" : ConversionFactor := {: value <- 0.75; group <- "Composition parameters"; :};
+    #endif
+  };
+
+  sub_models <-
+  {
+    // Digester1 -> Tank
+    OBJ Tank : ADM1_Digester ;
+    #if (defined ASM1Temp || defined ASMG1)
+    OBJ Trans_In : ASM1toADM1 ;
+    OBJ Trans_Out : ADM1toASM1 ;
+    #endif
+    #if (defined ASM2dModTemp || defined ASM2dM || defined IUWS1 || defined IUWS2)
+    OBJ Trans_In : ASM2toADM1 ;
+    OBJ Trans_Out : ADM1toASM2 ;
+    #endif
+  };
+
+  coupling <-
+  {
+    connect(interface.Inflow, sub_models.Trans_In.interface.Inflow),
+    connect(sub_models.Trans_In.interface.Outflow, sub_models.Tank.interface.Inflow),
+    connect(sub_models.Tank.interface.Outflow, sub_models.Trans_Out.interface.Inflow),
+    connect(sub_models.Trans_Out.interface.Outflow, interface.Outflow),
+    
+    sub_models.Trans_In.parameters.Ka_ac.value := parameters.Ka_ac.value,
+    sub_models.Tank.parameters.Ka_ac.value := parameters.Ka_ac.value,
+    sub_models.Trans_Out.parameters.Ka_ac.value := parameters.Ka_ac.value,
+
+    sub_models.Trans_In.parameters.Ka_bu.value := parameters.Ka_bu.value,
+    sub_models.Tank.parameters.Ka_bu.value := parameters.Ka_bu.value,
+    sub_models.Trans_Out.parameters.Ka_bu.value := parameters.Ka_bu.value,
+
+    sub_models.Trans_In.parameters.Ka_pro.value := parameters.Ka_pro.value,
+    sub_models.Tank.parameters.Ka_pro.value := parameters.Ka_pro.value,
+    sub_models.Trans_Out.parameters.Ka_pro.value := parameters.Ka_pro.value,
+
+    sub_models.Trans_In.parameters.Ka_va.value := parameters.Ka_va.value,
+    sub_models.Tank.parameters.Ka_va.value := parameters.Ka_va.value,
+    sub_models.Trans_Out.parameters.Ka_va.value := parameters.Ka_va.value,
+
+    #if (defined ASMG1)
+    sub_models.Trans_In.parameters.Ka_no2.value := parameters.Ka_no2.value,
+//    sub_models.Tank.parameters.Ka_no2.value := parameters.Ka_no2.value,
+    sub_models.Trans_Out.parameters.Ka_no2.value := parameters.Ka_no2.value,
+    #endif
+
+    sub_models.Tank.parameters.pHss.value := parameters.pHss.value,
+    sub_models.Tank.parameters.mode.value := parameters.mode.value,
+
+    sub_models.Tank.parameters.C_aa.value := parameters.C_aa.value,
+    sub_models.Tank.parameters.C_pr.value := parameters.C_pr.value,
+    sub_models.Tank.parameters.C_ac.value := parameters.C_ac.value,
+    sub_models.Tank.parameters.C_biom.value := parameters.C_biom.value,
+    sub_models.Tank.parameters.C_bu.value := parameters.C_bu.value,
+    sub_models.Tank.parameters.C_ch4.value := parameters.C_ch4.value,
+    sub_models.Tank.parameters.C_fa.value := parameters.C_fa.value,
+    sub_models.Tank.parameters.C_li.value := parameters.C_li.value,
+    sub_models.Tank.parameters.C_pro.value := parameters.C_pro.value,
+    sub_models.Tank.parameters.C_SI.value := parameters.C_SI.value,
+    sub_models.Tank.parameters.C_su.value := parameters.C_su.value,
+    sub_models.Tank.parameters.C_ch.value := parameters.C_ch.value,
+    sub_models.Tank.parameters.C_va.value := parameters.C_va.value,
+    sub_models.Tank.parameters.C_Xc.value := parameters.C_Xc.value,
+    sub_models.Tank.parameters.C_XI.value := parameters.C_XI.value,
+    sub_models.Tank.parameters.N_aa.value := parameters.N_aa.value,
+    sub_models.Tank.parameters.N_biom.value := parameters.N_biom.value,
+    sub_models.Tank.parameters.N_SI.value := parameters.N_SI.value,
+    sub_models.Tank.parameters.N_Xc.value := parameters.N_Xc.value,
+    sub_models.Tank.parameters.N_XI.value := parameters.N_XI.value,
+    sub_models.Tank.parameters.f_ac_su.value := parameters.f_ac_su.value,
+    sub_models.Tank.parameters.f_ac_aa.value := parameters.f_ac_aa.value,
+    sub_models.Tank.parameters.f_bu_aa.value := parameters.f_bu_aa.value,
+    sub_models.Tank.parameters.f_ch_xc.value := parameters.f_ch_xc.value,
+    sub_models.Tank.parameters.f_fa_li.value := parameters.f_fa_li.value,
+    sub_models.Tank.parameters.f_h2_aa.value := parameters.f_h2_aa.value,
+    sub_models.Tank.parameters.f_pro_aa.value := parameters.f_pro_aa.value,
+    sub_models.Tank.parameters.f_pro_su.value := parameters.f_pro_su.value,
+    sub_models.Tank.parameters.f_pr_xc.value := parameters.f_pr_xc.value,
+    sub_models.Tank.parameters.f_SI_xc.value := parameters.f_SI_xc.value,
+    sub_models.Tank.parameters.f_va_aa.value := parameters.f_va_aa.value,
+    sub_models.Tank.parameters.f_XI_xc.value := parameters.f_XI_xc.value,
+    sub_models.Tank.parameters.f_bu_su.value := parameters.f_bu_su.value,
+    sub_models.Tank.parameters.f_h2_su.value := parameters.f_h2_su.value,
+    sub_models.Tank.parameters.f_li_xc.value := parameters.f_li_xc.value,
+    sub_models.Tank.parameters.Y_aa.value := parameters.Y_aa.value,
+    sub_models.Tank.parameters.Y_ac.value := parameters.Y_ac.value,
+    sub_models.Tank.parameters.Y_c4.value := parameters.Y_c4.value,
+    sub_models.Tank.parameters.Y_fa.value := parameters.Y_fa.value,
+    sub_models.Tank.parameters.Y_h2.value := parameters.Y_h2.value,
+    sub_models.Tank.parameters.Y_pro.value := parameters.Y_pro.value,
+    sub_models.Tank.parameters.Y_su.value := parameters.Y_su.value,
+    sub_models.Tank.parameters.pH_ac_ll.value := parameters.pH_ac_ll.value,
+    sub_models.Tank.parameters.pH_ac_ul.value := parameters.pH_ac_ul.value,
+    sub_models.Tank.parameters.pH_bac_ll.value := parameters.pH_bac_ll.value,
+    sub_models.Tank.parameters.pH_bac_ul.value := parameters.pH_bac_ul.value,
+    sub_models.Tank.parameters.pH_h2_ll.value := parameters.pH_h2_ll.value,
+    sub_models.Tank.parameters.pH_h2_ul.value := parameters.pH_h2_ul.value,
+    sub_models.Tank.parameters.KI_h2_fa.value := parameters.KI_h2_fa.value,
+    sub_models.Tank.parameters.KI_h2_c4.value := parameters.KI_h2_c4.value,
+    sub_models.Tank.parameters.KI_h2_pro.value := parameters.KI_h2_pro.value,
+    sub_models.Tank.parameters.KI_nh3_ac.value := parameters.KI_nh3_ac.value,
+    sub_models.Tank.parameters.kdec_xaa.value := parameters.kdec_xaa.value,
+    sub_models.Tank.parameters.kdec_xac.value := parameters.kdec_xac.value,
+    sub_models.Tank.parameters.kdec_xc4.value := parameters.kdec_xc4.value,
+    sub_models.Tank.parameters.kdec_xfa.value := parameters.kdec_xfa.value,
+    sub_models.Tank.parameters.kdec_xh2.value := parameters.kdec_xh2.value,
+    sub_models.Tank.parameters.kdec_xpro.value := parameters.kdec_xpro.value,
+    sub_models.Tank.parameters.kdec_xsu.value := parameters.kdec_xsu.value,
+    sub_models.Tank.parameters.kdis.value := parameters.kdis.value,
+    sub_models.Tank.parameters.khyd_ch.value := parameters.khyd_ch.value,
+    sub_models.Tank.parameters.khyd_li.value := parameters.khyd_li.value,
+    sub_models.Tank.parameters.khyd_pr.value := parameters.khyd_pr.value,
+    sub_models.Tank.parameters.kla.value := parameters.kla.value,
+    sub_models.Tank.parameters.km_aa.value := parameters.km_aa.value,
+    sub_models.Tank.parameters.km_ac.value := parameters.km_ac.value,
+    sub_models.Tank.parameters.km_c4.value := parameters.km_c4.value,
+    sub_models.Tank.parameters.km_fa.value := parameters.km_fa.value,
+    sub_models.Tank.parameters.km_h2.value := parameters.km_h2.value,
+    sub_models.Tank.parameters.km_pro.value := parameters.km_pro.value,
+    sub_models.Tank.parameters.km_su.value := parameters.km_su.value,
+    sub_models.Tank.parameters.Ks_aa.value := parameters.Ks_aa.value,
+    sub_models.Tank.parameters.Ks_ac.value := parameters.Ks_ac.value,
+    sub_models.Tank.parameters.Ks_c4.value := parameters.Ks_c4.value,
+    sub_models.Tank.parameters.Ks_fa.value := parameters.Ks_fa.value,
+    sub_models.Tank.parameters.Ks_h2.value := parameters.Ks_h2.value,
+    sub_models.Tank.parameters.Ks_IN.value := parameters.Ks_IN.value,
+    sub_models.Tank.parameters.Ks_pro.value := parameters.Ks_pro.value,
+    sub_models.Tank.parameters.Ks_su.value := parameters.Ks_su.value,
+    sub_models.Tank.parameters.K_p.value := parameters.K_p.value,
+    sub_models.Tank.parameters.P_atm.value := parameters.P_atm.value,
+//    sub_models.Tank.parameters.T.value := parameters.T.value,
+    sub_models.Tank.parameters.V_gas.value := parameters.V_gas.value,
+    sub_models.Tank.parameters.V_liq.value := parameters.V_liq.value,
+    sub_models.Tank.parameters.f_X_Out.value := parameters.f_X_Out.value,
+    sub_models.Trans_In.parameters.naa.value := parameters.naa.value,
+    sub_models.Trans_Out.parameters.naa.value := parameters.naa.value,
+    sub_models.Trans_In.parameters.nbac.value := parameters.nbac.value,
+    sub_models.Trans_Out.parameters.nbac.value := parameters.nbac.value,
+    sub_models.Trans_In.parameters.nxc.value := parameters.nxc.value,
+    sub_models.Trans_Out.parameters.nxc.value := parameters.nxc.value,
+    sub_models.Trans_In.parameters.nxi.value := parameters.nxi.value,
+    sub_models.Trans_Out.parameters.nxi.value := parameters.nxi.value,
+    sub_models.Trans_In.parameters.nsi.value := parameters.nsi.value,
+    sub_models.Trans_Out.parameters.nsi.value := parameters.nsi.value,
+    sub_models.Trans_In.parameters.nsi_adm.value := parameters.nsi_adm.value,
+    sub_models.Trans_Out.parameters.nsi_adm.value := parameters.nsi_adm.value,
+    sub_models.Trans_In.parameters.T_ref.value := parameters.T_ref.value,
+    sub_models.Trans_Out.parameters.T_ref.value := parameters.T_ref.value,
+
+    #if (defined ASM2dModTemp || defined ASM2dM || defined IUWS1 || defined IUWS2)
+    sub_models.Trans_Out.parameters.i_TSS_BM.value := parameters.i_TSS_BM.value,
+    sub_models.Trans_Out.parameters.i_TSS_X_S.value := parameters.i_TSS_X_S.value,
+    sub_models.Trans_Out.parameters.i_TSS_X_I.value := parameters.i_TSS_X_I.value,
+    #endif
+//
+//(EURE 20/11/2018)    connect(sub_models.Tank.interface.AD_pH, sub_models.Trans_In.interface.AD_pH),
+//(EURE 20/11/2018)    connect(sub_models.Tank.interface.AD_pH, sub_models.Trans_Out.interface.AD_pH),
+    connect(interface.pH_AS, sub_models.Trans_In.interface.pH_as),
+    connect(interface.pH_AS, sub_models.Trans_Out.interface.pH_as),
+    //(EURE 20/11/2018) added:
+    connect(interface.pH_AD, sub_models.Trans_In.interface.AD_pH),
+    connect(interface.pH_AD, sub_models.Trans_Out.interface.AD_pH),
+    connect(interface.T_op, sub_models.Trans_In.interface.T_op),
+    connect(interface.T_op, sub_models.Trans_Out.interface.T_op),
+    connect(interface.T_op, sub_models.Tank.interface.T_op),
+
+    connect(sub_models.Tank.interface.Gas_Outflow, interface.Gas_Outflow),
+    connect(sub_models.Tank.interface.AD_C, interface.AD_C),
+    connect(sub_models.Tank.interface.AD_C_Ion, interface.AD_C_Ion),
+    connect(sub_models.Tank.interface.AD_pH, interface.AD_pH),
+    connect(sub_models.Tank.interface.Gas_p_ch4, interface.Gas_p_ch4),
+    connect(sub_models.Tank.interface.Gas_p_co2, interface.Gas_p_co2),
+    connect(sub_models.Tank.interface.Gas_p_h2, interface.Gas_p_h2),
+    connect(sub_models.Tank.interface.Gas_p_tot, interface.Gas_p_tot),
+    connect(sub_models.Tank.interface.Gas_Q, interface.Gas_Q),    
+  };
+
+:};
+
+#endif //ASM1Temp, ASMG1
+
+#endif //WWTP_DIGESTER_ADM1

@@ -1,0 +1,38 @@
+/*******************************************************************************
+*
+* Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+* (c) Copyright 2004-2011 DHI
+*
+* This file is provided under the terms of a license and may not be
+* distributed and/or modified except where allowed by that license.
+*
+* This file is provided as is with no warranty of any kind, including the
+* warranty of design, merchantability and fitness for a particular purpose.
+*
+* $Revision: 1$
+* $Date: 30. september 2019 12:19:51$
+*
+******************************************************************************/
+
+#include "generic.msl"
+
+#if (defined ASM2dModTemp || defined IUWS1 || defined IUWS2)
+
+#include "iuws.splitters_combiners.msl"
+#include "iuws.convertors.msl"  
+#include "iuws.connectors.msl"
+#include "iuws.sensors.msl"
+#include "iuws.controllers.msl"
+
+#endif //IUWS2
+
+#include "Sewer/sewer.main.msl"
+
+#include "WWTP/wwtp.main.msl"
+
+#include "River/river.main.msl"
+//
+// New models, SP's
+#include "temp_models.msl"
+#include "temp_models2.msl"
+#include "temp_models3.msl"

@@ -1,0 +1,76 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 5. februar 2019 16:30:19$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_DOSING_CHEMP_FEOH
+#define WWTP_DOSING_CHEMP_FEOH
+
+
+#if (defined ASM2dModTemp || defined ASM2dMod1 || defined ASMG2d || defined IUWS1 || defined IUWS2)
+
+
+CLASS FeOH3 (* icon = "dosing_unit_iron" *) "Dosing unit for iron (III) hydroxide, Fe(OH)3"
+EXTENDS ChemP_Base WITH
+{:
+
+  comments <- "Dosing unit for iron (III) hydroxide, Fe(OH)3";
+
+  interface <-
+  {
+    OBJ C_Eq (* terminal = "out_2" *) ".." : Real := {: causality <- "COUT" ; group <- "Measurement data" :};
+  };
+  
+  parameters <-
+  {
+    OBJ MW_FeOH3 (* hidden = "0" *) "Molecular weight of the Fe(OH)3 (ASM2 ref for MeOH)" : Real := {: value <- 106.845 ; group <- "System" :};
+    OBJ P_Equiv_FeOH3 (* hidden = "0" *) "Molar equivalence to phosphorous" : Fraction := {: value <- 1.0 ; group <- "System" :};
+    OBJ integ_t "Frequency for integral calculation" : Time := {: value <- 1.0 ; group <- "System" :};
+  };
+  
+  state <-
+  {
+		OBJ temp (* hidden = "1" *) "dummy variable for initialisation" : Real ;
+    OBJ ID (* hidden = "1" *) "dummy variable for buffer ID" : Integer ;
+    OBJ Help_integ_M (* hidden = "1" *) "Cumulated mass of chemical dosed" : Mass := {: group <- "System" :};
+    OBJ integ_M "Cumulated (discrete) mass of chemical dosed" : Mass := {: group <- "System" :};
+  };
+  
+  initial <-
+  {
+//    parameters.MW_Ref := parameters.MW_FeOH3 ;
+    parameters.MW := parameters.MW_FeOH3 ;
+    parameters.P_Equiv := parameters.P_Equiv_FeOH3 ;
+		//buffer creation
+		state.ID := MSLUBufferCreate(parameters.integ_t, 0.01);
+  };
+  
+  equations <-
+  {
+		state.temp = MSLUBufferPut(state.ID, independent.t, interface.M_Chem) ;
+		state.Help_integ_M = MSLUBufferGetInt(state.ID) ;
+
+    state.integ_M = state.Help_integ_M ;
+
+    interface.C_Eq = interface.C_Dose  ;
+  };
+  
+:};
+
+
+#endif // ASM2dModTemp || defined ASMG2d || defined ASM2dM
+
+
+#endif // WWTP_DOSING_CHEMP_FEOH

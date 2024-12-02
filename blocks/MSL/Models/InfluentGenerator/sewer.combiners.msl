@@ -1,0 +1,92 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 10. september 2019 13:42:55$
+ *
+ ******************************************************************************/
+
+#ifndef INFLUENTGENERATOR_SEWER_COMBINERS
+#define INFLUENTGENERATOR_SEWER_COMBINERS
+
+
+CLASS InfluentCombinerTwo (* icon = "two_combiner" *) "2-way combiner with filter on incoming flows"
+SPECIALISES CoupledModelType :=
+{:
+
+  comments <- "2-way combiner with filter on incoming flows";
+  
+  interface <-
+  {
+    OBJ Inflow1 (* terminal = "in_1" *) "Inflow No.1" : InSewTerminal := {: causality <- "CIN" ; group <- "Influent 1" :};
+    OBJ Inflow2 (* terminal = "in_2" *) "Inflow No.2" : InSewTerminal := {: causality <- "CIN" ; group <- "Influent 2" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+  };
+
+  parameters <-
+  {
+    OBJ f1 "Filtering action on inflow no.1" : Real := {: value <- 1.0; interval <- {: lowerBound <- 0; upperBound <- 1; :}; group <- ".." :};
+    OBJ f2 "Filtering action on inflow no.2" : Real := {: value <- 1.0; interval <- {: lowerBound <- 0; upperBound <- 1; :}; group <- ".." :};
+  };
+  
+  sub_models <-
+  {
+    OBJ Combi : SewTwoCombiner ;
+    OBJ Filt1: InflowWithFilter ;
+    OBJ Filt2: InflowWithFilter ;
+  };
+
+  coupling <-
+  {
+    // parameter coupling
+    sub_models.Filt1.parameters.f.value := parameters.f1.value,
+    sub_models.Filt2.parameters.f.value := parameters.f2.value,
+    // sub-model coupling
+    connect(interface.Inflow1, sub_models.Filt1.interface.Inflow),
+    connect(interface.Inflow2, sub_models.Filt2.interface.Inflow),
+    connect(sub_models.Filt1.interface.Outflow, sub_models.Combi.interface.Inflow),   // TT#3672
+    connect(sub_models.Filt2.interface.Outflow, sub_models.Combi.interface.Inflow2),
+    connect(sub_models.Combi.interface.Outflow, interface.Outflow),
+  };
+
+:};
+ 
+ 
+CLASS InflowWithFilter SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InSewTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+  };
+
+  // in fact, it may be more flexible if it was an input (interface) var
+  parameters <-
+  {
+    OBJ f "Filtering action" : Real ;
+  };
+
+  independent <- 
+  {
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+  };
+
+  equations <-
+  {
+    {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}:
+      interface.Outflow[Comp_Index] = - parameters.f * interface.Inflow[Comp_Index] ; }; 
+  };
+
+:};
+
+
+#endif // INFLUENTGENERATOR_SEWER_COMBINERS

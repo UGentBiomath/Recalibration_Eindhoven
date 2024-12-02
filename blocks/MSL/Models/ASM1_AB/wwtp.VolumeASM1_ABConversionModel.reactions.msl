@@ -1,0 +1,21 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE ASM1_ABReactions "The reactions between the components considered" = 
+ENUM
+{
+  AerGrowthOHOfast,
+  AerGrowthOHOslow,
+  AnGrowthOHO,
+  AerGrowthANO,
+  DecayOHO,
+  DecayANO,
+  AmmonifSolOrgN,
+  HydrolEntrapOrg,
+  HydrolEntrapOrgN,
+  FlocculatCB,
+  FlocculatCU,
+  HydrolXSTO,
+  HydrolXEPS,
+  Aerat
+};
+

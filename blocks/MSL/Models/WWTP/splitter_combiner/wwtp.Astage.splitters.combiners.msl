@@ -1,0 +1,40 @@
+/*******************************************************************************
+ *
+ * $Revision: 1$
+ * $Date: 5. december 2016 11:05:30$
+ *
+ ******************************************************************************/
+
+
+#ifdef ASM1Temp
+
+CLASS A_AtomicModelWithoutVolume SPECIALISES PhysicalDAEModelType :=
+{:
+
+  independent <- 
+  { 
+    OBJ t "Time"  : Time := {: group <- "Time" :}; 
+  };
+
+  state <-
+  {
+    OBJ InFluxPerComponent (* hidden = "1" *) "Vector containing incoming fluxes for all components" : ASM1_ABMassFluxVector;
+    OBJ Q_In (* is_favorite = "1" *) "Influent flow rate" : FlowRate := {: group <- "Operational" :};
+  };
+
+  equations <-
+  {
+    {FOREACH Comp_Index IN {1 .. ASM1_ABNrOfComponents}: state.InFluxPerComponent[Comp_Index] =
+      SUMOVER In_Terminal IN {SelectByType(interface, ASM1_ABInWWTPTerminal)}: (In_Terminal[Comp_Index]) ; };
+    
+    state.Q_In = 1E-06 * state.InFluxPerComponent[1] ;
+  };
+
+:};
+
+
+#include "WWTP/splitter_combiner/wwtp.Astage.twosplitter.msl"
+#include "WWTP/splitter_combiner/wwtp.Astage.threecombiner.msl"
+
+
+#endif // ASM1Temp

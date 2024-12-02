@@ -1,0 +1,4 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ S_O_Saturation (* *) "Oxygen saturation concentration" : Concentration := {: unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Kinetic"; :};
+

@@ -1,0 +1,26 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+
+
+   OBJ InfiltrationCustom "Custom pattern" : MonthlyYearlyPattern  
+          := [{: value <- 1.21:},{: value <- 1.27 :},{: value <- 1.25 :},{: value <- 1.04 :},
+          {: value <- 0.95 :},{: value <- 0.79 :},{: value <- 0.87 :},{: value <- 0.63 :},
+          {: value <- 0.61 :},{: value <- 0.76 :},{: value <- 0.86 :},{: value <- 1.08 :};];
+          
+   OBJ InfiltrationConstant (* hidden = "1" *) "Constant pattern" : MonthlyYearlyPattern  
+          := [{: value <- 1:},{: value <- 1 :},{: value <- 1 :},{: value <- 1 :},
+          {: value <- 1 :},{: value <- 1:},{: value <- 1 :},{: value <- 1 :},
+          {: value <- 1 :},{: value <- 1:},{: value <- 1 :},{: value <- 1 :};];

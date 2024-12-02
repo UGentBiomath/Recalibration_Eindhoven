@@ -1,0 +1,22 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ K_X_T (* *) "K_B_hyd at the system temperature" : Real := {: group <- "Temperature dependency"; :};
+    OBJ S_O_Saturation (* *) "Oxygen saturation concentration" : Concentration := {: group <- "Temperature dependency"; :};
+    OBJ X_TSS (* *) "Total suspended solids" : Concentration := {: unit <- "g/m3"; group <- "Concentration"; :};
+    OBJ b_ANO_T (* *) "b_ANO at the system temperature" : Real := {: group <- "Temperature dependency"; :};
+    OBJ b_OHO_T (* *) "b_OHO at the system temperature" : Real := {: group <- "Temperature dependency"; :};
+    OBJ f_STO (* *) "Flow of electrons to storage" : Real := {: unit <- "-"; group <- "Kinetics"; :};
+    OBJ k_EPS_PC (* *) "Proportionality coeff for extra-cellular polymeric substances production" : Real := {: unit <- "-"; group <- "Kinetics"; :};
+    OBJ k_EPS_SC (* *) "Normalised stoichiometric coeff for extra-cellular polymeric substances production" : Real := {: unit <- "-"; group <- "Kinetics"; :};
+    OBJ k_STO_PC (* *) "[GUESS]" : Real := {: unit <- "-"; group <- "Kinetics"; :};
+    OBJ k_a_T (* *) "k_a at the system temperature" : Real := {: group <- "Temperature dependency"; :};
+    OBJ k_h_T (* *) "q_XB_hyd at the system temperature" : Real := {: group <- "Temperature dependency"; :};
+    OBJ mu_ANO_T (* *) "mu_ANO at the system temperature" : Real := {: group <- "Temperature dependency"; :};
+    OBJ mu_OHO_T (* *) "mu_OHO at the system temperature" : Real := {: group <- "Temperature dependency"; :};
+    OBJ mu_OHOs_T (* *) "mu_OHOs at the system temperature" : Real := {: group <- "Temperature dependency"; :};
+    OBJ r_ads_B (* hidden = "1"; *) "Rate expression for adsorption (C_B)" : Real := {: group <- "Kinetic rates"; :};
+    OBJ r_ads_U (* hidden = "1"; *) "Rate expression for adsorption (C_U)" : Real := {: group <- "Kinetic rates"; :};
+    OBJ r_dia (* *) "Rate expression for diauxic model (of aerobic growth of OHOs)" : Real := {: group <- "Kinetic rates"; :};
+    OBJ r_dual (* *) "Rate expression for dual model (of aerobic growth of OHOs)" : Real := {: group <- "Kinetic rates"; :};
+    OBJ r_hydr_org (* *) "Rate expression for hydrolysis of entrapped organic matter" : Real := {: group <- "Kinetic rates"; :};
+

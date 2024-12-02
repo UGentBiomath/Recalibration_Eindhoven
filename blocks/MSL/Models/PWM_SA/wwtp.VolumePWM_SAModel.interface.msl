@@ -1,0 +1,20 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ DO (*terminal = "out_2"; *) "Dissolved oxygen concentration measurement" : DissolvedOxygen := {: causality <- "COUT"; unit <- "gO2/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- 15.000000; :}; group <- "Measurement data"; :};
+    OBJ Dissolved_N (*terminal = "out_2"; *) "NH4 + NO3 as N" : Concentration := {: causality <- "COUT"; unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Measurement data"; :};
+    OBJ InorgSS (*terminal = "out_2"; *) "Inorganic suspended solids as measured, including intracellular biomass contribution" : Concentration := {: causality <- "COUT"; unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Measurement data"; :};
+    OBJ Kla_ASU (*terminal = "out_2"; *) "Kla measurement data" : OxygenTransferCoefficient := {: causality <- "COUT"; unit <- "1/d"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- 5000.000000; :}; group <- "Measurement data"; :};
+    OBJ NH4_N (*terminal = "out_2"; *) "Ammonia as N" : Concentration := {: causality <- "COUT"; unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Measurement data"; :};
+    OBJ NO3_N (*terminal = "out_2"; *) "Nitrate as N" : Concentration := {: causality <- "COUT"; unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Measurement data"; :};
+    OBJ OUR_ASU (*terminal = "out_2"; *) "Oxygen Uptake Rate measurement data" : OxygenUptakeRate := {: causality <- "COUT"; unit <- "g/(m3.d)"; value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Measurement data"; :};
+    OBJ OrthoP (*terminal = "out_2"; *) "Ortho-phosphate as P" : Concentration := {: causality <- "COUT"; unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Measurement data"; :};
+    OBJ ParticulateCOD (*terminal = "out_2"; *) "Soluble COD" : Concentration := {: causality <- "COUT"; unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Measurement data"; :};
+    OBJ Particulate_P (*terminal = "out_2"; *) "Particulate phosphate as P" : Concentration := {: causality <- "COUT"; unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Measurement data"; :};
+    OBJ SolubleCOD (*terminal = "out_2"; *) "Soluble COD" : Concentration := {: causality <- "COUT"; unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Measurement data"; :};
+    OBJ Soluble_P (*terminal = "out_2"; *) "Soluble phosphate as P" : Concentration := {: causality <- "COUT"; unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Measurement data"; :};
+    OBJ TSS (*terminal = "out_2"; *) "Total suspended solids, including intracellular biomass contribution" : Concentration := {: causality <- "COUT"; unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Measurement data"; :};
+    OBJ TotalCOD (*terminal = "out_2"; *) "Total COD" : Concentration := {: causality <- "COUT"; unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Measurement data"; :};
+    OBJ Total_P (*terminal = "out_2"; *) "Total phosphate as P" : Concentration := {: causality <- "COUT"; unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Measurement data"; :};
+    OBJ VSS (*terminal = "out_2"; *) "Volatile suspended solids" : Concentration := {: causality <- "COUT"; unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Measurement data"; :};
+    OBJ V_ASU (*terminal = "out_2"; *) "Volume measurement data" : Volume := {: causality <- "COUT"; unit <- "m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Measurement data"; :};
+

@@ -1,0 +1,72 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 15:21:58$
+ *
+ ******************************************************************************/
+
+#ifndef IUWS_CONNECTORS_WWTP_RIVER
+#define IUWS_CONNECTORS_WWTP_RIVER
+
+#if (defined ASM2dModTemp || defined IUWS1)
+
+CLASS ASM2dToRM1 (* icon = "Connector" *) "ASM2d to RM1 (Duflow Simple) influent transformer"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  comments <- "";
+
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" :  InWWTPTerminal  := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutRiverTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+  };
+  
+  parameters <-
+  {
+    OBJ fBOD2_BOD20p "Fraction of BOD2 in BOD20p particulate" : Fraction := {: value <- 0.8 ; group <- "Fractionation" :};   
+    OBJ fBOD1p_BODf "Fraction of BOD1p in BODfast" : Fraction := {: value <- 0.1 ; group <- "Fractionation" :};
+    OBJ fBOD2p_BODs "Fraction of BOD2p in BODslow" : Fraction := {: value <- 0.3 ; group <- "Fractionation" :};
+  };
+  
+  independent <- 
+  {
+    OBJ t "Time" : Time := {: group <- "Time" :};
+  };
+  
+  state <-
+  {
+    // Q_in -> Q_In
+    OBJ Q_In (* is_favorite = "1" *) "Actual influent flow rate" : FlowRate := {: group <- "Results" :};
+  };
+  
+  equations <-
+  {
+    state.Q_In = interface.Inflow[H2O] / 1000000;
+    
+    //WATER
+    interface.Outflow[H2O]   = - interface.Inflow[H2O] ;
+    interface.Outflow[O2]   = - interface.Inflow[S_O] ;
+    interface.Outflow[NH4]   = - interface.Inflow[S_NH] ;
+    interface.Outflow[BOD1]   = - (1-parameters.fBOD1p_BODf) * (interface.Inflow[S_F] + interface.Inflow[S_A]) ;
+    interface.Outflow[BOD1p]   = - parameters.fBOD1p_BODf * (interface.Inflow[S_F] + interface.Inflow[S_A]) ;
+    interface.Outflow[BOD2] = - parameters.fBOD2_BOD20p * (1-parameters.fBOD2p_BODs) * (interface.Inflow[X_S] + interface.Inflow[X_H]
+      + interface.Inflow[X_AUT] + interface.Inflow[X_PAO] + interface.Inflow[X_PHA]) ; 
+    interface.Outflow[BOD2p] = - parameters.fBOD2_BOD20p * parameters.fBOD2p_BODs * (interface.Inflow[X_S] + interface.Inflow[X_H]
+      + interface.Inflow[X_AUT] + interface.Inflow[X_PAO] + interface.Inflow[X_PHA]) ;  
+  };
+
+:};
+
+#endif // ASM2dModTemp, IUWS1
+
+#endif // IUWS_CONNECTORS_WWTP_RIVER

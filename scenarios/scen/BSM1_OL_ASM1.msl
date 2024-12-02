@@ -1,0 +1,48 @@
+#ifndef __BSM1_OL_ASM1_MSL__
+#define __BSM1_OL_ASM1_MSL__
+
+
+CLASS BSM1_OL_ASM1 (* icon = ""; file = ""; *)  SPECIALISES CoupledModelType := 
+{:
+  comments <- "";
+
+  independent <-
+  {
+    OBJ t "Time": Time := {: group <- "Time" :};
+  };
+
+  parameters <-
+  {
+  };
+
+  interface <-
+  {
+  };
+
+  state <-
+  {
+  };
+
+  sub_models <-
+  {
+  };
+
+  initial <-
+  {
+    // Param couplings
+
+
+  };
+
+  equations <-
+  {
+  };
+
+  coupling <-
+  {
+
+  };
+:};
+
+#endif
+

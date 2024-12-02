@@ -1,0 +1,50 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:37$
+ *
+ ******************************************************************************/
+
+#ifdef PWM_SA
+
+ // 1 - H2O  
+ // The indices H - HPO4 are used in 2 senses in the subroutine
+ // As input (Totalmolality) they represent mass balance components.
+ // As output (molality), they represent the concentrations of the free ions, 
+ // when the CO3 and PO4 indices represent HCO3- and HPO4-2.
+ // 2 - H  3 -  Na  4 - K    5 - Mg  6 - Ca  7 - NH4  8 - Cl
+ // 9 -  Ac 10 - Pr 11 - CO3 12 - SO4 13 - PO4
+ 
+ // The remaining indices OH - NaSO4 are only relevant to the output (molality),
+ // which represents the speciated ion or ion-pair concentrations
+  
+ // The speciation subroutine does not consider H2O explicitly,
+ // so starts at H
+
+{FOREACH Comp_Index IN {S_H .. S_PO4} : state.Totalmolality[Comp_Index - 1] =
+IF (state.C[Comp_Index] < 0.0) THEN 0.0 ELSE state.C[Comp_Index] * parameters.conc_mol_conversion[Comp_Index - 1]; };
+
+{FOREACH Comp_Index IN {1 .. NrOfComponents} : state.COD[Comp_Index] = parameters.COD_per_g[Comp_Index] * state.C[Comp_Index]; };
+
+state.SpeciationError = MSLU_PWM_SA_Speciate(ref(state.TK), ref(state.Totalmolality[H_]), ref(state.molality[H]), ref(state.k_thermo[h2co3]), ref(state.k_equil[h2co3]),
+ref(state.IonicStrength), ref(state.p_H), ref(state.TotalAlkalinity), ref(state.CarbonateAlkalinity), ref(state.gam1), ref(state.lastTk),
+ref(state.spectest1), ref(state.spectest2)) + 0.000000 * (SUMOVER Comp_Index IN {S_H .. S_PO4} : state.Totalmolality[Comp_Index - 1]) ;
+
+state.SpeciationDone = IF (state.SpeciationError > 0.0) THEN 0.0 ELSE 0.0 ;
+
+state.gam0 = pow(10, state.IonicStrength * 0.1) + state.SpeciationDone ;
+
+state.COD_HAc = state.molality[HAc] * 63996 / 60.0516 + state.SpeciationDone ;
+
+state.COD_HPr = state.molality[HPr] * 111993 / 74.0784 + state.SpeciationDone ;
+
+#endif // PWM_SA						

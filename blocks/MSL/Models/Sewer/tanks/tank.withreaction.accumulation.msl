@@ -1,0 +1,75 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:30$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_TANKS_TANK_WITHREACTION_ACCUMULATION
+#define SEWER_TANKS_TANK_WITHREACTION_ACCUMULATION
+
+CLASS Tank_wReaction_Accumulation (* icon = "Tank" *)
+"Retention volume of the system: buffertank with reaction and outflow of resuspended solid matter"
+EXTENDS Base_SedimentSewerModel WITH
+{:
+ 
+  comments <- "Retention volume of the system: buffertank with reaction and outflow of resuspended solid matter";
+  
+  interface <-
+  {
+   OBJ Outflow (* terminal = "out_1" *) "Outflow": OutSewTerminal := {: causality <- "COUT" :};
+   OBJ r_Res (* terminal = "in_2"; manip = "1" *) "Sedimentation rate in the connected unit": Real := {: causality <- "CIN"; group <- "Settling" :};
+   OBJ M_Sed (* terminal = "out_2" *) "Mass of sediment settled on the bottom of the unit" : Mass := {: causality <- "COUT" :};
+  };
+	
+  parameters <-
+  {
+    // favorite and group: missing
+    OBJ H_init "Initial level of the tank" : Length := {: value <- 0.1; group <- "Hydraulic" :};
+    // MeanSedTSSMass -> TSSmean
+    OBJ TSSmean "Mean TSS sediment mass in the sewer": Mass := {: value <- 5000000.0; group <- "Sedimentation" :};
+  };
+  
+  state <-
+  {
+    OBJ r_Resusp "Particulate matter removal rate" : Real;
+  };
+
+  initial <-
+  {
+    state.SewM[NH4] := state.SewM[H2O] * 1E-06 * parameters.C0_NH4 ;
+    state.SewM[SCOD] := state.SewM[H2O] * 1E-06 * parameters.C0_SCOD ;
+    state.SewM[XCOD] := state.SewM[H2O] * 1E-06 * parameters.C0_XCOD ;	
+    state.SewM[PO4] := state.SewM[H2O] * 1E-06 * parameters.C0_PO4 ;
+    state.SewM[XTSS] := parameters.TSSmean ;   
+  };
+
+  equations <-
+  {
+   state.r_Resusp = IF (state.SewM[XTSS] > 10000.0) THEN interface.r_Res/state.SewM[XTSS] ELSE 0 ;
+   
+   state.V = 1E-06 * state.SewM[H2O] ;
+   
+   { FOREACH Comp_Index IN {2 .. Kosim1NrOfComponents}: state.C[Comp_Index] = state.SewM[Comp_Index] / state.V ; };
+
+   // to avoid resuspension when there is no sediment mass left
+   { FOREACH Comp_Index IN {Kosim1IndexOfFirstParticulateComponent .. Kosim1IndexOfLastParticulateComponent}:
+      interface.Outflow [Comp_Index] = state.r_Resusp * state.SewM[Comp_Index] ; };
+
+   interface.M_Sed= state.SewM[XTSS]; 
+  };
+
+:};
+
+
+#endif // SEWER_TANKS_TANK_WITHREACTION_ACCUMULATION

@@ -1,0 +1,71 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:57$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_BASE_SAND_FILTER_SIMPLEDOWNFLOW
+#define WWTP_BASE_SAND_FILTER_SIMPLEDOWNFLOW
+
+
+CLASS SimpleDownFlow
+(* icon = "sand_filter" ; is_default = "true" *)
+"Semicontinuous Downflow granular medium filter"
+EXTENDS DownFlow WITH
+{:
+
+  comments <- "A model for sand filtration";
+  
+  equations <-
+  {
+    state.BW_On = IF (independent.t <= 0) THEN 0.0
+      ELSE IF (state.Q_BW > 0.0) THEN 1 ELSE 0.0 ; 
+  };
+
+:};
+ 
+
+// (EURE 30/07/2018) variation of original model
+CLASS DownFlow_BW (* icon = "sand_filter" *)
+"Semicontinuous downflow granular medium filter - with automatic detection of backwash conditions"
+EXTENDS DownFlow WITH
+{:
+
+  comments <- "Semicontinuous downflow granular medium filter - with automatic detection of backwash conditions";
+
+  interface <-
+  {
+    OBJ Is_BW (* terminal = "out_2"; is_favorite = "1" *) "Backwashing state (1=on 0=off)" : Integer := {: causality <- "COUT" ; group <- "Operation" :};
+  };
+    
+  initial <-
+  {
+    state.BW_On = 0 ;
+  };
+  
+  equations <-
+  {
+    // ~begin~   Is backwash necessary?
+    state.Qratio = state.Help_Q_Out / state.Q_In ;
+    interface.Is_BW = state.BW_On ;
+    state.BW_On = IF (independent.t <= 0) THEN 0.0
+//      ELSE IF (state.Qratio <= parameters.f_Qin) THEN 1 ELSE 0.0 ; 
+      ELSE IF (previous(state.BW_On) < 1 && state.Qratio <= parameters.f_Qin) THEN 1 ELSE 0.0 ; 
+    // ~end~
+  };
+
+:};
+
+
+#endif // WWTP_BASE_SAND_FILTER_SIMPLEDOWNFLOW

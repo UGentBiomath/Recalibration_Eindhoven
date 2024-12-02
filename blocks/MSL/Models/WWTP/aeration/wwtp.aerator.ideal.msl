@@ -1,0 +1,64 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 18. marts 2022 08:36:35$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_AERATOR_IDEAL
+#define WWTP_AERATOR_IDEAL
+
+
+CLASS Aerator_Ideal (* icon = "aerator" *) "Basic model for aeration: simplistic approach"
+EXTENDS Aerator_Base WITH
+{:
+
+  comments <- "Basic model for aeration: simplistic approach" ;
+
+  interface <-
+  {
+		OBJ Q_air (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Air flow rate under Standard Conditions": FlowRate := {: causality <- "CIN" ; value <- 35000 ; group <- "Operational" :};
+  };
+
+  parameters <-
+  {
+    OBJ AE "Aeration efficiency (kgO2/kWh)": Real := {: value <- 0.8; group <- "Energy" :};
+		OBJ O2_air (* hidden = "1" *) "O2 fraction in air": Fraction := {: value <- 0.2085 :};
+		OBJ MW_O2 (* hidden = "1" *) "Molar weight of oxygen": Real := {: value <- 32.0 :};
+  };
+
+  state <-
+  {
+    OBJ AerationEnergy "Energy consumption for aeration, integral" : ElectricalEnergy := {: group <- "Energy" :} ;
+    OBJ Help_Q_O2 (* hidden = "1" *) "Mass flow of oxygen": Real := {: unit <- "g/d"; group <- "Conditions" :};
+    OBJ Help_P (* hidden = "1" *) "Power input": Power := {: group <- "Energy" :};
+		OBJ	M_O2 (* hidden = "1" *) "Mass of oxygen per unit volume of air": Concentration := {: group <- "Conditions" :};
+  };
+
+  equations <-
+  {
+    DERIV(state.AerationEnergy, [independent.t]) = state.Help_P / 1000 * 24;
+
+    state.Help_Q_O2 = interface.Q_air * state.M_O2 ;
+
+    state.Help_P = state.Help_Q_O2 / (parameters.AE * 24) ;
+    
+    state.M_O2 = (parameters.O2_air / state.MVol_air) * parameters.MW_O2 ;
+    
+    interface.Kla = IF ((state.O2_sat - interface.O2_tank) * interface.Vol_tank > 0.0) THEN state.Help_Q_O2 / ((state.O2_sat - interface.O2_tank) * interface.Vol_tank) ELSE 0.0 ;
+  };
+
+:};
+
+
+#endif // WWTP_AERATOR_IDEAL

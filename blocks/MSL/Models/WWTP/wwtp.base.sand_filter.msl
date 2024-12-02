@@ -1,0 +1,225 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 22. september 2020 14:54:01$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_SAND_FILTER
+#define WWTP_BASE_SAND_FILTER
+
+#ifdef StandardCategoryModels
+
+
+CLASS DownFlow "Base class for a semicontinuous downflow granular medium filter"
+EXTENDS Base_DownFlow WITH
+{:
+
+  comments <- "Base class for a semicontinuous downflow granular medium filter" ;
+
+  interface <-
+  {
+    OBJ Overflow (* terminal = "out_3" *) "Outflow unfiltered" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Overflwo" :};
+  };
+  
+  parameters <-
+  {
+    OBJ I_bw "Backwash Intensity" : Real := {: unit <- "m-3"; value <- 0.02 ; group <- "Filtration" :};
+    OBJ f_Qin (* is_favorite = "1" *) "Threshold for residual flow" : Fraction := {: value <- 0.5 ; group <- "Filtration" :};
+  };
+  
+  state <-
+  {
+    OBJ BW_On (* hidden = "1" *) "Is backwash needed? (0/1)" : Integer := {: interval <- {: lowerBound <- 0 ; upperBound <- 1 :} ; group <- "Operation" :};
+    OBJ Qratio (* hidden = "1" *) "Ratio Q filtered / Q in" : Real ;
+    
+    OBJ f_Over (* hidden = "1" *) "Fraction of the influent flux going to the unfiltered outflow" : Fraction ;
+  };
+  
+  initial <-
+  {
+    state.BW_On = 0 ;
+  };
+  
+  equations <-
+  {
+    // Q_Out FILTERED (no Q_Out while backwashing)
+    // Accidental backwash influent while the filter is in operation is bypassed to filtered effluent
+    state.Q_Out = IF (state.BW_On <= 0) THEN state.Q_BW + state.Help_Q_Out ELSE 0.0 ;
+
+    state.Q_Over = IF (state.H > parameters.H_Max) THEN
+      IF (state.BW_On <= 0) THEN
+        IF (state.Help_Q_Over < 0) THEN 0.0 ELSE state.Help_Q_Over
+      ELSE state.Q_In + state.Q_BW
+    ELSE 0.0 ;
+
+    state.X_BW = IF (state.BW_On < 1 || state.Q_BW <= 0.0) THEN 0.0 ELSE state.Help_X_Backwash / state.Q_BW ;
+    
+    // Fractions of filtered- and unfiltered effluent
+    state.f_Out = IF (state.BW_On <= 0) THEN
+      IF ((state.Q_Out + state.Q_Over) <= 0) THEN 0.0
+      ELSE state.Q_Out / (state.Q_Out + state.Q_Over)
+    ELSE 0.0 ;
+    
+    state.f_Over = 1 - state.f_Out ;
+
+    // Rate of backwash 
+    state.r_BW = IF (state.H > parameters.H_Max) THEN state.BW_On * state.Q_BW * parameters.I_bw ELSE 0.0 ;
+
+    // Amount of sludge that remains on the filter (TSS per surface area)
+    DERIV(state.M_TSS,[independent.t]) =
+      ((state.X_In * state.Q_In + state.X_BW * state.Q_BW - state.Q_Out * state.X_Out - state.Q_Over * state.X_Over) / parameters.A) ;
+
+    // Per fraction in COD
+    {FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+    DERIV(state.M[Comp_Index],[independent.t]) =
+      (interface.Inflow[Comp_Index] + interface.Inflow_Backwash[Comp_Index] + interface.Outflow_Filtered[Comp_Index] + interface.Overflow[Comp_Index]) ; };
+
+    // Solids in the Unfiltered flow
+    #ifdef CalculateTSSComponent
+    state.Help_X_Over = (SUMOVER Comp_Index IN {IndexOfFirstTSSComponent .. IndexOfLastTSSComponent}: - interface.Overflow[Comp_Index] * parameters.F_TSS_COD) ;
+    #endif // CalculateTSSComponent
+
+    #ifdef UseTSSComponent
+    state.Help_X_Over = - interface.Overflow[IndexOfTSSComponent] ;
+    #endif // UseTSSComponent
+
+    // Outflows
+    {FOREACH Comp_Index IN {IndexOfSolvent .. IndexOfLastSolubleComponent}:
+      interface.Outflow_Filtered[Comp_Index] = - interface.Inflow[Comp_Index] * state.f_Out - (1 - state.BW_On) * interface.Inflow_Backwash[Comp_Index] ; };
+
+    {FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+      interface.Outflow_Filtered[Comp_Index] = - interface.Inflow[Comp_Index] * parameters.f_nf * state.f_Out - (1 - state.BW_On) * interface.Inflow_Backwash[Comp_Index] ; };
+
+    {FOREACH Comp_Index IN {IndexOfSolvent .. IndexOfLastSolubleComponent}:
+      interface.Overflow[Comp_Index] = - interface.Inflow[Comp_Index] * state.f_Over - state.BW_On * interface.Inflow_Backwash[Comp_Index] ; };
+
+    {FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+      interface.Overflow[Comp_Index] = - interface.Inflow[Comp_Index] * state.f_Over - state.BW_On * interface.Inflow_Backwash[Comp_Index] - state.M[Comp_Index] * state.r_BW ; };      
+  };
+
+:};
+
+
+CLASS Base_DownFlow "Base class for a semicontinuous downflow granular medium filter"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  comments <- "Base class for a semicontinuous downflow granular medium filter" ;
+
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Inflow_Backwash (* terminal = "in_3" *) "Inflow" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent backwash" :};
+    OBJ Outflow_Filtered (* terminal = "out_1" *) "Outflow filtered" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent Filtered" :};
+  };
+  
+  parameters <-
+  {
+    OBJ alfa "Empirical factor" : Real := {: value <- 2500 ; group <- "Model" :};
+    OBJ beta "Empirical factor" : Real := {: value <- 1 ; group <- "Model" :};
+    OBJ k "Sludge resistance coefficient" : Real := {: value <- 0.001 ; group <- "Model" :};
+    OBJ f0 "Clean filter bed resistance factor": Fraction := {: value <- 0.025 ; group <- "Model" :};
+
+    OBJ A (* is_favorite = "1" *) "Surface" : Area:= {: value <- 1500 ; group <- "Tank" :};
+    OBJ H_Max (* is_favorite = "1" *) "Maximum height of the water in the sand filter" : Length := {: value <- 1 ; group <- "Tank" :};
+    
+    OBJ f_nf "Non-filterable fraction" : Fraction := {: value <- 0.005 ; group <- "Filtration" :};
+
+    OBJ F_TSS_COD "Fraction TSS/COD" : Fraction := {: value <- 0.75 ; group <- "Conversion factors" :};
+  };
+  
+  independent <- 
+  { 
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+  };
+  
+  state <-
+  {
+    OBJ Help_Q_Out (* hidden = "1" *) "..." : FlowRate := {: group <- "Operation" :};
+    OBJ Help_Q_Over (* hidden = "1" *) "Unfiltered effluent flow rate" : Real := {: group <- "Operation" :};
+    OBJ r_BW (* hidden = "1" *) "Backwash rate" : Frequency := {: group <- "Operational" :};
+    
+    OBJ Q_In (* is_favorite = "1" *) "Influent flow rate" : FlowRate := {: group <- "Operation" :};
+    OBJ Q_Out (* is_favorite = "1" *) "Filtered effluent flow rate" : FlowRate := {: group <- "Operation" :};
+    OBJ Q_Over (* is_favorite = "1" *) "Unfiltered effluent flow rate" : FlowRate := {: group <- "Operation" :};
+    OBJ Q_BW  (* is_favorite = "1" *) "Backwash flow rate" : FlowRate := {: group <- "Operation" :};
+
+    OBJ H (* is_favorite = "1" *) "Height of the water on the sand filter" : Length := {: group <- "Operation" :};
+    OBJ V "Volume" : Volume := {: group <- "Tank" :};
+    OBJ M_TSS "Total in TSS per surface area" : SurfaceDensity := {: group <- "Operation" :};
+    // should be restricted to X_ components only
+    OBJ M "Mass of sludge on the sand filter" : MassVector := {: group <- "Operation" :};
+    OBJ f_Out (* hidden = "1" *) "Fraction of the influent flux going to the filtered outflow" : Fraction ;
+    
+    OBJ Help_X_In (* hidden = "1" *) "" : MassFlux;
+    OBJ Help_X_Backwash (* hidden = "1" *) "" : MassFlux;
+    OBJ Help_X_Out (* hidden = "1" *) "" : MassFlux;
+    OBJ Help_X_Over (* hidden = "1" *) "" : MassFlux;
+
+    OBJ X_In (* is_favorite = "1" *) "Influent suspended solids concentration" : Concentration := {: group <- "Concentration" :};
+    OBJ X_BW (* is_favorite = "1" *) "Backwash suspended solids concentration" : Concentration := {: group <- "Concentration" :};
+    OBJ X_Out (* is_favorite = "1" *) "Filtered effluent suspended solids concentration" : Concentration := {: group <- "Concentration" :};
+    OBJ X_Over (* is_favorite = "1" *) "Unfiltered effluent suspended solids concentration" : Concentration := {: group <- "Concentration" :};
+  };
+  
+  equations <-
+  {
+    // TT #56457
+    state.Q_In = 1E-06 * interface.Inflow[IndexOfSolvent];
+    state.Help_Q_Out = parameters.alfa * pow(state.H, parameters.beta) * (1 - (parameters.f0 * exp(parameters.k * state.M_TSS))) ;
+    // TT #56593
+    state.Q_BW = IF (interface.Inflow_Backwash[IndexOfSolvent] > 0.0) THEN 1E-06 * interface.Inflow_Backwash[IndexOfSolvent] ELSE 0.0 ;
+
+    // Height and volume of the water above the material
+    DERIV(state.H,[independent.t]) = 1 / parameters.A * (state.Q_In + state.Q_BW - state.Q_Out - state.Q_Over) ;
+    state.V = state.H * parameters.A;
+
+    // Q_Out UNFILTERED, only when the height of water exceeds the overflow height
+    // While backwashing all flow goes to Q_over
+    state.Help_Q_Over = state.Q_In - state.Help_Q_Out ;
+    
+    // Solids in the In, Out and Unfiltered flows
+    #ifdef CalculateTSSComponent
+    state.Help_X_In = (SUMOVER Comp_Index IN {IndexOfFirstTSSComponent .. IndexOfLastTSSComponent}: interface.Inflow[Comp_Index] * parameters.F_TSS_COD) ;
+    
+    state.Help_X_Backwash = (SUMOVER Comp_Index IN {IndexOfFirstTSSComponent .. IndexOfLastTSSComponent}: interface.Inflow_Backwash[Comp_Index] * parameters.F_TSS_COD) ;
+    
+    state.Help_X_Out = (SUMOVER Comp_Index IN {IndexOfFirstTSSComponent .. IndexOfLastTSSComponent}: - interface.Outflow_Filtered[Comp_Index] * parameters.F_TSS_COD) ;
+    #endif // CalculateTSSComponent
+
+    #ifdef UseTSSComponent
+    state.Help_X_In = interface.Inflow[IndexOfTSSComponent] ;
+    
+    state.Help_X_Backwash = interface.Inflow_Backwash[IndexOfTSSComponent] ;
+    
+    state.Help_X_Out = - interface.Outflow_Filtered[IndexOfTSSComponent] ;
+    #endif // UseTSSComponent
+
+    state.X_In = IF (state.Q_In <= 0.0) THEN 0.0 ELSE state.Help_X_In / state.Q_In ;
+
+    state.X_Out = IF (state.Q_Out <= 0.0) THEN 0.0 ELSE state.Help_X_Out / state.Q_Out ;
+    
+    state.X_Over  = IF (state.Q_Over <= 0.0) THEN 0.0 ELSE state.Help_X_Over  / state.Q_Over ;
+  };
+
+:};
+
+
+#include "WWTP/sandfilter/wwtp.base.sand_filter.simpledownflow.msl"
+#include "WWTP/sandfilter/wwtp.sand_filter.autobw.msl"
+
+
+#endif // StandardCategoryModels
+
+
+#endif // WWTP_BASE_SAND_FILTER

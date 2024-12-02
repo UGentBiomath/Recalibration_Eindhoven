@@ -1,0 +1,28 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ KL_Min (* *) "Minimum mass transfer constant reaeration" : Velocity := {: value <- 0.1; group <- "Kinetics"; :};
+    OBJ KS_O2 (* *) "Monod constant O2 on sediment oxygen demand" : Concentration := {: value <- 2.0; group <- "Kinetics"; :};
+    OBJ K_BODs (* *) "Decay rate for sediment BOD" : RateConstant := {: value <- 0.7; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ K_N (* *) "Nitrification rate at 20 degC" : RateConstant := {: value <- 0.2; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ K_NO2 (* *) "Monod constant O2 on nitrification" : Concentration := {: value <- 3.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ K_O2 (* *) "Monod constant O2 on BOD decay" : Concentration := {: value <- 2.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ K_ProdO2 (* *) "Oxygen production Macrophyte biomass (gO2/gM)/(W/m2)/day" : Real := {: value <- 0.0002; group <- "Kinetics"; :};
+    OBJ K_RespO2 (* *) "Oxygen respiration Macrophyte biomass (gO2/gM)/day" : RateConstant := {: value <- 0.04; group <- "Kinetics"; :};
+    OBJ K_SedO2 (* *) "Sediment Oxygen Demand" : Real := {: unit <- "g/m2/d"; value <- 5.0; group <- "Diffuse input"; :};
+    OBJ Kd1 (* *) "Decay rate BOD1 at 20 degC" : RateConstant := {: value <- 0.4; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ Kd2 (* *) "Decay rate BOD2 at 20 degC" : RateConstant := {: value <- 0.3; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ MB (* *) "Macrophyte biomass" : SurfaceDensity := {: value <- 50.0; group <- "Diffuse input"; :};
+    OBJ Sed_BOD1 (* *) "Diffuse source BOD1, sediment" : Real := {: unit <- "g/m2/d"; value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Diffuse input"; :};
+    OBJ Sed_BOD2 (* *) "Diffuse source BOD2, sediment" : Real := {: unit <- "g/m2/d"; value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Diffuse input"; :};
+    OBJ Sed_NH4 (* *) "Diffuse source NH4, sediment" : Real := {: unit <- "g/m2/d"; value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Diffuse input"; :};
+    OBJ Theta_KL (* hidden = "1"; *) "Temperature coefficient mass transfer" : Real := {: value <- 1.02; group <- "Kinetics"; :};
+    OBJ Theta_Kd (* hidden = "1"; *) "Temperature coefficient BOD decay" : Real := {: value <- 1.05; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ Theta_M (* hidden = "1"; *) "Temperature coefficient plant growth/decay" : Real := {: value <- 1.03; group <- "Kinetics"; :};
+    OBJ Theta_N (* hidden = "1"; *) "Temperature coefficient nitrification" : Real := {: value <- 1.06; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ Theta_Sed (* hidden = "1"; *) "Temperature coefficient SOD" : Real := {: value <- 1.08; group <- "Kinetics"; :};
+    OBJ V_KL (* *) "Velocity reaeration coefficient" : Velocity := {: value <- 3.2; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ alpha_T (* *) "Empirical parameter for air/water T conversion" : CelsiusTemperature := {: value <- 15.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ beta_T (* *) "Empirical parameter for air/water T conversion" : Real := {: value <- 3.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; :};
+    OBJ r_Sed1 (* *) "Sedimentation rate for particulate BOD1" : Velocity := {: value <- 10.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+    OBJ r_Sed2 (* *) "Sedimentation rate for particulate BOD2" : Velocity := {: value <- 50.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetics"; :};
+

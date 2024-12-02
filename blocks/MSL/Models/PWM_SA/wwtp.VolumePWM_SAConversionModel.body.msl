@@ -1,0 +1,161 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+  interface <-
+  {
+    #include "PWM_SA/wwtp.VolumePWM_SAModel.interface.msl"
+  };
+
+  parameters <-
+  {
+    #include "PWM_SA/wwtp.VolumePWM_SAConversionModel.parameters.msl"
+  };
+
+  state <-
+  {
+    #include "PWM_SA/wwtp.VolumePWM_SAConversionModel.state.msl"
+  };
+
+  initial <-
+  {
+    // Params
+
+    parameters.Gk := parameters.i_H_Org_mol_perC - 3.000000 * parameters.i_N_Org_mol_perC - 2.000000 * parameters.i_O_Org_mol_perC + 5.000000 * parameters.i_P_Org_mol_perC + 4.000000;
+    parameters.Gx := parameters.i_H_SF_mol_perC - 3.000000 * parameters.i_N_SF_mol_perC - 2.000000 * parameters.i_O_SF_mol_perC + 5.000000 * parameters.i_P_SF_mol_perC + 4.000000;
+
+    // StateVars
+
+    state.Ksp_cal := 3.55 * exp(- 7);
+    state.Ksp_cap := 3.7942 * exp(- 12);
+    state.Ksp_mag := 1.000000 * exp(- 7);
+    state.Ksp_mgkp := 2.1e-013;
+    state.Ksp_newb := 1.58 * exp(- 6);
+    state.Ksp_stru := 2.51189e-013;
+    state.PCO2_eq := 0.3;
+
+    // Extra
+
+      state.Ksp_cal := 3.55 * exp(- 7);
+      state.Ksp_cap := 3.7942 * exp(- 12);
+      state.Ksp_mag := 1.000000 * exp(- 7);
+      state.Ksp_mgkp := 2.1e-013;
+      state.Ksp_newb := 1.58 * exp(- 6);
+      state.Ksp_stru := 2.51189e-013;
+      state.PCO2_eq := 0.3;
+      state.lastTk := 1.000000;
+      //
+      state.COD_HAc := IF (independent.t < 1e-007) THEN 1.000000 ELSE state.COD_HAc;
+      state.COD_HPr := IF (independent.t < 1e-007) THEN 0.2 ELSE state.COD_HPr;
+      state.IonicStrength := IF (independent.t < 1e-007) THEN 1e-011 ELSE state.IonicStrength;
+      state.gam0 := pow(10, state.IonicStrength * 0.1);
+      //
+      state.SpeciationError := MSLU_PWM_SA_Speciate(ref(state.TK), ref(state.Totalmolality[H_]), ref(state.molality[H]), ref(state.k_thermo[h2co3]), ref(state.k_equil[h2co3]), ref(state.IonicStrength), ref(state.p_H), ref(state.TotalAlkalinity), ref(state.CarbonateAlkalinity), ref(state.gam1), ref(state.lastTk), ref(state.spectest1), ref(state.spectest2));
+      //
+      state.saturation_cal := (state.molality[Ca] * state.molality[CO3]) / state.Ksp_cal;
+      state.saturation_cap := (pow(state.molality[Ca], 3) * pow(state.molality[PO4], 2)) / state.Ksp_cap;
+      state.saturation_mag := (state.molality[Mg] * state.molality[CO3]) / state.Ksp_mag;
+      state.saturation_mgkp := (state.molality[Mg] * state.molality[K] * state.molality[PO4]) / state.Ksp_mgkp;
+      state.saturation_newb := (state.molality[Mg] * state.molality[HPO4]) / state.Ksp_newb;
+      state.saturation_stru := (state.molality[Mg] * state.molality[NH4] * state.molality[PO4]) / state.Ksp_stru;
+      //
+      #include "PWM_SA/wwtp.VolumePWM_SAConversionModel.initialisation.msl"
+
+    // Stoichiometry
+
+    #include "PWM_SA/wwtp.VolumePWM_SAConversionModel.stoichiometry.msl"
+  };
+
+  equations <-
+  {
+    // StateVars
+
+    state.CO2_A_rate = parameters.KLa_CO2 * (state.KCO2) * 44009;
+    state.D_Struv = parameters.MW_[X_Str_NH4] * pow(pow(state.saturation_stru,0.3333333333) - 1.0,2) + state.SpeciationDone;
+    state.D_cal = parameters.MW_[X_Cal] * pow(pow(state.saturation_cal,0.5) - 1.0,2) + state.SpeciationDone;
+    state.D_cap = parameters.MW_[X_ACP] * pow(pow(state.saturation_cap,0.2) - 1.0, 2) + state.SpeciationDone;
+    state.D_mag = parameters.MW_[X_Mag] * pow(pow(state.saturation_mag,0.5) - 1.0, 2) + state.SpeciationDone;
+    state.D_mgkp = parameters.MW_[X_Str_K] * pow(pow(state.saturation_mgkp,0.3333333333) - 1.0,2) + state.SpeciationDone;
+    state.D_newb = parameters.MW_[X_Newb] * pow(pow(state.saturation_newb,0.5) - 1.0,2) + state.SpeciationDone;
+    state.Diss_Str = IF (state.min_str < state.Totalmolality[PO4_] + state.SpeciationDone) THEN state.min_str ELSE state.Totalmolality[PO4_];
+    state.Diss_cal = IF (state.Totalmolality[Ca] < state.Totalmolality[CO3_] + state.SpeciationDone) THEN state.Totalmolality[Ca] ELSE state.Totalmolality[CO3_];
+    state.Diss_cap = IF (3 * state.Totalmolality[Ca] < 2 * state.Totalmolality[PO4_] + state.SpeciationDone) THEN state.Totalmolality[Ca] / 3.0 ELSE state.Totalmolality[PO4_] / 2.0;
+    state.Diss_mag = IF (state.Totalmolality[Mg] < state.Totalmolality[CO3_] + state.SpeciationDone) THEN state.Totalmolality[Ca] ELSE state.Totalmolality[CO3_];
+    state.Diss_mgkp = IF (state.min_mgkp < state.Totalmolality[PO4_] + state.SpeciationDone) THEN state.min_mgkp ELSE state.Totalmolality[PO4_];
+    state.Diss_newb = IF (state.Totalmolality[Mg] < state.Totalmolality[PO4_] + state.SpeciationDone) THEN state.Totalmolality[Ca] ELSE state.Totalmolality[PO4_];
+    state.Driver_Str = IF ((state.saturation_stru < 1.0) && (state.C[X_Str_NH4] <= 0.0)) THEN 0.0 ELSE -pow(state.Ksp_stru,0.6666667)*state.D_Struv;
+    state.Driver_cal = IF ((state.saturation_cal < 1.0) && (state.C[X_Cal] <= 0.0)) THEN 0.0 ELSE -state.Ksp_cal*state.D_cal;
+    state.Driver_cap = IF ((state.saturation_cap < 1.0) && (state.C[X_ACP] <= 0.0)) THEN 0.0 ELSE -pow(state.Ksp_cap,0.4)*state.D_cap;
+    state.Driver_mag = IF ((state.saturation_mag < 1.0) && (state.C[X_Mag] <= 0.0)) THEN 0.0 ELSE -state.Ksp_mag*state.D_mag;
+    state.Driver_mgkp = IF ((state.saturation_mgkp < 1.0) && (state.C[X_Str_K] <= 0.0)) THEN 0.0 ELSE  -pow(state.Ksp_mgkp,0.6666667)*state.D_mgkp;
+    state.Driver_newb = IF ((state.saturation_newb < 1.0) && (state.C[X_Newb] <= 0.0)) THEN 0.0 ELSE -state.Ksp_newb*state.D_newb;
+    state.HydrolysisRateConst = (parameters.k_M_BInf_OHO_hyd * state.S_O_MonodTerm + parameters.k_M_BInf_OHO_hyd * parameters.n_OHO_BInf_hyd * state.S_O_InhibitionTerm * state.S_NO_MonodTerm + parameters.k_M_BInf_OHO_hyd * parameters.n_OHO_BInf_ferm * state.S_O_InhibitionTerm * state.S_NO_InhibitionTerm);
+    state.IpH_N = (pow(parameters.KI_H_N, 2) / (pow(parameters.KI_H_N, 2) + pow(state.molality[H], 2))) * (pow(state.molality[H], 2) / (pow(parameters.KA_H_N, 2) + pow(state.molality[H], 2))) + state.SpeciationDone;
+    state.KCO2 = state.molality[H2CO3] - parameters.KA_CO2 + state.SpeciationDone;
+    state.K_cal = IF ((state.saturation_cal > 1.0)&&(state.Diss_cal <= 0.0)) THEN 0.0 ELSE parameters.kdis_cal * state.Tcorr;
+    state.K_cap = IF ((state.saturation_cap > 1.0)&&(state.Diss_cap <= 0.0)) THEN 0.0 ELSE parameters.kdis_cap * state.Tcorr;
+    state.K_mag = IF ((state.saturation_mag > 1.0)&&(state.Diss_mag <= 0.0)) THEN 0.0 ELSE parameters.kdis_mag * state.Tcorr;
+    state.K_mgkp = IF ((state.saturation_mgkp > 1.0)&&(state.Diss_mgkp <= 0.0)) THEN 0.0 ELSE parameters.kdis_mgkp * state.Tcorr;
+    state.K_newb = IF ((state.saturation_newb > 1.0)&&(state.Diss_newb <= 0.0)) THEN 0.0 ELSE parameters.kdis_newb * state.Tcorr;
+    state.K_stru = IF ((state.saturation_stru > 1.0)&&(state.Diss_Str <= 0.0)) THEN 0.0 ELSE parameters.kdis_stru * state.Tcorr;
+    state.Kdec_XG = parameters.A_20 * parameters.b_PAO * pow(parameters.Th_d_XG_20, (parameters.Temperature - 20)) + parameters.A_35 * parameters.b_PAO * exp(parameters.Th_d_XG_35 * (parameters.Temperature - 35));
+    state.Kdec_XH = parameters.A_20 * parameters.b_OHO * pow(parameters.Th_d_XH_20, (parameters.Temperature - 20)) + parameters.A_35 * parameters.b_OHO * exp(parameters.Th_d_XH_35 * (parameters.Temperature - 35));
+    state.Kdec_XN = parameters.A_20 * parameters.b_ANO * pow(parameters.Th_d_XN_20, (parameters.Temperature - 20)) + parameters.A_35 * parameters.b_ANO * exp(parameters.Th_d_XN_35 * (parameters.Temperature - 35));
+    state.Km_XH = parameters.A_20 * parameters.mu_OHO_max * pow(parameters.Th_m_XH_20, (parameters.Temperature - 20)) + parameters.A_35 * parameters.mu_OHO_max * exp(-0.01 * (pow((parameters.Temperature - 35), 2))) + parameters.A_55 * parameters.mu_OHO_max * exp(-0.01 * (pow((parameters.Temperature - 55), 2)));
+    state.Km_XN = parameters.mu_ANO * pow(parameters.Th_m_XN_20, (state.Temp_Actual - 20));
+    state.KspCorr = (1.0/state.TK - 1.0/298.15)/(2.303 * 8.314);
+    state.Ksp_cal = pow(10.0,-8.3-state.KspCorr*(-8000.0));
+    state.Ksp_cap = pow(10.0,-28.92-state.KspCorr*(54000.0));
+    state.Ksp_mag = pow(10.0,-7.46-state.KspCorr*(20000.0));
+    state.Ksp_mgkp = pow(10.0,-10.62-state.KspCorr*(20000.0));
+    state.Ksp_newb = 6.6834E-19;
+    state.Ksp_stru = pow(10.0,-13.26-state.KspCorr*(22600.0));
+    state.NPA_MonodTerm = state.S_NH_MonodTerm * state.S_PO_MonodTerm * state.S_ALK_MonodTerm;
+    state.Ppt_A = state.C[X_PAO_Stor] / (parameters.K_A_PO4 + state.C[X_PAO_Stor]);
+    state.Ppt_I = parameters.K_A_PO4 / (parameters.K_A_PO4 + state.C[X_PAO_Stor]);
+    state.Ppt_Str = IF (state.C[X_Str_NH4] < 0.000000) THEN 0.000000 ELSE state.C[X_Str_NH4] / parameters.MW_[X_Str_NH4];
+    state.Ppt_cal = IF (state.C[X_Cal] < 0.0) THEN 0.0 ELSE state.C[X_Cal] / parameters.MW_[X_Cal];
+    state.Ppt_cap = IF (state.C[X_ACP] < 0.0) THEN 0.0 ELSE state.C[X_ACP] / parameters.MW_[X_ACP];
+    state.Ppt_mag = IF (state.C[X_Mag] < 0.0) THEN 0.0 ELSE state.C[X_Mag] / parameters.MW_[X_Mag];
+    state.Ppt_mgkp = IF (state.C[X_Str_K] < 0.0) THEN 0.0 ELSE state.C[X_Str_K] / parameters.MW_[X_Str_K];
+    state.Ppt_newb = IF (state.C[X_Newb] < 0.0) THEN 0.0 ELSE state.C[X_Newb] / parameters.MW_[X_Newb];
+    state.S_ALK_MonodTerm = (state.C[S_CO3] / (parameters.K_S_ALK * 60.008 + state.C[S_CO3]));
+    state.S_A_MonodTerm = (state.C[S_VFA] / (parameters.K_S_VFA * 59.0437 / 63.996 + state.C[S_VFA]));
+    state.S_F_MonodTerm = (state.C[S_F] / (parameters.K_F_OHO * parameters.MW_[S_F] / (8 * parameters.gam_f) + state.C[S_F]));
+    state.S_NH_MonodTerm = (state.C[S_NH] / (parameters.K_S_NH * 18.0386 / 14.007 + state.C[S_NH]));
+    state.S_NO_InhibitionTerm = ((parameters.K_NOx_OHO * 62.004 / 14.007) / (parameters.K_NOx_OHO * 62.004 / 14.007 + state.C[S_NOx]));
+    state.S_NO_MonodTerm = (state.C[S_NOx] / (parameters.K_NOx_OHO * 62.004 / 14.007 + state.C[S_NOx]));
+    state.S_O_InhibitionTerm = IF (state.C[S_O] < 0.0) THEN 1.0 ELSE (parameters.K_O2) / (parameters.K_O2 + state.C[S_O]);
+    state.S_O_MonodTerm = IF (state.C[S_O] < 0.0) THEN 0.0 ELSE (state.C[S_O]) / (parameters.K_O2 + state.C[S_O]);
+    state.S_O_Saturation = 14.65 - 0.41 * state.Temp_Actual + 0.00799 * pow(state.Temp_Actual, 2) - 7.78e-005 * pow(state.Temp_Actual, 3);
+    state.S_PO_MonodTerm = (state.C[S_PO4] / (parameters.K_S_PO4 * 94.97 / 30.974 + state.C[S_PO4]));
+    state.TK = parameters.Temperature + 273.15;
+    state.TKN_o = parameters.MW_N * (parameters.i_N_Org_mol_perC * (state.C[X_OHO] / parameters.MW_[X_OHO] + state.C[X_PAO] / parameters.MW_[X_PAO] + state.C[X_AD] / parameters.MW_[X_AD] + state.C[X_AC] / parameters.MW_[X_AC] + state.C[X_AM] / parameters.MW_[X_AM] + state.C[X_HM] / parameters.MW_[X_HM]));
+    state.TKN_u = parameters.MW_N * (parameters.i_N_SU_mol_perC * (state.C[S_U] / parameters.MW_[S_U]) + parameters.i_N_XUInf_mol_perC * (state.C[X_U_Inf] / parameters.MW_[X_U_Inf]) + parameters.i_N_SF_mol_perC * (state.C[S_F] / parameters.MW_[S_F]) + parameters.i_N_XUOrg_mol_perC * (state.C[X_U_Org] / parameters.MW_[X_U_Org]) + parameters.i_N_XBOrg_mol_perC * (state.C[X_B_Org] / parameters.MW_[X_B_Org]) + parameters.i_N_XBInf_mol_perC * (state.C[X_B_Inf] / parameters.MW_[X_B_Inf]));
+    state.TP_o = parameters.MW_P * (parameters.i_P_Org_mol_perC * (state.C[X_OHO] / parameters.MW_[X_OHO] + state.C[X_PAO] / parameters.MW_[X_PAO] + state.C[X_AD] / parameters.MW_[X_AD] + state.C[X_AC] / parameters.MW_[X_AC] + state.C[X_AM] / parameters.MW_[X_AM] + state.C[X_HM] / parameters.MW_[X_HM]));
+    state.TP_u = parameters.MW_P * (parameters.i_P_SU_mol_perC * (state.C[S_U] / parameters.MW_[S_U]) + parameters.i_P_XUInf_mol_perC * (state.C[X_U_Inf] / parameters.MW_[X_U_Inf]) + parameters.i_P_SF_mol_perC * (state.C[S_F] / parameters.MW_[S_F]) + parameters.i_P_XUOrg_mol_perC * (state.C[X_U_Org] / parameters.MW_[X_U_Org]) + parameters.i_P_XBOrg_mol_perC * (state.C[X_B_Org] / parameters.MW_[X_B_Org]) + parameters.i_P_XBInf_mol_perC * (state.C[X_B_Inf] / parameters.MW_[X_B_Inf]));
+    state.Tcorr = exp(parameters.TempCoeff * (parameters.Temperature - parameters.Tref));
+    state.XOrg_S_MonodTerm = ((state.C[X_B_Org] / state.C[X_OHO]) / (parameters.K_S_BInf_OHO_hyd * (parameters.MW_[X_B_Org] * parameters.gam_o) / (parameters.gam_bp * parameters.MW_[X_OHO]) + (state.C[X_B_Org] / state.C[X_OHO])));
+    state.X_PHA_MonodTerm = ((state.C[X_PAO_Stor] / state.C[X_PAO]) / (parameters.K_S_PHA_PAO * (86.0894 * (8 * parameters.gam_o)) / (143.991 * parameters.MW_[X_PAO]) + state.C[X_PAO_Stor] / state.C[X_PAO]));
+    state.X_S_MonodTerm = ((state.C[X_B_Inf] / state.C[X_OHO]) / (parameters.K_S_BInf_OHO_hyd * (parameters.MW_[X_B_Inf] * parameters.gam_o) / (parameters.gam_bps * parameters.MW_[X_OHO]) + (state.C[X_B_Inf] / state.C[X_OHO])));
+    state.k_h_AS = parameters.A_20 * parameters.k_M_BInf_OHO_hyd * pow(parameters.Th_h_20, (parameters.Temperature - 20)) + parameters.A_35 * parameters.k_M_BInf_OHO_hyd * exp(parameters.Th_h_35 * (parameters.Temperature - 35));
+    state.min_mgkp = IF (state.Totalmolality[K_] < state.Totalmolality[Mg_]) THEN state.Totalmolality[K_] ELSE state.Totalmolality[Mg_];
+    state.min_str = IF (state.Totalmolality[NH4_] < state.Totalmolality[Mg_]) THEN state.Totalmolality[NH4_] ELSE state.Totalmolality[Mg_];
+    state.saturation_cal = (state.molality[Ca] * state.molality[CO3]) / state.Ksp_cal + state.SpeciationDone;
+    state.saturation_cap = (pow(state.molality[Ca],3) * pow(state.molality[PO4],2)) / state.Ksp_cap + state.SpeciationDone;
+    state.saturation_mag = (state.molality[Mg] * state.molality[CO3]) / state.Ksp_mag + state.SpeciationDone;
+    state.saturation_mgkp = (state.molality[Mg] * state.molality[K] * state.molality[PO4]) / state.Ksp_mgkp + state.SpeciationDone;
+    state.saturation_newb = (state.molality[Mg] * state.molality[HPO4]) / state.Ksp_newb + state.SpeciationDone;
+    state.saturation_stru = (state.molality[Mg] * state.molality[NH4] * state.molality[PO4]) / state.Ksp_stru + state.SpeciationDone;
+
+    // Extra
+
+      #include "PWM_SA/wwtp.VolumePWM_SAConversionModel.speciation.msl"
+
+    // Kinetics
+
+    #include "PWM_SA/wwtp.VolumePWM_SAConversionModel.kinetics.msl"
+
+    // InterfaceVars
+
+    #include "PWM_SA/wwtp.VolumePWM_SAModel.sensors.msl"
+  };
+

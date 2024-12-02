@@ -1,0 +1,284 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 5. februar 2019 16:38:01$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_SECONDARYTAKACS_REACTIVE
+#define WWTP_SECONDARYTAKACS_REACTIVE
+
+
+CLASS ConcentrationChangeRate "Concentration Flow" SPECIALISES PhysicalQuantityType :=
+{:
+  unit <- "g/(m3.d)";
+:};
+
+
+CLASS LayerConcentrationChangeRateMatrix = ConcentrationChangeRate[NrOfComponents;][NrOfLayers;];
+ 
+
+#if(defined ASM1Temp || defined ASM2dModTemp || defined ASM3Temp || defined ASM3P_EAWAG || defined IUWS1 || defined IUWS2)
+
+// This model is an extension on the Takacs model, which was
+// developed by Takacs et al. (1991).
+// The clarifier is divided in 10 horizontal layers
+// (a discretion of the underlying partial differential equations)
+// and the mass balance is calculated for each layer and for each component (solubles	
+// and particulates). The novelty of this model 
+// is the fact that an expression is proposed for the settling velocity v_S 
+// which is valid for both the thickening and the clarification zone. 
+// 
+// Literature :	
+// Takacs I., Patry G.G. & Nolasco D. (1991), 
+// A dynamic model of the thickening/clarification process,
+// Wat. Res., 25, 1263-1271.
+
+
+CLASS SecondaryFullReactive (* icon = "secondary_clarifier" *) "Layered and fully reactive Takacs clarifier model"
+EXTENDS TakacsReactive WITH
+{:
+
+  comments <- "Layered and fully reactive Takacs clarifier model" ;
+
+  interface <-
+  { 
+    // SAME AS e.g. ASU TANKS
+    OBJ Kla (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "kLa in the different layers" : OxygenTransferCoefficient[NrOfLayers;] := {: causality <- "CIN" ; value <- 0 ; group <- "Operational" :};  
+    #ifdef StandardCategoryModels
+    OBJ Temp (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Process temperature" : CelsiusTemperature := {: causality <- "CIN" ; value <- 15 ; group <- "Operational" :}; 
+    #endif
+  };
+
+  state <-
+  {
+    OBJ ConversionTermPerComponentPerLayer (* hidden = "1" *) "Conversion term per component per layer": LayerConcentrationMatrix;
+    OBJ ConcentrationFluxPerComponentPerLayer (* hidden = "1" *) "Concentration flux per component and per layer" : LayerConcentrationChangeRateMatrix;
+    OBJ D_Out (* hidden = "1" *) "Dilution rate per layer" : Rate := {: group <- "Settling" :};
+    OBJ D_Under (* hidden = "1" *) "Dilution rate per layer" : Rate := {: group <- "Settling" :};
+  };
+
+  initial <-  
+  {
+    #ifdef CalculateTSSComponent
+    parameters.Help_F_TSS_COD := parameters.Help_F_TSS_COD ;
+    #endif
+  };
+
+  equations <-
+  {
+    // YOURI Kla
+    {FOREACH Layer_Index IN {1 .. NrOfLayers}:
+      state.Kla_Actual[Layer_Index] = interface.Kla[Layer_Index] ; };
+    
+    #ifdef StandardCategoryModels
+    state.Temp_Actual = interface.Temp;
+    #endif
+
+    // Calculation of the dilution rate in the layers (for upward and downward liquid stream in respective layers)
+    state.D_Out = state.Q_Out / state.V_Layer ;
+    state.D_Under = state.Q_Under_Actual / state.V_Layer ;
+
+    #ifdef CalculateTSSComponent
+    { FOREACH Layer_Index IN {1 .. NrOfLayers}: state.X_Layer[Layer_Index] =
+      (SUMOVER Comp_Index IN {IndexOfFirstTSSComponent .. IndexOfLastTSSComponent}:
+        state.C[Comp_Index][Layer_Index] * parameters.F_TSS_COD) ; };
+    #endif
+    
+    #ifdef UseTSSComponent
+    { FOREACH Layer_Index IN {1 .. NrOfLayers}: state.X_Layer[Layer_Index] =
+      state.C[IndexOfTSSComponent][Layer_Index] ; };
+    #endif
+
+    // Calculation of the fluxes of all components in the effluent
+       
+    interface.Overflow[IndexOfSolvent] = - state.Q_Out / parameters.WWTPSpecificVolume[IndexOfSolvent] ;
+    
+    // New Takacs equations in which the effluent fractions are the concentrations calculated for the top
+    // layer of the clarifier    
+    { FOREACH Comp_Index IN {2 .. NrOfComponents}: interface.Overflow[Comp_Index] =
+      - state.C[Comp_Index][1] * state.Q_Out ; };
+    
+    // Calculation of the fluxes of all components in the underflow    
+    
+    // New Takacs equations in which the effluent fractions are the concentrations calculated for the bottom
+    // layer of the clarifier
+    { FOREACH Comp_Index IN {2 .. NrOfComponents}: interface.Underflow[Comp_Index] =
+      - state.C[Comp_Index][NrOfLayers] * state.Q_Under_Actual ; };
+  
+    // Concentration matrix
+    { FOREACH Layer_Index IN {1 .. NrOfLayers}:
+      { FOREACH Comp_Index IN {1 .. NrOfComponents}: DERIV(state.C[Comp_Index][Layer_Index],[independent.t]) =
+        state.ConcentrationFluxPerComponentPerLayer[Comp_Index][Layer_Index] +
+        state.ConversionTermPerComponentPerLayer[Comp_Index][Layer_Index] ; }; };
+        
+    // Modified Takacs model, calculation of the transport of the soluble fractions in the layers of the clarifier
+    { FOREACH Comp_Index IN {IndexOfFirstSolubleComponent .. IndexOfLastSolubleComponent}:
+      state.ConcentrationFluxPerComponentPerLayer[Comp_Index][1] =
+        state.D_Out * (state.C[Comp_Index][2] - state.C[Comp_Index][1]) ; };
+    
+    { FOREACH Comp_Index IN {IndexOfFirstSolubleComponent .. IndexOfLastSolubleComponent}:
+      { FOREACH Layer_Index IN {2 .. NrOfLayersButOne}: state.ConcentrationFluxPerComponentPerLayer[Comp_Index][Layer_Index] =
+        IF (Layer_Index == IndexOfFeedLayer) THEN (1.0 / state.V_Layer) * (state.InFluxPerComponent[Comp_Index] - state.Q_In * state.C[Comp_Index][IndexOfFeedLayer])
+          ELSE IF (Layer_Index < IndexOfFeedLayer) THEN state.D_Out * (state.C[Comp_Index][Layer_Index+1] - state.C[Comp_Index][Layer_Index])
+            ELSE state.D_Under * (state.C[Comp_Index][Layer_Index-1] - state.C[Comp_Index][Layer_Index]) ; }; };
+    
+    { FOREACH Comp_Index IN {IndexOfFirstSolubleComponent .. IndexOfLastSolubleComponent}:
+      state.ConcentrationFluxPerComponentPerLayer[Comp_Index][NrOfLayers] =
+        state.D_Under * (state.C[Comp_Index][NrOfLayersButOne] - state.C[Comp_Index][NrOfLayers]) ; };
+  
+    // Modified Takacs model, calculation of the mass balances for the particulate fractions in all the layers    
+    { FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+      state.ConcentrationFluxPerComponentPerLayer[Comp_Index][1] =
+        (1 / state.H_Layer) * (state.J_Up[2] * state.C[Comp_Index][2] / state.X_Layer[2]
+        - state.J_G[1] * state.C[Comp_Index][1] / state.X_Layer[1]) - state.D_Out * state.C[Comp_Index][1] ; };
+    
+    { FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+    { FOREACH Layer_Index IN {2 .. NrOfLayersButOne}: state.ConcentrationFluxPerComponentPerLayer[Comp_Index][Layer_Index] =
+      IF (Layer_Index == IndexOfFeedLayer) THEN (1 / state.H_Layer) * (state.J_G[Layer_Index-1] * state.C[Comp_Index][Layer_Index-1] / state.X_Layer[Layer_Index-1]
+        - (state.J_G[Layer_Index] + state.J_Up[Layer_Index] + state.J_Dn[Layer_Index]) * state.C[Comp_Index][Layer_Index] / state.X_Layer[Layer_Index])
+        + (1 / state.V_Layer) * state.InFluxPerComponent[Comp_Index]
+        ELSE (1 / state.H_Layer) * ((state.J_G[Layer_Index-1] + state.J_Dn[Layer_Index-1]) * state.C[Comp_Index][Layer_Index-1] / state.X_Layer[Layer_Index-1]
+          + state.J_Up[Layer_Index+1] * state.C[Comp_Index][Layer_Index+1] / state.X_Layer[Layer_Index+1] - (state.J_G[Layer_Index] + state.J_Dn[Layer_Index] + state.J_Up[Layer_Index])
+          * state.C[Comp_Index][Layer_Index] / state.X_Layer[Layer_Index]) ; }; };
+    
+    { FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+      state.ConcentrationFluxPerComponentPerLayer[Comp_Index][NrOfLayers] =
+        (1 / state.H_Layer) * (state.J_Dn[NrOfLayersButOne] + state.J_G[NrOfLayersButOne]) * state.C[Comp_Index][NrOfLayersButOne] / state.X_Layer[NrOfLayersButOne]
+        - state.D_Under * state.C[Comp_Index][NrOfLayers] ; };
+  
+    // ConversionTermPerComponent
+    {FOREACH Layer_Index IN {1 .. NrOfLayers}:
+      {FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}:
+        state.ConversionTermPerComponentPerLayer[Comp_Index][Layer_Index] =
+          SUMOVER Reaction_Index IN {1 .. NrOfReactions}: (parameters.Stoichiometry[Reaction_Index][Comp_Index] * state.Kinetics[Reaction_Index][Layer_Index]); }; };
+  };
+
+:};
+
+
+
+CLASS TakacsReactive EXTENDS TakacsReactive_Body WITH
+{:
+  // State + Kinetics for the layers.
+  #include "WWTP/wwtp.VolumeASMConversionModel.layer.settling.body.msl"
+:};
+
+
+
+// FOR FUTURE DEVELOPMENT
+CLASS TakacsReactive_SVI_Body EXTENDS TakacsReactive_Body WITH
+{:
+
+  interface <-
+  {
+    OBJ SVI (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Sludge Volume Index in mL/g" : Real := {: causality <- "CIN" ; value <- 100 ; group <- "Settling" :};
+  };
+
+  state <-
+  {
+    OBJ r_H "Settling parameter (hindered settling)" : SpecificVolume := {: group <- "Settling" :}; 
+  };
+
+  equations <-
+  {
+    state.Help_r_H = (0.148 + 0.00210 * interface.SVI) / 1000 ;
+    state.r_H = state.Help_r_H ;
+  };
+
+:};
+
+
+
+CLASS TakacsReactive_NonSVI_Body EXTENDS TakacsReactive_Body WITH
+{:
+
+  parameters <- 
+  {     
+    OBJ r_H "Settling parameter (hindered settling)" : SpecificVolume := {: value <- 0.000576 ; group <- "Settling" :}; 
+  };
+
+  initial <-  
+  {
+    state.Help_r_H := parameters.r_H ;
+  };
+
+:};
+
+
+
+CLASS TakacsReactive_Body EXTENDS SettlingTank_Takacs_Reactive WITH
+{:
+
+  parameters <- 
+  {     
+    OBJ Stoichiometry (* hidden = "1" *) "A matrix structure containing stoichiometry" : QuantityType[NrOfReactions;][NrOfComponents,];
+  };
+
+  state <-
+  {
+    OBJ Kinetics (* hidden = "1" *) "A vector containing kinetics for all reactions" : QuantityType[NrOfReactions;][NrOfLayers;];
+    OBJ C "Concentration for all the components per layer" : LayerConcentrationMatrix := {: group <- "Concentration" :};
+    OBJ Kla_Actual	"The actual Kla in the system" : OxygenTransferCoefficient[NrOfLayers;] := {: group <- "Operational" :};
+    OBJ Temp_Actual "Actual temperature" : CelsiusTemperature  := {: group <- "Operational" :}; 
+  };
+
+:};
+
+
+// (EURE 02/06/2017) Ideally for both 1ary and 2ary Takacs models
+CLASS SettlingTank_Takacs_Reactive "Base class for a reactive Takacs model" EXTENDS SettlingTank_Takacs WITH
+{:
+
+  comments <- "Base class for a reactive Takacs model" ;
+
+  interface <-
+  {
+    OBJ TSS (* terminal = "out_3" *) "Total suspended solids concentration" : Concentration := {: causality <- "COUT" ; group <- "Measurement data" :};
+    OBJ V_Clarifier (* terminal = "out_3" *)"Volume measurement data" : Volume := {: causality <- "COUT" ; group <- "Measurement data" :};
+    //
+    OBJ PumpingEnergy (* terminal = "out_3" *)"Pumping energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ PumpingPower (* terminal = "out_3" *) "Pumping power" : Power := {: causality <- "COUT"; group <- "Energy" :};
+  };
+
+  parameters <- 
+  {     
+//CHECK    OBJ f_ns "Non-settleable fraction of suspended solids" : Fraction := {: value <- 0.00228 ; group <- "Settling" :};
+    // PUMPING ENERGY
+    OBJ F_Energy_FlowRate "Conversion factor Energy needed/Pump flow rate" : EnergyForPumping := {: value <- 0.04 ; group <- "Energy":};
+  };
+
+  equations <-
+  {
+//CHECK    state.X_Min = IF (state.Q_In <= 0.0) THEN parameters.f_ns * state.SolidConcentration
+//CHECK      ELSE parameters.f_ns * state.SolidFlux_In / state.Q_In ;
+
+//CHECK    state.v0_H = parameters.v0 * exp(parameters.r_H * state.X_Min); 
+  //Takacs_SVI    state.v0_H = parameters.v0 * exp(state.r_H * state.X_Min); 
+    
+    interface.TSS = state.SolidConcentration;
+  
+    interface.V_Clarifier = parameters.A * parameters.H;  
+  
+    // PUMPING ENERGY
+    interface.PumpingPower = 1E3 * parameters.F_Energy_FlowRate * state.Q_Under_Actual / 24 ;
+    DERIV(state.Integ_PE,[independent.t])=  state.Q_Under_Actual;
+    interface.PumpingEnergy = parameters.F_Energy_FlowRate * state.Integ_PE ;
+  };
+
+:};
+
+
+#endif // StandardCategoryModels
+
+#endif // WWTP_SECONDARYTAKACS_REACTIVE

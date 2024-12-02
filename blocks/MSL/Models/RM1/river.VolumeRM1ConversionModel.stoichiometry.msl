@@ -1,0 +1,23 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    parameters.Stoichiometry[Reaeration][O2] := 1;
+    parameters.Stoichiometry[MacroO2][O2] := 1;
+    parameters.Stoichiometry[SedO2][O2] := -1;
+    parameters.Stoichiometry[OxiBOD1][O2] := 1;
+    parameters.Stoichiometry[OxiBOD1][BOD1] := -1;
+    parameters.Stoichiometry[OxiBOD2][O2] := 1;
+    parameters.Stoichiometry[OxiBOD2][BOD2] := -1;
+    parameters.Stoichiometry[ResuspensionBOD1][BOD1] := 1;
+    parameters.Stoichiometry[ResuspensionBOD2][BOD2] := 1;
+    parameters.Stoichiometry[ResuspensionNH4][NH4] := 1;
+    parameters.Stoichiometry[Nitrification][NH4] := -1/4.57;
+    parameters.Stoichiometry[Nitrification][O2] := -1;
+    parameters.Stoichiometry[DegradationBODs][O2] := -1;
+    parameters.Stoichiometry[DegradationBODs][BODs] := -1;
+    parameters.Stoichiometry[OxiBOD1p][BOD1p] := -1;
+    parameters.Stoichiometry[OxiBOD2p][BOD2p] := -1;
+    parameters.Stoichiometry[ResuspensionBOD1p][BODs] := 1;
+    parameters.Stoichiometry[ResuspensionBOD1p][BOD1p] := -1;
+    parameters.Stoichiometry[ResuspensionBOD2p][BODs] := 1;
+    parameters.Stoichiometry[ResuspensionBOD2p][BOD2p] := -1;
+

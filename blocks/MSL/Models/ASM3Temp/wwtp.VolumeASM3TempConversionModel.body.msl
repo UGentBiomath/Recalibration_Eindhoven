@@ -1,0 +1,63 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+  interface <-
+  {
+    #include "ASM3Temp/wwtp.VolumeASM3TempModel.interface.msl"
+  };
+
+  parameters <-
+  {
+    #include "ASM3Temp/wwtp.VolumeASM3TempConversionModel.parameters.msl"
+  };
+
+  state <-
+  {
+    #include "ASM3Temp/wwtp.VolumeASM3TempConversionModel.state.msl"
+  };
+
+  initial <-
+  {
+    // Params
+
+
+    // StateVars
+
+
+    // Extra
+
+
+    // Stoichiometry
+
+    #include "ASM3Temp/wwtp.VolumeASM3TempConversionModel.stoichiometry.msl"
+  };
+
+  equations <-
+  {
+    // StateVars
+
+    state.b_A_NO_Temp = parameters.b_A_NO * pow(parameters.theta_b_A_NO, state.Temp_Actual - parameters.Temp_Ref);
+    state.b_A_O2_Temp = parameters.b_A_O2 * pow(parameters.theta_b_A_O2, state.Temp_Actual - parameters.Temp_Ref);
+    state.b_H_NO_Temp = parameters.b_H_NO * pow(parameters.theta_b_H_NO, state.Temp_Actual - parameters.Temp_Ref);
+    state.b_H_O2_Temp = parameters.b_H_O2 * pow(parameters.theta_b_H_O2, state.Temp_Actual - parameters.Temp_Ref);
+    state.b_STO_NO_Temp = parameters.b_STO_NO * pow(parameters.theta_b_STO_NO, state.Temp_Actual - parameters.Temp_Ref);
+    state.b_STO_O2_Temp = parameters.b_STO_O2 * pow(parameters.theta_b_STO_O2, state.Temp_Actual - parameters.Temp_Ref);
+    state.k_STO_Temp = parameters.k_STO * pow(parameters.theta_k_STO, state.Temp_Actual - parameters.Temp_Ref);
+    state.k_h_Temp = parameters.k_h * pow(parameters.theta_k_h, state.Temp_Actual - parameters.Temp_Ref);
+    state.mu_A_Temp = parameters.mu_A * pow(parameters.theta_mu_A, state.Temp_Actual - parameters.Temp_Ref);
+    state.mu_H_Temp = parameters.mu_H * pow(parameters.theta_mu_H, state.Temp_Actual - parameters.Temp_Ref);
+
+    // Extra
+
+      // TT 3768 Obsolete
+      // state.S_O_Saturation = 14.65 - 0.41 * state.Temp_Actual + 0.00799 * state.Temp_Actual * state.Temp_Actual - 7.78e-005 * state.Temp_Actual * state.Temp_Actual * state.Temp_Actual ;
+      state.S_O_Saturation = 290326 * exp(- 66.7354 + 87.4755 / ((state.Temp_Actual + 273.15) / 100.0) + 24.4526 * log((state.Temp_Actual + 273.15) / 100.0)) ;
+
+    // Kinetics
+
+    #include "ASM3Temp/wwtp.VolumeASM3TempConversionModel.kinetics.msl"
+
+    // InterfaceVars
+
+    #include "ASM3Temp/wwtp.VolumeASM3TempModel.sensors.msl"
+  };
+

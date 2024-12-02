@@ -1,0 +1,31 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ I (* *) "Solar radiation" : DensityOfHeatFlowRate := {: group <- "River characteristics"; :};
+    OBJ I_seasonal (* *) "Solar radiation" : DensityOfHeatFlowRate := {: group <- "River characteristics"; :};
+    OBJ Kla (* *) "reaeration rate coefficient" : OxygenTransferCoefficient := {: group <- "River characteristics"; :};
+    OBJ S_DOC (* *) "Dissolved Organic Carbon concentration in the water" : Concentration := {: group <- "Concentration"; :};
+    OBJ S_O_sat (* *) "Oxygen concentration at saturation" : Concentration := {: group <- "Re-aeration"; :};
+    OBJ S_POC (* *) "Particulate Organic Carbon concentration (with ref to the whole volume)" : Concentration := {: group <- "Concentration"; :};
+    OBJ T_water (* *) "Water temperature" : CelsiusTemperature := {: group <- "River characteristics"; :};
+    OBJ X_TSS (* *) "TSS concentration (with ref to the whole volume)" : Concentration := {: group <- "Concentration"; :};
+    OBJ diff_ALK (* hidden = "1"; *) "Diffusion of S_ALK" : MassFlux := {: group <- "Diffusion"; :};
+    OBJ diff_NH (* hidden = "1"; *) "Diffusion of S_NH" : MassFlux := {: group <- "Diffusion"; :};
+    OBJ diff_NO2 (* hidden = "1"; *) "Diffusion of S_NO2" : MassFlux := {: group <- "Diffusion"; :};
+    OBJ diff_NO3 (* hidden = "1"; *) "Diffusion of S_NO3" : MassFlux := {: group <- "Diffusion"; :};
+    OBJ diff_PO (* hidden = "1"; *) "Diffusion of S_PO" : MassFlux := {: group <- "Diffusion"; :};
+    OBJ diff_SI (* hidden = "1"; *) "Diffusion of S_I" : MassFlux := {: group <- "Diffusion"; :};
+    OBJ diff_SO (* hidden = "1"; *) "Diffusion of oxygen" : MassFlux := {: group <- "Diffusion"; :};
+    OBJ diff_SS (* hidden = "1"; *) "Diffusion of S_S" : MassFlux := {: group <- "Diffusion"; :};
+    OBJ e_beta_ALG (* hidden = "1"; *) "Temperature correction factor for algae growth rate (exponential)" : Real := {: unit <- "-"; interval <- {: lowerBound <- 0.0; upperBound <- +INF; :}; group <- "Re-aeration"; :};
+    OBJ e_beta_H (* hidden = "1"; *) "Temperature correction factor for heterotrophs growth rate (exponential)" : Real := {: unit <- "-"; interval <- {: lowerBound <- 0.0; upperBound <- +INF; :}; group <- "Re-aeration"; :};
+    OBJ e_beta_Hyd (* hidden = "1"; *) "Temperature correction factor for hydrolysis (exponential)" : Real := {: unit <- "-"; interval <- {: lowerBound <- 0.0; upperBound <- +INF; :}; group <- "Re-aeration"; :};
+    OBJ e_beta_N1 (* hidden = "1"; *) "Temperature correction factor for first stage nitrifiers growth rate (exponential)" : Real := {: unit <- "-"; interval <- {: lowerBound <- 0.0; upperBound <- +INF; :}; group <- "Re-aeration"; :};
+    OBJ e_beta_N2 (* hidden = "1"; *) "Temperature correction factor for second stage nitrifiers growth rate (exponential)" : Real := {: unit <- "-"; interval <- {: lowerBound <- 0.0; upperBound <- +INF; :}; group <- "Re-aeration"; :};
+    OBJ k_gro_ALG_T (* *) "Maxi specific growth rate for algae with temperature correction" : GrowthRate := {: group <- "Kinetics"; :};
+    OBJ k_gro_H_aer_T (* *) "Max aerobic specific growth rate for heterotrophic biomass with temperature correction" : GrowthRate := {: group <- "Kinetics"; :};
+    OBJ k_gro_H_anox_T (* *) "Max anoxic specific growth rate for heterotrophic biomass with temperature correction" : GrowthRate := {: group <- "Kinetics"; :};
+    OBJ k_gro_N1_T (* *) "Max specific growth rate for first stage nitrifiers with temperature correction" : GrowthRate := {: group <- "Kinetics"; :};
+    OBJ k_gro_N2_T (* *) "Max specific growth rate for second stage nitrifiers with temperature correction" : GrowthRate := {: group <- "Kinetics"; :};
+    OBJ mu_w (* *) "Dynamic viscosity of water at T_w" : DynamicViscosity := {: unit <- "kg/m/s"; group <- "Sedimentation"; :};
+    OBJ nue (* hidden = "1"; *) "Kinematic viscosity of water at T_w" : KinematicViscosity := {: group <- "Sedimentation"; :};
+

@@ -1,0 +1,92 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_TANKS_STORMTANK_BASE
+#define SEWER_TANKS_STORMTANK_BASE
+
+
+ CLASS StormTank_Base
+ "A tank with lateral weir and overflow when full"
+ EXTENDS SewerAtomicModelWithVariableVolume WITH
+ {:
+ 
+  comments <- "A tank with lateral weir and overflow when full";
+
+  parameters <-
+  {
+   // the weir coeff. depends on shape of the weir and whether it fills the whole cross-section
+   OBJ c_d "Discharge coefficient of the weir" : Real := {: value <- 0.65 ; group <- "Hydraulics" :};
+   // Vmin -> V_Min
+   OBJ V_Min (* hidden = "1" *) "Minimum volume of the tank" : Volume := {: group <- "Tank characteristics"; value <- 10.0 :};
+   OBJ c_o "Throttle coefficient (1=total cross-section)" : Real := {: value <- 1.0 ; group <- "Hydraulics" :};
+   OBJ PipeDiameter "diameter of the connected (circular) pipe downstream" : Length := {: value <- 0.6 ; group <- "Hydraulic" :};
+   OBJ Qmax_Tank (* is_favorite = "1" *) "Calculated maximum outflow from the tank" : FlowRate:= {: group <- "Hydraulic" :};
+   OBJ WeirLength "Length of the weir" : Length:= {: value <- 5.0; group <- "Hydraulic" :};
+  };
+
+  state <-
+  {
+   //  Q_flow -> Help_Q
+   OBJ Help_Q (* hidden = "1" *) "Actual flow rate" : FlowRate := {: group <- "Flow" :};
+  };
+
+  initial <-
+  {
+   parameters.V_Min := parameters.H_Min * parameters.L * parameters.W ;
+   parameters.alpha := 0.666 * parameters.c_d * parameters.WeirLength * sqrt(2.0 * parameters.grav) ;
+   parameters.beta := 1.5 ;
+   parameters.Qmax_Tank := sqrt(2.0 * 9.81 * parameters.UnitDepth) * 0.785 //for a circular pipe (cross-section)
+      * pow(parameters.PipeDiameter, 2) * parameters.c_o * 86400.0 ;
+  };
+
+  equations <-
+  {
+   // (09/07/2015) duplicate eqn, cf. Base_WaterSewerModel class 
+   // state.WaterLevel = state.V / parameters.W / parameters.L ;
+   
+   state.Help_Q = IF (state.WaterLevel >= parameters.UnitDepth) THEN parameters.Qmax_Tank
+      ELSE IF (state.WaterLevel < parameters.H_Min) THEN 0 // Added by WDK20090609
+          ELSE IF (state.WaterLevel >= parameters.PipeDiameter) THEN
+              // modified to account for Hmin (WDK20090610):
+              sqrt(2.0 * (state.WaterLevel - parameters.H_Min) * 9.81) * 86400.0 * 0.785 * pow(parameters.PipeDiameter,2) * parameters.c_o
+              ELSE sqrt(2.0 * (state.WaterLevel - parameters.H_Min) * 9.81) * 86400.0  * 0.785 * parameters.PipeDiameter * (state.WaterLevel - parameters.H_Min) * parameters.c_o ;
+
+   {FOREACH Comp_Index IN {Kosim1IndexOfFirstSolubleComponent .. Kosim1IndexOfLastSolubleComponent}:
+      state.C[Comp_Index] = IF (state.V == 0) THEN 0.0
+          ELSE state.SewM[Comp_Index] / state.V ; };
+
+// below will be implemented in each derived class
+/*							   
+   {FOREACH s_comp_index IN {IndexOfFirstParticulateSewComponent .. IndexOfLastParticulateSewComponent}:
+      state.SewC[s_comp_index] =
+      
+   interface.Outflow1[s_comp_index] =
+   interface.Outflow2[s_comp_index] =
+*/      
+  };
+
+ :};
+
+
+#include "Sewer/tanks/stormtank.simple.msl"
+#include "Sewer/tanks/stormtank.pumped.msl"
+// Included with W2017
+#include "Sewer/tanks/stormtank.constant.msl"
+#include "Sewer/tanks/stormtank.nooverflow.msl"
+#include "Sewer/tanks/stormtank.firstflush.msl"
+
+#endif // SEWER_TANKS_STORMTANK_BASE

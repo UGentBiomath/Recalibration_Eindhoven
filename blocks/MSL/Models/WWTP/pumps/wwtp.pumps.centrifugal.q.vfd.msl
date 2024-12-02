@@ -1,0 +1,169 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:49$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_PUMPS_CENTRIFUGAL_Q_VFD
+#define WWTP_PUMPS_CENTRIFUGAL_Q_VFD
+
+
+CLASS Centrifugal_Q_VFD (* icon = "pump"; is_default = "true" *)
+"A model to calculate a centrifugal VFD-controlled pump's power consumption based on the flow rate Q"
+EXTENDS Generic_Q WITH
+{:
+  comments <- "A model to calculate a centrifugal VFD-controlled pump's power consumption based on the flow rate Q";
+
+  interface <-
+  {
+    OBJ N (* terminal = "out_2" *) "Relative pump speed: actual pump speed / nominal pump speed" : Fraction := {: causality <- "COUT" ; group <- "Operational" :};
+  };
+
+  parameters <- 
+  {
+    // Efficiency related parameters
+    OBJ Eta_VFD_Max "Efficiency of the VFD at full speed (N = 1)" : Fraction := {: value <- 0.95 ; group <- "Efficiency":};
+    OBJ Eta_VFD_Half "Efficiency of the VFD at half speed (N = 0.5)" : Fraction := {: value <- 0.89 ; group <- "Efficiency":};
+    OBJ N_min "Minimum relative pump speed for VFD controlled pumps" : Fraction := {: value <- 0.60 ; group <- "Efficiency":};
+    OBJ N_max "Maximum relative pump speed for VFD controlled pumps" : Fraction := {: value <- 1.0 ; group <- "Efficiency":};
+  };
+
+  state <-
+  {
+    // Variables related to pump curve and system curve
+    OBJ Q_MinVFD_Duty "Minimum flow rate for VFD pumps operating at N=Nmin" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_MaxVFD_Duty "Maximum flow rate for VFD pumps operating at N=Nmax" : FlowRate := {: group <- "Operational" :};
+    OBJ H_MinVFD_Duty "Operating head corresponding to Q_MinVFD_Duty for the given pump and system" : Length := {: group <- "Operational" :};
+    OBJ H_MaxVFD_Duty "Operating head corresponding to Q_MaxVFD_Duty for the given pump and system" : Length := {: group <- "Operational" :};
+
+    OBJ H_PumpCurve_MinVFD (* hidden = "1" *) "Dummy vector discretizing the pump curve for N=Nmin, containing the heads for n different flow rate values" : Length[n;] := {: group <- "Operational" :};
+    OBJ H_PumpCurve_MaxVFD (* hidden = "1" *) "Dummy vector discretizing the pump curve for N=Nmax, containing the heads for n different flow rate values" : Length[n;] := {: group <- "Operational" :};
+    OBJ Nvector (* hidden = "1" *) "Dummy vector containing n different RelativePumpSpeed values" : Fraction[n;] := {: group <- "Operational" :};
+    OBJ Hvector (* hidden = "1" *) "Dummy vector containing the heads for n different RelativePumpSpeed values" : Length[n;] := {: group <- "Operational" :};
+    OBJ Eta_VFD "Efficiency of the VFD" : Fraction := {: group <- "Energy" :};
+    // Variables to force right equation sorting
+    OBJ Dummy1 (* hidden = "1" *) "Dummy var 1" : Real ;
+    OBJ Dummy2 (* hidden = "1" *) "Dummy var 2" : Real ;
+  };
+
+  initial <-
+  {
+    // General
+    // Prepare interpolation vector for the calculation of relative pump speed for VFD pumps:
+    { FOREACH i IN {1 .. n}: state.Nvector[i] =
+      parameters.N_min + (parameters.N_max - parameters.N_min) * (i - 1) / (n - 1) ; }; // Nvector[1] = Nmin, Nvector[n] = Nmax
+    
+    // Constrained operating conditions
+    { FOREACH i IN {1 .. n}: state.H_PumpCurve_MinVFD[i] = IF (parameters.N_min <= 0.0) THEN 0.0
+      ELSE state.PumpCurveCoeff_A * pow(parameters.N_min,2) - state.PumpCurveCoeff_B * pow(parameters.N_min,(2 - state.PumpCurveCoeff_C)) * pow(state.Q_NoCtl[i], state.PumpCurveCoeff_C) ; };
+      // H_pumpcurve_minVFD[1] is smallest, H_pumpcurve_minVFD[n] is largest 
+    
+    { FOREACH i IN {1 .. n}: state.H_PumpCurve_MaxVFD[i] = IF (state.Q_NoCtl[i] <= 0.0) THEN state.PumpCurveCoeff_A * pow(parameters.N_max,2)
+      ELSE state.PumpCurveCoeff_A * pow(parameters.N_max,2) - state.PumpCurveCoeff_B * pow(parameters.N_max,(2 - state.PumpCurveCoeff_C)) * pow(state.Q_NoCtl[i], state.PumpCurveCoeff_C) ; };
+      // H_pumpcurve_maxVFD[1] is smallest, H_pumpcurve_maxVFD[n] is largest
+  };
+
+  equations <-
+  {
+    // Constrainted operating conditions
+    state.H_MinVFD_Duty = IF (state.H_PumpCurve_MinVFD[1] > state.H_System_NoCtl[1] && state.H_PumpCurve_MinVFD[2] <= state.H_System_NoCtl[2]) THEN ((state.H_PumpCurve_MinVFD[1] * state.H_System_NoCtl[2] - state.H_PumpCurve_MinVFD[2] * state.H_System_NoCtl[1]) / (state.H_System_NoCtl[2] - state.H_System_NoCtl[1] + state.H_PumpCurve_MinVFD[1] - state.H_PumpCurve_MinVFD[2])) ELSE  
+      IF (state.H_PumpCurve_MinVFD[2] > state.H_System_NoCtl[2] && state.H_PumpCurve_MinVFD[3] <= state.H_System_NoCtl[3]) THEN ((state.H_PumpCurve_MinVFD[2] * state.H_System_NoCtl[3] - state.H_PumpCurve_MinVFD[3] * state.H_System_NoCtl[2]) / (state.H_System_NoCtl[3] - state.H_System_NoCtl[2] + state.H_PumpCurve_MinVFD[2] - state.H_PumpCurve_MinVFD[3])) ELSE  
+        IF (state.H_PumpCurve_MinVFD[3] > state.H_System_NoCtl[3] && state.H_PumpCurve_MinVFD[4] <= state.H_System_NoCtl[4]) THEN ((state.H_PumpCurve_MinVFD[3] * state.H_System_NoCtl[4] - state.H_PumpCurve_MinVFD[4] * state.H_System_NoCtl[3]) / (state.H_System_NoCtl[4] - state.H_System_NoCtl[3] + state.H_PumpCurve_MinVFD[3] - state.H_PumpCurve_MinVFD[4])) ELSE  
+          IF (state.H_PumpCurve_MinVFD[4] > state.H_System_NoCtl[4] && state.H_PumpCurve_MinVFD[5] <= state.H_System_NoCtl[5]) THEN ((state.H_PumpCurve_MinVFD[4] * state.H_System_NoCtl[5] - state.H_PumpCurve_MinVFD[5] * state.H_System_NoCtl[4]) / (state.H_System_NoCtl[5] - state.H_System_NoCtl[4] + state.H_PumpCurve_MinVFD[4] - state.H_PumpCurve_MinVFD[5])) ELSE  
+            IF (state.H_PumpCurve_MinVFD[5] > state.H_System_NoCtl[5] && state.H_PumpCurve_MinVFD[6] <= state.H_System_NoCtl[6]) THEN ((state.H_PumpCurve_MinVFD[5] * state.H_System_NoCtl[6] - state.H_PumpCurve_MinVFD[6] * state.H_System_NoCtl[5]) / (state.H_System_NoCtl[6] - state.H_System_NoCtl[5] + state.H_PumpCurve_MinVFD[5] - state.H_PumpCurve_MinVFD[6])) ELSE  
+              IF (state.H_PumpCurve_MinVFD[6] > state.H_System_NoCtl[6] && state.H_PumpCurve_MinVFD[7] <= state.H_System_NoCtl[7]) THEN ((state.H_PumpCurve_MinVFD[6] * state.H_System_NoCtl[7] - state.H_PumpCurve_MinVFD[7] * state.H_System_NoCtl[6]) / (state.H_System_NoCtl[7] - state.H_System_NoCtl[6] + state.H_PumpCurve_MinVFD[6] - state.H_PumpCurve_MinVFD[7])) ELSE  
+                IF (state.H_PumpCurve_MinVFD[7] > state.H_System_NoCtl[7] && state.H_PumpCurve_MinVFD[8] <= state.H_System_NoCtl[8]) THEN ((state.H_PumpCurve_MinVFD[7] * state.H_System_NoCtl[8] - state.H_PumpCurve_MinVFD[8] * state.H_System_NoCtl[7]) / (state.H_System_NoCtl[8] - state.H_System_NoCtl[7] + state.H_PumpCurve_MinVFD[7] - state.H_PumpCurve_MinVFD[8])) ELSE  
+                  IF (state.H_PumpCurve_MinVFD[8] > state.H_System_NoCtl[8] && state.H_PumpCurve_MinVFD[9] <= state.H_System_NoCtl[9]) THEN ((state.H_PumpCurve_MinVFD[8] * state.H_System_NoCtl[9] - state.H_PumpCurve_MinVFD[9] * state.H_System_NoCtl[8]) / (state.H_System_NoCtl[9] - state.H_System_NoCtl[8] + state.H_PumpCurve_MinVFD[8] - state.H_PumpCurve_MinVFD[9])) ELSE  
+      IF (state.H_PumpCurve_MinVFD[9] > state.H_System_NoCtl[9] && state.H_PumpCurve_MinVFD[10] <= state.H_System_NoCtl[10]) THEN ((state.H_PumpCurve_MinVFD[9] * state.H_System_NoCtl[10] - state.H_PumpCurve_MinVFD[10] * state.H_System_NoCtl[9]) / (state.H_System_NoCtl[10] - state.H_System_NoCtl[9] + state.H_PumpCurve_MinVFD[9] - state.H_PumpCurve_MinVFD[10])) ELSE  
+        IF (state.H_PumpCurve_MinVFD[10] > state.H_System_NoCtl[10] && state.H_PumpCurve_MinVFD[11] <= state.H_System_NoCtl[11]) THEN ((state.H_PumpCurve_MinVFD[10] * state.H_System_NoCtl[11] - state.H_PumpCurve_MinVFD[11] * state.H_System_NoCtl[10]) / (state.H_System_NoCtl[11] - state.H_System_NoCtl[10] + state.H_PumpCurve_MinVFD[10] - state.H_PumpCurve_MinVFD[11])) ELSE  
+          IF (state.H_PumpCurve_MinVFD[11] > state.H_System_NoCtl[11] && state.H_PumpCurve_MinVFD[12] <= state.H_System_NoCtl[12]) THEN ((state.H_PumpCurve_MinVFD[11] * state.H_System_NoCtl[12] - state.H_PumpCurve_MinVFD[12] * state.H_System_NoCtl[11]) / (state.H_System_NoCtl[12] - state.H_System_NoCtl[11] + state.H_PumpCurve_MinVFD[11] - state.H_PumpCurve_MinVFD[12])) ELSE  
+            IF (state.H_PumpCurve_MinVFD[12] > state.H_System_NoCtl[12] && state.H_PumpCurve_MinVFD[13] <= state.H_System_NoCtl[13]) THEN ((state.H_PumpCurve_MinVFD[12] * state.H_System_NoCtl[13] - state.H_PumpCurve_MinVFD[13] * state.H_System_NoCtl[12]) / (state.H_System_NoCtl[13] - state.H_System_NoCtl[12] + state.H_PumpCurve_MinVFD[12] - state.H_PumpCurve_MinVFD[13])) ELSE  
+              IF (state.H_PumpCurve_MinVFD[13] > state.H_System_NoCtl[13] && state.H_PumpCurve_MinVFD[14] <= state.H_System_NoCtl[14]) THEN ((state.H_PumpCurve_MinVFD[13] * state.H_System_NoCtl[14] - state.H_PumpCurve_MinVFD[14] * state.H_System_NoCtl[13]) / (state.H_System_NoCtl[14] - state.H_System_NoCtl[13] + state.H_PumpCurve_MinVFD[13] - state.H_PumpCurve_MinVFD[14])) ELSE  
+                IF (state.H_PumpCurve_MinVFD[14] > state.H_System_NoCtl[14] && state.H_PumpCurve_MinVFD[15] <= state.H_System_NoCtl[15]) THEN ((state.H_PumpCurve_MinVFD[14] * state.H_System_NoCtl[15] - state.H_PumpCurve_MinVFD[15] * state.H_System_NoCtl[14]) / (state.H_System_NoCtl[15] - state.H_System_NoCtl[14] + state.H_PumpCurve_MinVFD[14] - state.H_PumpCurve_MinVFD[15])) ELSE  
+                  IF (state.H_PumpCurve_MinVFD[15] > state.H_System_NoCtl[15] && state.H_PumpCurve_MinVFD[16] <= state.H_System_NoCtl[16]) THEN ((state.H_PumpCurve_MinVFD[15] * state.H_System_NoCtl[16] - state.H_PumpCurve_MinVFD[16] * state.H_System_NoCtl[15]) / (state.H_System_NoCtl[16] - state.H_System_NoCtl[15] + state.H_PumpCurve_MinVFD[15] - state.H_PumpCurve_MinVFD[16])) ELSE  
+                    IF (state.H_PumpCurve_MinVFD[16] > state.H_System_NoCtl[16] && state.H_PumpCurve_MinVFD[17] <= state.H_System_NoCtl[17]) THEN ((state.H_PumpCurve_MinVFD[16] * state.H_System_NoCtl[17] - state.H_PumpCurve_MinVFD[17] * state.H_System_NoCtl[16]) / (state.H_System_NoCtl[17] - state.H_System_NoCtl[16] + state.H_PumpCurve_MinVFD[16] - state.H_PumpCurve_MinVFD[17])) ELSE  
+      IF (state.H_PumpCurve_MinVFD[17] > state.H_System_NoCtl[17] && state.H_PumpCurve_MinVFD[18] <= state.H_System_NoCtl[18]) THEN ((state.H_PumpCurve_MinVFD[17] * state.H_System_NoCtl[18] - state.H_PumpCurve_MinVFD[18] * state.H_System_NoCtl[17]) / (state.H_System_NoCtl[18] - state.H_System_NoCtl[17] + state.H_PumpCurve_MinVFD[17] - state.H_PumpCurve_MinVFD[18])) ELSE  
+        IF (state.H_PumpCurve_MinVFD[18] > state.H_System_NoCtl[18] && state.H_PumpCurve_MinVFD[19] <= state.H_System_NoCtl[19]) THEN ((state.H_PumpCurve_MinVFD[18] * state.H_System_NoCtl[19] - state.H_PumpCurve_MinVFD[19] * state.H_System_NoCtl[18]) / (state.H_System_NoCtl[19] - state.H_System_NoCtl[18] + state.H_PumpCurve_MinVFD[18] - state.H_PumpCurve_MinVFD[19])) ELSE  
+          IF (state.H_PumpCurve_MinVFD[19] > state.H_System_NoCtl[19] && state.H_PumpCurve_MinVFD[20] <= state.H_System_NoCtl[20]) THEN ((state.H_PumpCurve_MinVFD[19] * state.H_System_NoCtl[20] - state.H_PumpCurve_MinVFD[20] * state.H_System_NoCtl[19]) / (state.H_System_NoCtl[20] - state.H_System_NoCtl[19] + state.H_PumpCurve_MinVFD[19] - state.H_PumpCurve_MinVFD[20])) ELSE  
+            IF (state.H_PumpCurve_MinVFD[20] > state.H_System_NoCtl[20] && state.H_PumpCurve_MinVFD[21] <= state.H_System_NoCtl[21]) THEN ((state.H_PumpCurve_MinVFD[20] * state.H_System_NoCtl[21] - state.H_PumpCurve_MinVFD[21] * state.H_System_NoCtl[20]) / (state.H_System_NoCtl[21] - state.H_System_NoCtl[20] + state.H_PumpCurve_MinVFD[20] - state.H_PumpCurve_MinVFD[21])) ELSE  
+              state.H_System_NoCtl[1]; // pump curve does not intersect system curve --> Hmin = only static head
+    
+    state.Q_MinVFD_Duty = IF (state.H_PumpCurve_MinVFD[n] <= state.H_System_NoCtl[n]) THEN 0.0 // pump curve does not intersect system curve
+      ELSE MSLUGetInterpolated(ref(state.H_PumpCurve_MinVFD[1]), ref(state.Q_NoCtl[1]), n, state.H_MinVFD_Duty);
+    
+    state.H_MaxVFD_Duty = IF (parameters.N_max == 1.0) THEN state.H_NoCtl_Duty ELSE
+      IF (state.H_PumpCurve_MaxVFD[1] > state.H_System_NoCtl[1] && state.H_PumpCurve_MaxVFD[2] <= state.H_System_NoCtl[2]) THEN ((state.H_PumpCurve_MaxVFD[1] * state.H_System_NoCtl[2] - state.H_PumpCurve_MaxVFD[2] * state.H_System_NoCtl[1]) / (state.H_System_NoCtl[2] - state.H_System_NoCtl[1] + state.H_PumpCurve_MaxVFD[1] - state.H_PumpCurve_MaxVFD[2])) ELSE
+        IF (state.H_PumpCurve_MaxVFD[2] > state.H_System_NoCtl[2] && state.H_PumpCurve_MaxVFD[3] <= state.H_System_NoCtl[3]) THEN ((state.H_PumpCurve_MaxVFD[2] * state.H_System_NoCtl[3] - state.H_PumpCurve_MaxVFD[3] * state.H_System_NoCtl[2]) / (state.H_System_NoCtl[3] - state.H_System_NoCtl[2] + state.H_PumpCurve_MaxVFD[2] - state.H_PumpCurve_MaxVFD[3])) ELSE  
+          IF (state.H_PumpCurve_MaxVFD[3] > state.H_System_NoCtl[3] && state.H_PumpCurve_MaxVFD[4] <= state.H_System_NoCtl[4]) THEN ((state.H_PumpCurve_MaxVFD[3] * state.H_System_NoCtl[4] - state.H_PumpCurve_MaxVFD[4] * state.H_System_NoCtl[3]) / (state.H_System_NoCtl[4] - state.H_System_NoCtl[3] + state.H_PumpCurve_MaxVFD[3] - state.H_PumpCurve_MaxVFD[4])) ELSE  
+            IF (state.H_PumpCurve_MaxVFD[4] > state.H_System_NoCtl[4] && state.H_PumpCurve_MaxVFD[5] <= state.H_System_NoCtl[5]) THEN ((state.H_PumpCurve_MaxVFD[4] * state.H_System_NoCtl[5] - state.H_PumpCurve_MaxVFD[5] * state.H_System_NoCtl[4]) / (state.H_System_NoCtl[5] - state.H_System_NoCtl[4] + state.H_PumpCurve_MaxVFD[4] - state.H_PumpCurve_MaxVFD[5])) ELSE  
+              IF (state.H_PumpCurve_MaxVFD[5] > state.H_System_NoCtl[5] && state.H_PumpCurve_MaxVFD[6] <= state.H_System_NoCtl[6]) THEN ((state.H_PumpCurve_MaxVFD[5] * state.H_System_NoCtl[6] - state.H_PumpCurve_MaxVFD[6] * state.H_System_NoCtl[5]) / (state.H_System_NoCtl[6] - state.H_System_NoCtl[5] + state.H_PumpCurve_MaxVFD[5] - state.H_PumpCurve_MaxVFD[6])) ELSE  
+                IF (state.H_PumpCurve_MaxVFD[6] > state.H_System_NoCtl[6] && state.H_PumpCurve_MaxVFD[7] <= state.H_System_NoCtl[7]) THEN ((state.H_PumpCurve_MaxVFD[6] * state.H_System_NoCtl[7] - state.H_PumpCurve_MaxVFD[7] * state.H_System_NoCtl[6]) / (state.H_System_NoCtl[7] - state.H_System_NoCtl[6] + state.H_PumpCurve_MaxVFD[6] - state.H_PumpCurve_MaxVFD[7])) ELSE  
+                  IF (state.H_PumpCurve_MaxVFD[7] > state.H_System_NoCtl[7] && state.H_PumpCurve_MaxVFD[8] <= state.H_System_NoCtl[8]) THEN ((state.H_PumpCurve_MaxVFD[7] * state.H_System_NoCtl[8] - state.H_PumpCurve_MaxVFD[8] * state.H_System_NoCtl[7]) / (state.H_System_NoCtl[8] - state.H_System_NoCtl[7] + state.H_PumpCurve_MaxVFD[7] - state.H_PumpCurve_MaxVFD[8])) ELSE  
+                    IF (state.H_PumpCurve_MaxVFD[8] > state.H_System_NoCtl[8] && state.H_PumpCurve_MaxVFD[9] <= state.H_System_NoCtl[9]) THEN ((state.H_PumpCurve_MaxVFD[8] * state.H_System_NoCtl[9] - state.H_PumpCurve_MaxVFD[9] * state.H_System_NoCtl[8]) / (state.H_System_NoCtl[9] - state.H_System_NoCtl[8] + state.H_PumpCurve_MaxVFD[8] - state.H_PumpCurve_MaxVFD[9])) ELSE  
+      IF (state.H_PumpCurve_MaxVFD[9] > state.H_System_NoCtl[9] && state.H_PumpCurve_MaxVFD[10] <= state.H_System_NoCtl[10]) THEN ((state.H_PumpCurve_MaxVFD[9] * state.H_System_NoCtl[10] - state.H_PumpCurve_MaxVFD[10] * state.H_System_NoCtl[9]) / (state.H_System_NoCtl[10] - state.H_System_NoCtl[9] + state.H_PumpCurve_MaxVFD[9] - state.H_PumpCurve_MaxVFD[10])) ELSE  
+        IF (state.H_PumpCurve_MaxVFD[10] > state.H_System_NoCtl[10] && state.H_PumpCurve_MaxVFD[11] <= state.H_System_NoCtl[11]) THEN ((state.H_PumpCurve_MaxVFD[10] * state.H_System_NoCtl[11] - state.H_PumpCurve_MaxVFD[11] * state.H_System_NoCtl[10]) / (state.H_System_NoCtl[11] - state.H_System_NoCtl[10] + state.H_PumpCurve_MaxVFD[10] - state.H_PumpCurve_MaxVFD[11])) ELSE  
+          IF (state.H_PumpCurve_MaxVFD[11] > state.H_System_NoCtl[11] && state.H_PumpCurve_MaxVFD[12] <= state.H_System_NoCtl[12]) THEN ((state.H_PumpCurve_MaxVFD[11] * state.H_System_NoCtl[12] - state.H_PumpCurve_MaxVFD[12] * state.H_System_NoCtl[11]) / (state.H_System_NoCtl[12] - state.H_System_NoCtl[11] + state.H_PumpCurve_MaxVFD[11] - state.H_PumpCurve_MaxVFD[12])) ELSE  
+            IF (state.H_PumpCurve_MaxVFD[12] > state.H_System_NoCtl[12] && state.H_PumpCurve_MaxVFD[13] <= state.H_System_NoCtl[13]) THEN ((state.H_PumpCurve_MaxVFD[12] * state.H_System_NoCtl[13] - state.H_PumpCurve_MaxVFD[13] * state.H_System_NoCtl[12]) / (state.H_System_NoCtl[13] - state.H_System_NoCtl[12] + state.H_PumpCurve_MaxVFD[12] - state.H_PumpCurve_MaxVFD[13])) ELSE  
+              IF (state.H_PumpCurve_MaxVFD[13] > state.H_System_NoCtl[13] && state.H_PumpCurve_MaxVFD[14] <= state.H_System_NoCtl[14]) THEN ((state.H_PumpCurve_MaxVFD[13] * state.H_System_NoCtl[14] - state.H_PumpCurve_MaxVFD[14] * state.H_System_NoCtl[13]) / (state.H_System_NoCtl[14] - state.H_System_NoCtl[13] + state.H_PumpCurve_MaxVFD[13] - state.H_PumpCurve_MaxVFD[14])) ELSE  
+                IF (state.H_PumpCurve_MaxVFD[14] > state.H_System_NoCtl[14] && state.H_PumpCurve_MaxVFD[15] <= state.H_System_NoCtl[15]) THEN ((state.H_PumpCurve_MaxVFD[14] * state.H_System_NoCtl[15] - state.H_PumpCurve_MaxVFD[15] * state.H_System_NoCtl[14]) / (state.H_System_NoCtl[15] - state.H_System_NoCtl[14] + state.H_PumpCurve_MaxVFD[14] - state.H_PumpCurve_MaxVFD[15])) ELSE  
+                  IF (state.H_PumpCurve_MaxVFD[15] > state.H_System_NoCtl[15] && state.H_PumpCurve_MaxVFD[16] <= state.H_System_NoCtl[16]) THEN ((state.H_PumpCurve_MaxVFD[15] * state.H_System_NoCtl[16] - state.H_PumpCurve_MaxVFD[16] * state.H_System_NoCtl[15]) / (state.H_System_NoCtl[16] - state.H_System_NoCtl[15] + state.H_PumpCurve_MaxVFD[15] - state.H_PumpCurve_MaxVFD[16])) ELSE  
+                    IF (state.H_PumpCurve_MaxVFD[16] > state.H_System_NoCtl[16] && state.H_PumpCurve_MaxVFD[17] <= state.H_System_NoCtl[17]) THEN ((state.H_PumpCurve_MaxVFD[16] * state.H_System_NoCtl[17] - state.H_PumpCurve_MaxVFD[17] * state.H_System_NoCtl[16]) / (state.H_System_NoCtl[17] - state.H_System_NoCtl[16] + state.H_PumpCurve_MaxVFD[16] - state.H_PumpCurve_MaxVFD[17])) ELSE  
+      IF (state.H_PumpCurve_MaxVFD[17] > state.H_System_NoCtl[17] && state.H_PumpCurve_MaxVFD[18] <= state.H_System_NoCtl[18]) THEN ((state.H_PumpCurve_MaxVFD[17] * state.H_System_NoCtl[18] - state.H_PumpCurve_MaxVFD[18] * state.H_System_NoCtl[17]) / (state.H_System_NoCtl[18] - state.H_System_NoCtl[17] + state.H_PumpCurve_MaxVFD[17] - state.H_PumpCurve_MaxVFD[18])) ELSE  
+        IF (state.H_PumpCurve_MaxVFD[18] > state.H_System_NoCtl[18] && state.H_PumpCurve_MaxVFD[19] <= state.H_System_NoCtl[19]) THEN ((state.H_PumpCurve_MaxVFD[18] * state.H_System_NoCtl[19] - state.H_PumpCurve_MaxVFD[19] * state.H_System_NoCtl[18]) / (state.H_System_NoCtl[19] - state.H_System_NoCtl[18] + state.H_PumpCurve_MaxVFD[18] - state.H_PumpCurve_MaxVFD[19])) ELSE  
+          IF (state.H_PumpCurve_MaxVFD[19] > state.H_System_NoCtl[19] && state.H_PumpCurve_MaxVFD[20] <= state.H_System_NoCtl[20]) THEN ((state.H_PumpCurve_MaxVFD[19] * state.H_System_NoCtl[20] - state.H_PumpCurve_MaxVFD[20] * state.H_System_NoCtl[19]) / (state.H_System_NoCtl[20] - state.H_System_NoCtl[19] + state.H_PumpCurve_MaxVFD[19] - state.H_PumpCurve_MaxVFD[20])) ELSE  
+            IF (state.H_PumpCurve_MaxVFD[20] > state.H_System_NoCtl[20] && state.H_PumpCurve_MaxVFD[21] <= state.H_System_NoCtl[21]) THEN ((state.H_PumpCurve_MaxVFD[20] * state.H_System_NoCtl[21] - state.H_PumpCurve_MaxVFD[21] * state.H_System_NoCtl[20]) / (state.H_System_NoCtl[21] - state.H_System_NoCtl[20] + state.H_PumpCurve_MaxVFD[20] - state.H_PumpCurve_MaxVFD[21])) ELSE  
+              state.H_System_NoCtl[1]; // pump curve does not intersect system curve --> Hmax = only static head
+    
+    state.Q_MaxVFD_Duty = IF (parameters.N_max == 1.0) THEN state.Q_NoCtl_Duty ELSE
+      IF (state.H_PumpCurve_MaxVFD[n] <= state.H_System_NoCtl[n]) THEN 0.0 // pump curve does not intersect system curve
+        ELSE MSLUGetInterpolated(ref(state.H_PumpCurve_MaxVFD[1]), ref(state.Q_NoCtl[1]), n, state.H_MaxVFD_Duty);
+    
+    state.Q_Max = state.Q_MaxVFD_Duty ;
+    
+    // Determine the actual operating conditions
+    state.help_Q = IF (interface.IsOn == 0) THEN 0.0
+      ELSE IF (interface.Q_Op > state.Q_MaxVFD_Duty) THEN state.Q_MaxVFD_Duty
+        ELSE IF (interface.Q_Op < state.Q_MinVFD_Duty) THEN state.Q_MinVFD_Duty
+          ELSE interface.Q_Op ;
+    
+    state.H = IF (interface.IsOn == 0) THEN 0.0
+      ELSE IF (interface.Q_Op > state.Q_MaxVFD_Duty) THEN state.H_MaxVFD_Duty
+        ELSE IF (interface.Q_Op < state.Q_MinVFD_Duty) THEN state.H_MinVFD_Duty
+          ELSE state.H_System ;
+
+    // Variable speed control
+    // The most elegant solution to find N would be via solveset (..)
+    { FOREACH i IN {1 .. n}: state.Hvector[i] = IF (state.Nvector[i] <= 0.0) THEN 0.0
+      ELSE IF (state.help_Q <= 0.0) THEN pow(state.Nvector[i], 2) * state.PumpCurveCoeff_A
+        ELSE pow(state.Nvector[i], 2) * state.PumpCurveCoeff_A - state.PumpCurveCoeff_B * pow(state.Nvector[i], (2 - state.PumpCurveCoeff_C)) * pow(state.help_Q, state.PumpCurveCoeff_C) ; };
+
+    state.help_N = IF (interface.Q_Op > state.Q_MaxVFD_Duty) THEN 1.0
+      ELSE IF (interface.Q_Op < state.Q_MinVFD_Duty) THEN parameters.N_min
+        ELSE MSLUGetMax2(parameters.N_min, MSLUGetInterpolated(ref(state.Hvector[1]), ref(state.Nvector[1]), n, state.H) + state.Dummy2);
+
+    interface.N = state.help_N ;
+    
+    state.Eta_VFD = (parameters.Eta_VFD_Max - parameters.Eta_VFD_Half) * (pow(interface.N, 4) - pow(0.5, 4)) / (pow(1.0, 4) - pow(0.5, 4)) + parameters.Eta_VFD_Half ;
+    
+    state.Eta_Total = state.Eta_Pump * parameters.Eta_motor * state.Eta_VFD ;
+    
+    // Forcing right equation sorting
+    state.Dummy1 = 0.0 ; 
+    state.Dummy2 = state.Dummy1 * (SUMOVER i IN {1 .. n}: state.Hvector[i]) ;
+  };
+
+:};
+
+
+#endif // WWTP_PUMPS_CENTRIFUGAL_Q_VFD

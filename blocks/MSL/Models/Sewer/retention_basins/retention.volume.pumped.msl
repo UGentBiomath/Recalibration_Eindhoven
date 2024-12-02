@@ -1,0 +1,57 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+ 
+
+#ifndef RETENTION_VOLUME_PUMPED
+#define RETENTION_VOLUME_PUMPED
+
+
+CLASS SewRetentionVolume_Pumped (* icon = "Tank" *) "Retention volume of the system: pumped outflow + overflow"
+EXTENDS SewRetentionVolume WITH
+{:
+
+  parameters <-
+  { 
+   OBJ Q_Pump (* is_favorite = "1" *) "Pump flow rate" : FlowRate := {: value <- 50.0; group <- "Tank characteristics" :};
+   OBJ f_on "Fraction of volume above which Qout=Qpump" : Fraction := {: value <- 0.01; group <- "Tank characteristics" :};
+   OBJ Eur_Energy "Price per unit energy (Eur/kWh)" : Real := {: value <- 0.12 ; group <- "Power consumption" :};
+   OBJ Energy_Volume "Energy for pumping (kWh/m3)" : EnergyForPumping := {: value <- 0.09 ; group <- "Power consumption" :};
+  };
+
+  state <-
+  { 
+   OBJ Int_Q_Out (* hidden = "1" *) "Integral of Q_Out" : Volume ;
+   OBJ Tot_Energy (* is_favorite = "1" *) "Energy consumption for pumping" : ElectricalEnergy := {: group <- "Power consumption" :};
+   OBJ Tot_Cost (* is_favorite = "1" *) "Cost for pumping (Eur)" : Euro := {: group <- "Power consumption" :};
+  };
+
+  equations <-
+  { 
+   state.Q_Out = IF (state.V < parameters.V_Min) THEN 0.0
+   		ELSE IF ((state.Q_In > parameters.Q_Pump) || (state.V >= parameters.V_Max * parameters.f_on)) THEN parameters.Q_Pump
+			 ELSE state.Q_In ;    
+			
+   DERIV(state.Int_Q_Out,[independent.t]) = state.Q_Out ;
+   
+   state.Tot_Energy = state.Int_Q_Out * parameters.Energy_Volume ;
+   
+   state.Tot_Cost = state.Tot_Energy * parameters.Eur_Energy ;
+  };
+
+:};
+
+
+#endif //RETENTION_VOLUME_PUMPED

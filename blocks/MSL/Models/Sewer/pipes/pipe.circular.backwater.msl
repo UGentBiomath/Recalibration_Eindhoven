@@ -1,0 +1,66 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_PIPES_PIPECIRCULARBACKWATER
+#define SEWER_PIPES_PIPECIRCULARBACKWATER
+
+ CLASS Pipe_Circular_Backwater (* icon = "Tank" *)
+ ".."
+ SPECIALISES CoupledModelType :=
+ {:
+ 
+  comments <- "..";
+
+  interface <-
+  {
+   OBJ Inflow (* terminal = "in_1" *) "Inflow" : InSewTerminal := {: causality <- "CIN"; group <- "Inflow" :};
+   OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {:causality <- "COUT"; group <- "Outflow":};
+   OBJ Backflow (* terminal = "in_2" *) "Backflow" : InSewTerminal := {:causality <- "CIN"; group <- "Backflow":};
+   OBJ Overflow (* terminal = "out_2" *) "Overflow" : OutSewTerminal := {:causality <- "COUT"; group <- "Overflow":};
+   // (EURE 25/06/2015) it should also expose T_aw (from Base_PipeSewerModel) and Temp (from Base_SewerAtomicModelWithVolume)
+   // and set them as 'manip'
+  };
+
+  parameters <-
+  {
+   OBJ Q_Max (* is_favorite = "1" *) "Maximum outflow of the pipe": FlowRate:= {: value <- 86400.0; group <- "Hydraulic":};
+  };
+
+  sub_models <-
+  {
+   OBJ Pipe : Pipe_Circular_wReaction2;
+   OBJ Combi : SewTwoCombiner;
+   OBJ Split : SewAbsTwoSplitter;
+  };
+
+  coupling <-
+  {
+   // parameter coupling
+   sub_models.Split.parameters.Q_Out2.value := parameters.Q_Max.value,
+   // sub-model coupling
+   connect(interface.Inflow, sub_models.Pipe.interface.Inflow),
+   connect(sub_models.Pipe.interface.Outflow, sub_models.Combi.interface.Inflow1),
+   connect(sub_models.Combi.interface.Outflow, sub_models.Split.interface.Inflow),
+   connect(sub_models.Split.interface.Outflow1, interface.Overflow),
+   connect(interface.Backflow, sub_models.Combi.interface.Inflow2),
+   connect(sub_models.Split.interface.Outflow2, interface.Outflow),
+  };
+
+ :};
+ 
+
+#endif // SEWER_PIPES_PIPECIRCULARBACKWATER

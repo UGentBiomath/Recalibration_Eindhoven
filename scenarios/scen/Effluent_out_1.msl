@@ -1,20 +1,29 @@
 #ifndef __EFFLUENT_OUT_1_MSL__
 #define __EFFLUENT_OUT_1_MSL__
 
-#include "wwtp.msl"
+#include "west.msl"
 
-CLASS Effluent_out_1 (* icon = ""; file = "";  *)  SPECIALISES PhysicalDAEModelType := 
+CLASS Effluent_out_1 (* icon = "effluent"; file = "";  *)  SPECIALISES PhysicalDAEModelType := 
 {:
   comments <- "";
 
   interface <-
   {
+    OBJ COD (*is_favorite = "1"; terminal = ""; *) "Total COD" : Real := {: causality <- "COUT"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+    OBJ TKN (*is_favorite = "1"; terminal = ""; *) "TKN" : Real := {: causality <- "COUT"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+    OBJ TSS (*is_favorite = "1"; terminal = ""; *) "Total solids" : Real := {: causality <- "COUT"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+    OBJ Water (*terminal = ""; *) "Flow" : Real := {: causality <- "COUT"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
 
     OBJ Effluent_Load (*terminal = "in_1"; *) "Effluent load" : InWWTPTerminal := {: nature <- "THROUGH"; causality <- "CIN"; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Effluent"; :};
   };
 
   parameters <-
   {
+    OBJ F_BOD5_BOD20 (* is_favorite = "1";  *) "Conversion factor BOD5/BOD20" : Fraction := {: unit <- "-"; value <- 0.25; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Conversion factors"; :};
+    OBJ F_TSS_COD (* is_favorite = "1";  *) "Conversion factor TSS/COD" : Real := {: unit <- "-"; value <- 0.75; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Conversion factors"; :};
+    OBJ i_X_P (* is_favorite = "1";  *) "N/COD in product formed" : MassOfNitrogenPerMassOfCODInProdFromBiomass := {: unit <- "-"; value <- 0.06; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Composition parameters"; :};
+    OBJ i_X_B (* is_favorite = "1";  *) "N/COD in biomass" : MassOfNitrogenPerMassOfCODInBiomass := {: unit <- "-"; value <- 0.086; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Composition parameters"; :};
+    OBJ _1_ (* hidden = "1"; fixed = "1";  *) "" : Real := {: value <- 1; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
 
     OBJ WWTPSpecificVolume (* hidden = "1";  *) "The specific volumes (= 1/density) of the components" : SpecificVolumeVector := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
   };
@@ -26,6 +35,9 @@ CLASS Effluent_out_1 (* icon = ""; file = "";  *)  SPECIALISES PhysicalDAEModelT
 
   state <-
   {
+    OBJ S_COD (* is_favorite = "1";  *) "Soluble COD" : Concentration := {: unit <- "g/m3"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+    OBJ X_COD (* is_favorite = "1";  *) "Particulate COD" : Concentration := {: unit <- "g/m3"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
+    OBJ BOD20 (*  *) "BOD20" : Concentration := {: unit <- "g/m3"; value <- 0; interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Custom specs"; :};
 
     OBJ Outflow (*  *) "Temporary variable" : WWTPConcTerminal := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; :};
     OBJ Q_In (*  *) "Effluent flow rate" : FlowRate := {: interval <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF; :}; group <- "Operational"; :};
@@ -41,6 +53,13 @@ CLASS Effluent_out_1 (* icon = ""; file = "";  *)  SPECIALISES PhysicalDAEModelT
   {
     // (De-)Fractionation
 
+    interface.COD = state.S_COD * (1) + state.X_COD * (1);
+    interface.TKN = state.Outflow[X_BH] * (parameters.i_X_B) + state.Outflow[X_I] * (parameters.i_X_P) + state.Outflow[X_ND] * (1) + state.Outflow[X_P] * (parameters.i_X_P) + state.Outflow[S_ND] * (1) + state.Outflow[S_NH] * (1) + state.Outflow[X_BA] * (parameters.i_X_B);
+    interface.TSS = state.X_COD * (parameters.F_TSS_COD);
+    interface.Water = state.Outflow[H2O] * (1);
+    state.S_COD = state.Outflow[S_I] * (1) + state.Outflow[S_S] * (1);
+    state.X_COD = state.Outflow[X_BH] * (1) + state.Outflow[X_I] * (1) + state.Outflow[X_P] * (1) + state.Outflow[X_S] * (1) + state.Outflow[X_BA] * (1);
+    state.BOD20 = state.Outflow[X_BH] * (1) + state.Outflow[X_S] * (1) + state.Outflow[S_S] * (1) + state.Outflow[X_BA] * (1);
 
     // F to C conversion
 

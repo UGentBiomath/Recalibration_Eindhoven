@@ -1,0 +1,51 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+ 
+
+#ifndef RETENTION_VOLUME_FREEFLOW
+#define RETENTION_VOLUME_FREEFLOW
+
+
+CLASS SewRetentionVolume_Freeflow (* icon = "Tank" *) "Retention volume of the system: free flow outflow"
+EXTENDS SewRetentionVolume WITH
+{:
+
+  parameters <-
+  { 
+   OBJ D_Pipe "Diameter of the connected (circular) pipe downstream" : Length := {: value <- 0.6 ; group <- "Tank characteristics" :};
+   OBJ c_o "Throttle coefficient (1=total cross-section)" : Real := {: value <- 1.0 ; group <- "Tank characteristics" :};
+   OBJ Q_Max (* is_favorite = "1" *) "Maximum outflow" : FlowRate := {: value <- 50.0 ; group <- "Tank characteristics" :};
+  };
+
+  state <-
+  { 
+   OBJ Help_Q_Out (* hidden = "1" *) "Actual effluent flow rate" : FlowRate ;
+  };
+
+  equations <-
+  { 
+   state.Help_Q_Out = IF (state.V < parameters.V_Min) THEN 0.0
+   		ELSE IF (state.WaterLevel >= parameters.D_Pipe) THEN sqrt(2 * state.WaterLevel * 9.81) * 86400 * 0.785 * pow(parameters.D_Pipe, 2) * parameters.c_o
+			 ELSE sqrt(2 * state.WaterLevel * 9.81) * 86400 * 0.785 * parameters.D_Pipe * state.WaterLevel * parameters.c_o ;
+						  
+   state.Q_Out = IF (state.Help_Q_Out < parameters.Q_Max) THEN state.Help_Q_Out
+   		ELSE parameters.Q_Max ;
+  };
+
+:};
+
+
+#endif //RETENTION_VOLUME_FREEFLOW

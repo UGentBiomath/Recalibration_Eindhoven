@@ -1,0 +1,97 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:27$
+ *
+ ******************************************************************************/
+ 
+#ifndef SEWER_RETENTION_BASINS
+#define SEWER_RETENTION_BASINS
+
+
+CLASS SewRetentionVolume "Retention volume of the system"
+EXTENDS SewerAtomicModelWithVolume WITH
+{:
+
+  interface <-
+  { 
+//   OBJ Inflow (* terminal = "in_1" *) "Inflow" : InSewTerminal := {: causality <- "CIN"; group <- "Inflow" :};
+   OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {: causality <- "COUT"; group <- "Outflow" :};
+   OBJ Overflow (* terminal = "out_2" *) "Overflow" : OutSewTerminal := {: causality <- "COUT"; group <- "Overflow" :};
+   // Remark: not assigned to a terminal and hidden -> only to be used in the scope of the catchment models
+   OBJ Qout (* hidden = "1" *) "Outflow flow rate" : FlowRate := {: causality <- "COUT" :};
+   OBJ Qover (* hidden = "1" *) "Overflow flow rate" : FlowRate := {: causality <- "COUT" :};
+  };
+
+  parameters <-
+  { 
+   OBJ V_Max (* is_favorite = "1" *) "Maximum volume of the tank" : Volume := {: group <- "Tank characteristics"; value <- 10.0 :};
+   OBJ V_Min "Minimum volume of the tank" : Volume := {: group <- "Tank characteristics"; value <- 1.0 :};
+   // D_Max -> H_Max
+   OBJ H_Max (* is_favorite = "1" *) "Maximum depth of the tank" : Length := {: group <- "Tank characteristics"; value <- 1.0 :};
+   // Overflow: Cd*(g^1/2)*B*(Du^3/2)
+   OBJ Cd "Coefficient to compute overflow" : Real := {: group <- "Tank characteristics"; value <- 0.85 :};
+   OBJ B "Coefficient to compute overflow" : Length := {: group <- "Tank characteristics"; value <- 20.0 :};
+   OBJ A (* hidden = "1"; fixed = "1" *) "Surface of the tank" : Area ;
+  };
+
+  initial <-
+  { 
+   parameters.A = IF (parameters.H_Max > 0.0) THEN (parameters.V_Max / parameters.H_Max) ELSE 0.0 ;
+  };
+
+  state <-
+  { 
+   OBJ WaterLevel "Water level inside the tank" : Length := {: group <- "Tank" :} ;
+   OBJ Q_Over "Overflow flow rate" : FlowRate := {: group <- "Flow" :};
+   // Du can be negative which is incompatible with the data type Length
+   OBJ Du "Height above weir crest" : Real := {: unit <- "m"; group <- "Tank" :};
+  };
+
+  equations <-
+  { 
+   state.Du = IF (parameters.A > 0.0) THEN (state.V - parameters.V_Max) / parameters.A ELSE 0.0 ;
+
+   // moved here (base class) from derived class _freeflow
+   state.WaterLevel = IF (parameters.A > 0.0) THEN state.V / parameters.A ELSE 0.0 ;
+   
+   interface.Outflow[H2O] = - state.Q_Out / 1E-06 ;
+   interface.Overflow[H2O] = - state.Q_Over / 1E-06 ;
+   
+   state.V = state.SewM[H2O] * 1E-06 ;
+   
+   state.Q_Over = IF (state.V <= parameters.V_Max) THEN 0.0
+   		ELSE parameters.Cd * pow(9.81,0.5) * parameters.B * pow(state.Du, 1.5) * 3600 * 24 ;
+
+   {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}:
+		state.C[Comp_Index] = IF (state.V == 0.0) THEN 0.0 ELSE state.SewM[Comp_Index] / state.V ; };
+
+   {FOREACH Comp_Index IN {2 .. Kosim1NrOfComponents}:
+   		interface.Outflow[Comp_Index] = - state.C[Comp_Index] * state.Q_Out ; };
+
+   {FOREACH Comp_Index IN {2 .. Kosim1NrOfComponents}:
+   		interface.Overflow[Comp_Index] = - state.C[Comp_Index] * state.Q_Over ; };
+
+   interface.Qout = state.Q_Out ;
+   interface.Qover = state.Q_Over ;
+  };
+
+ :};
+
+
+#include "Sewer/retention_basins/retention.volume.pumped.msl"
+#include "Sewer/retention_basins/retention.volume.freeflow.msl"
+// New models, version 2017
+#include "Sewer/splitters_combiners/retention.novolume.msl"
+
+
+#endif //SEWER_RETENTION_BASINS

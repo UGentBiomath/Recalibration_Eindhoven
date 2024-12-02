@@ -1,0 +1,120 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 15:21:58$
+ *
+ ******************************************************************************/
+
+
+#ifndef IUWS_CONNECTORS_SEWER_WWTP_COD_NH
+#define IUWS_CONNECTORS_SEWER_WWTP_COD_NH
+
+
+CLASS SewerToWWP_COD_NH4
+  (* icon = "Connector" *)
+  "Transforms a NH4-COD influent to an influent type for ASM2(d)(Temp)"
+  EXTENDS SewerConnectors_Base WITH 
+  {:
+
+  comments <- "Transforms a NH4-COD influent to an influent type for ASM2(d)(Temp)";
+
+  interface <-
+  {
+   OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+  };
+
+  parameters <-
+  {
+   OBJ S_O_In "Concentration of dissolved oxygen in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+   OBJ S_ALK_In "Concentration of alkalinity in the influent": Concentration := {: value <- 30 ; group <- "Influent characterization" :};
+   OBJ S_NO_In "Concentration of nitrate in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+   OBJ S_N2_In "Concentration of dinitrogen in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+//   OBJ S_Al_In "Concentration of soluble aluminium salts in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+   OBJ X_PP_In "Concentration of poly-phosphate in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+   OBJ X_AUT_In "Concentration of autotrophic biomass in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+   OBJ X_H_In "Concentration of heterotrophic biomass in the influent": Concentration := {: value <- 5 ; group <- "Influent characterization" :};
+   OBJ X_PAO_In "Concentration of phosphate accumulating organisms in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+   OBJ X_PHA_In "Concentration of cell internal organic storage products of the PAO in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+   OBJ X_MEOH_In "Concentration of metal-hydroxides in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+   OBJ X_MEP_In "Concentration of metal-phosphates in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+//   OBJ X_I_i_In "Concentration of Aluminium precipitates in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+   // fractions to calculate all remaining Outflows
+   OBJ f_S_F (* is_favorite = "1" *) "Fraction of fermentable readily biodegradable products (S_F) in the soluble COD": Fraction := {: value <- 0.375 ; group <- "Conversion factors" :};
+   OBJ f_S_A (* is_favorite = "1" *) "Fraction of fermentation products (S_A) in the soluble COD": Fraction := {: value <- 0.25 ; group <- "Conversion factors" :};
+   OBJ f_X_S (* is_favorite = "1" *) "Fraction slowly biodegradable substrate (X_S) in the particulate COD" : Fraction := {: value <- 0.69 ; group <- "Conversion factors" :};
+  };
+//##
+
+  state <-
+  {
+   // Q_in -> Q_In
+   OBJ X_COD (* hidden = "1" *) "Particulate COD" : MassFlux := {: group <- "Influent characterization" :};
+   OBJ S_COD (* hidden = "1" *) "Soluble COD" : MassFlux := {: group <- "Influent characterization" :};
+   OBJ Help_X_I (* hidden = "1" *) "Inert particulate" : MassFlux := {: group <- "Influent characterization" :};
+   OBJ f_XI (* is_favorite = "1" *) "Fraction of X_I" : Real := {: group <- "Influent characterization" :};
+   OBJ f_XS (* is_favorite = "1" *) "Fraction of X_S" : Real := {: group <- "Influent characterization" :};
+   OBJ f_SS (* is_favorite = "1" *) "Fraction of S_S" : Real := {: group <- "Influent characterization" :};
+   OBJ f_SI (* is_favorite = "1" *) "Fraction of S_I" : Real := {: group <- "Influent characterization" :};
+  };
+
+  equations <-
+  {
+   state.X_COD = interface.Inflow[XCOD];
+   state.S_COD = interface.Inflow[SCOD];
+   state.f_XS = state.X_COD * parameters.f_X_S/(state.X_COD + state.S_COD);
+   state.f_SS = (state.S_COD * parameters.f_S_F + state.S_COD * parameters.f_S_A)/(state.X_COD + state.S_COD);
+   state.f_SI = state.S_COD * (1 - parameters.f_S_F - parameters.f_S_A)/(state.X_COD + state.S_COD);
+   state.f_XI = (state.X_COD + interface.Outflow[X_H] + interface.Outflow[X_AUT] + interface.Outflow[X_PAO]
+   		+ interface.Outflow[X_PHA] + interface.Outflow[X_S])/(state.X_COD + state.S_COD) ;
+   //WATER
+   interface.Outflow[IndexOfSolvent] = - interface.Inflow[H2O] ;
+   // Oxygen and Alkalinity
+   interface.Outflow[S_O]   = - parameters.S_O_In * state.Q_In;
+   interface.Outflow[S_ALK] = - parameters.S_ALK_In * state.Q_In;
+   // ALUMINIUM
+   //EURE 19/07/2013   interface.Outflow[S_Al]  = parameters.S_Al_In ;
+   // Nitrogen
+   interface.Outflow[S_NO]  = - parameters.S_NO_In * state.Q_In;
+   interface.Outflow[S_N2]  = - parameters.S_N2_In * state.Q_In;
+   interface.Outflow[S_NH]  = - interface.Inflow[NH4] ;
+   // Phosphorous
+   interface.Outflow[S_PO]  = - interface.Inflow[PO4] ;
+   interface.Outflow[X_PP]  = - parameters.X_PP_In * state.Q_In ;
+   // COD
+   interface.Outflow[S_F]   = - state.S_COD * parameters.f_S_F;
+   interface.Outflow[S_A]   = - state.S_COD * parameters.f_S_A;
+   interface.Outflow[S_I]   = - state.S_COD * (1 - parameters.f_S_F - parameters.f_S_A)  ;
+
+   interface.Outflow[X_S]   = - state.X_COD * parameters.f_X_S;
+   interface.Outflow[X_H]   = - parameters.X_H_In * state.Q_In;
+   interface.Outflow[X_AUT] = - parameters.X_AUT_In * state.Q_In;
+   interface.Outflow[X_PAO] = - parameters.X_PAO_In * state.Q_In;
+   interface.Outflow[X_PHA] = - parameters.X_PHA_In * state.Q_In;
+   
+   state.Help_X_I = - (state.X_COD + interface.Outflow[X_H] + interface.Outflow[X_AUT]
+   		+ interface.Outflow[X_PAO] + interface.Outflow[X_PHA] + interface.Outflow[X_S]);
+					  
+   interface.Outflow[X_I] = IF (state.Help_X_I > 0) THEN 0
+   		ELSE state.Help_X_I ;
+
+   interface.Outflow[X_MEOH]= - parameters.X_MEOH_In * state.Q_In ;
+   interface.Outflow[X_MEP] = - parameters.X_MEP_In * state.Q_In ;
+   //EURE 19/07/2013   interface.Outflow[X_I_i] = parameters.X_I_i_In; 
+   
+   //TSS
+   interface.Outflow[IndexOfTSSComponent] = - interface.Inflow[XTSS];
+ };
+
+:};
+
+ 
+#endif // IUWS_CONNECTORS_SEWER_WWTP_COD_NH

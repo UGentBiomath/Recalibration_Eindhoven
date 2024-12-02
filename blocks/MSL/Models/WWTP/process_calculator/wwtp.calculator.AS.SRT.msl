@@ -1,0 +1,170 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 10. januar 2017 15:57:49$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_CALC_AS_SRT
+#define WWTP_CALC_AS_SRT
+
+
+CLASS Calc_SRT_AS (* icon = "process_calculator" *)
+"Computation of the sludge age (total; instantaneous and averaged) and of the anoxic-to-aerated ratio for an activated sludge system"
+EXTENDS Calc_SRT_AS_Base WITH
+{:
+
+  comments <- "Computation of the sludge age (total; instantaneous and averaged) and of the anoxic-to-aerated ratio for an activated sludge system";
+  
+  interface <-
+  {
+    // Volumes of tanks
+    OBJ V_01 (* terminal = "in_1" *) "Volume of tank no.1" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_02 (* terminal = "in_1" *) "Volume of tank no.2" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_03 (* terminal = "in_1" *) "Volume of tank no.3" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_04 (* terminal = "in_1" *) "Volume of tank no.4" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_05 (* terminal = "in_1" *) "Volume of tank no.5" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_06 (* terminal = "in_1" *) "Volume of tank no.6" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_07 (* terminal = "in_1" *) "Volume of tank no.7" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_08 (* terminal = "in_1" *) "Volume of tank no.8" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_09 (* terminal = "in_1" *) "Volume of tank no.9" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_10 (* terminal = "in_1" *) "Volume of tank no.10" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_11 (* terminal = "in_1" *) "Volume of tank no.11" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_12 (* terminal = "in_1" *) "Volume of tank no.12" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_13 (* terminal = "in_1" *) "Volume of tank no.13" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_14 (* terminal = "in_1" *) "Volume of tank no.14" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_15 (* terminal = "in_1" *) "Volume of tank no.15" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_16 (* terminal = "in_1" *) "Volume of tank no.16" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_17 (* terminal = "in_1" *) "Volume of tank no.17" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_18 (* terminal = "in_1" *) "Volume of tank no.18" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_19 (* terminal = "in_1" *) "Volume of tank no.19" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_20 (* terminal = "in_1" *) "Volume of tank no.20" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_21 (* terminal = "in_1" *) "Volume of tank no.21" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_22 (* terminal = "in_1" *) "Volume of tank no.22" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_23 (* terminal = "in_1" *) "Volume of tank no.23" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_24 (* terminal = "in_1" *) "Volume of tank no.24" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_25 (* terminal = "in_1" *) "Volume of tank no.25" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_26 (* terminal = "in_1" *) "Volume of tank no.26" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_27 (* terminal = "in_1" *) "Volume of tank no.27" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_28 (* terminal = "in_1" *) "Volume of tank no.28" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_29 (* terminal = "in_1" *) "Volume of tank no.29" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    OBJ V_30 (* terminal = "in_1" *) "Volume of tank no.30" : Volume := {:causality <- "CIN" ; group <- "Tank volumes" :};
+    // Solids concentration in tanks
+    OBJ TSS_01 (* terminal = "in_1" *) "TSS in tank no.1" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_02 (* terminal = "in_1" *) "TSS in tank no.2" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_03 (* terminal = "in_1" *) "TSS in tank no.3" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_04 (* terminal = "in_1" *) "TSS in tank no.4" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_05 (* terminal = "in_1" *) "TSS in tank no.5" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_06 (* terminal = "in_1" *) "TSS in tank no.6" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_07 (* terminal = "in_1" *) "TSS in tank no.7" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_08 (* terminal = "in_1" *) "TSS in tank no.8" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_09 (* terminal = "in_1" *) "TSS in tank no.9" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_10 (* terminal = "in_1" *) "TSS in tank no.10" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_11 (* terminal = "in_1" *) "TSS in tank no.11" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_12 (* terminal = "in_1" *) "TSS in tank no.12" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_13 (* terminal = "in_1" *) "TSS in tank no.13" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_14 (* terminal = "in_1" *) "TSS in tank no.14" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_15 (* terminal = "in_1" *) "TSS in tank no.15" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_16 (* terminal = "in_1" *) "TSS in tank no.16" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_17 (* terminal = "in_1" *) "TSS in tank no.17" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_18 (* terminal = "in_1" *) "TSS in tank no.18" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_19 (* terminal = "in_1" *) "TSS in tank no.19" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_20 (* terminal = "in_1" *) "TSS in tank no.20" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_21 (* terminal = "in_1" *) "TSS in tank no.21" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_22 (* terminal = "in_1" *) "TSS in tank no.22" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_23 (* terminal = "in_1" *) "TSS in tank no.23" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_24 (* terminal = "in_1" *) "TSS in tank no.24" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_25 (* terminal = "in_1" *) "TSS in tank no.25" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_26 (* terminal = "in_1" *) "TSS in tank no.26" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_27 (* terminal = "in_1" *) "TSS in tank no.27" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_28 (* terminal = "in_1" *) "TSS in tank no.28" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_29 (* terminal = "in_1" *) "TSS in tank no.29" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+    OBJ TSS_30 (* terminal = "in_1" *) "TSS in tank no.30" : Concentration := {:causality <- "CIN" ; group <- "Solids concentrations" :};
+  };
+  
+  equations <-
+  {
+    // mass of solids accumulated in the system
+    state.TSS_Tanks = interface.V_01 * interface.TSS_01 + interface.V_02 * interface.TSS_02 + interface.V_03 * interface.TSS_03 +
+      interface.V_04 * interface.TSS_04 + interface.V_05 * interface.TSS_05 + interface.V_06 * interface.TSS_06 +
+      interface.V_07 * interface.TSS_07 + interface.V_08 * interface.TSS_08 + interface.V_09 * interface.TSS_09 +
+      interface.V_10 * interface.TSS_10 + interface.V_11 * interface.TSS_11 + interface.V_12 * interface.TSS_12 + 
+      interface.V_13 * interface.TSS_13 + interface.V_14 * interface.TSS_14 + interface.V_15 * interface.TSS_15 + 
+      interface.V_16 * interface.TSS_16 + interface.V_17 * interface.TSS_17 + interface.V_18 * interface.TSS_18 + 
+      interface.V_19 * interface.TSS_19 + interface.V_20 * interface.TSS_20 + interface.V_21 * interface.TSS_21 +
+      interface.V_22 * interface.TSS_22 + interface.V_23 * interface.TSS_23 + interface.V_24 * interface.TSS_24 +
+      interface.V_25 * interface.TSS_25 + interface.V_26 * interface.TSS_26 + interface.V_27 * interface.TSS_27 +
+      interface.V_28 * interface.TSS_28 + interface.V_29 * interface.TSS_29 + interface.V_30 * interface.TSS_30 ;
+  };
+
+:};
+
+
+CLASS Calc_SRT_AS_Base "Base class for sludge age and anoxic / aerated ratios for an activated sludge system"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  {
+    // Waste stream
+    OBJ Q_Waste1 (* terminal = "in_1" *) "Flow rate of waste sludge no.1": FlowRate := {: causality <- "CIN" ; group <- "Waste sludge" :};
+    OBJ TSS_Waste1 (* terminal = "in_1" *) "TSS in waste sludge no.1" : Concentration := {: causality <- "CIN" ; group <- "Waste sludge" :};
+    OBJ Q_Waste2 (* terminal = "in_1" *) "Flow rate of waste sludge no.2": FlowRate := {: causality <- "CIN" ; group <- "Waste sludge" :};
+    OBJ TSS_Waste2 (* terminal = "in_1" *) "TSS in waste sludge no.2" : Concentration := {: causality <- "CIN" ; group <- "Waste sludge" :};
+    // Effluent stream
+    OBJ TSS_Out (* terminal = "in_1" *) "Sludge concentration in the effluent" : Concentration := {: causality <- "CIN"; group <- "Effluent" :};
+    OBJ Q_Out (* terminal = "in_1" *) "Effluent flow rate": FlowRate:= {:causality <- "CIN"; group <- "Effluent" :};
+    //
+    OBJ T_Window (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Moving window": Time := {: causality <- "CIN" ; value <- 1 ; group <- "Calculation" :};
+    //
+    OBJ SRT_Tot (* terminal = "out_1" *) "Total sludge age" : Time := {: causality <- "COUT" ; group <- "Output" :};
+  };
+  
+  independent <-
+  {
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+  };
+  
+  state <-
+  {
+    OBJ TSS_Tanks (* hidden = "1" *) "Total amount of sludge accumulated in the tanks" : Mass := {: group <- "System" :};
+    OBJ TSS_Flux (* hidden = "1" *) "Total flux of sludge leaving the system" : MassFlux := {: group <- "System" :};
+    OBJ M_WAS "Sludge production" : MassFlux := {: group <- "Process" :};
+    OBJ SRTi_Tot "Total SRT (instantaneous)" : Time := {: group <- "Process" :};
+  	OBJ ID_Tot (* hidden = "1" *) "dummy variable for buffer ID" : Real ;
+  	OBJ temp_Tot (* hidden = "1" *) "dummy variable for initialisation" : Real ;
+  	OBJ SRT_Tot_Out (* hidden = "1" *) "dummy variable for signal that is retrieved from buffer": Time := {: group <- "Buffer" :};
+  };
+  
+  initial <-
+  {
+  	state.ID_Tot = MSLUBufferCreate(interface.T_Window, 0.001);
+  };
+  
+  equations <-
+  {
+    // mass flux of solids leaving the system
+    state.TSS_Flux = (interface.TSS_Out * interface.Q_Out) + (interface.TSS_Waste1 * interface.Q_Waste1 + interface.TSS_Waste2 * interface.Q_Waste2) ;
+    state.M_WAS = interface.TSS_Waste1 * interface.Q_Waste1 + interface.TSS_Waste2 * interface.Q_Waste2 ;
+    // instantaneous SRT's
+    state.SRTi_Tot = IF (state.TSS_Flux <= 0.0) THEN 0.0 ELSE state.TSS_Tanks / state.TSS_Flux ;
+    // Buffer for SRT_Tot
+    state.temp_Tot = MSLUBufferPut(state.ID_Tot, independent.t, state.SRTi_Tot);
+    state.SRT_Tot_Out = MSLUBufferGetMean(state.ID_Tot);
+    // averaged SRT
+    interface.SRT_Tot = state.SRT_Tot_Out ;   
+  };
+
+:};
+
+
+#endif // WWTP_CALC_AS_SRT

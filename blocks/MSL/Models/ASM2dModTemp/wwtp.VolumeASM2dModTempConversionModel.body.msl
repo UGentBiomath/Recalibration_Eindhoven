@@ -1,0 +1,77 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+  interface <-
+  {
+    #include "ASM2dModTemp/wwtp.VolumeASM2dModTempModel.interface.msl"
+  };
+
+  parameters <-
+  {
+    #include "ASM2dModTemp/wwtp.VolumeASM2dModTempConversionModel.parameters.msl"
+  };
+
+  state <-
+  {
+    #include "ASM2dModTemp/wwtp.VolumeASM2dModTempConversionModel.state.msl"
+  };
+
+  initial <-
+  {
+    // Params
+
+
+    // StateVars
+
+
+    // Extra
+
+
+    // Stoichiometry
+
+    #include "ASM2dModTemp/wwtp.VolumeASM2dModTempConversionModel.stoichiometry.msl"
+  };
+
+  equations <-
+  {
+    // StateVars
+
+    state.K_X_Temp = parameters.K_X * pow(parameters.theta_K_X, state.Temp_Actual - parameters.Temp_Ref);
+    state.Q_PHA_Temp = parameters.Q_PHA * pow(parameters.theta_Q_PHA, state.Temp_Actual - parameters.Temp_Ref);
+    state.Q_PP_Temp = parameters.Q_PP * pow(parameters.theta_Q_PP, state.Temp_Actual - parameters.Temp_Ref);
+    state.Q_fe_Temp = parameters.Q_fe * pow(parameters.theta_Q_fe, state.Temp_Actual - parameters.Temp_Ref);
+    state.S_ALK_MonodTerm = state.C[S_ALK] / (parameters.K_ALK + state.C[S_ALK]);
+    state.S_A_MonodTerm = state.C[S_A] / (parameters.K_A + state.C[S_A]);
+    state.S_F_MonodTerm = state.C[S_F] / (parameters.K_F + state.C[S_F]);
+    state.S_NH_MonodTerm = state.C[S_NH] / (parameters.K_NH + state.C[S_NH]);
+    state.S_NO_InhibitionTerm = parameters.K_NO / (parameters.K_NO + state.C[S_NO]);
+    state.S_NO_MonodTerm = state.C[S_NO] / (parameters.K_NO + state.C[S_NO]);
+    state.S_O_InhibitionTerm = parameters.K_O / (parameters.K_O + state.C[S_O]);
+    state.S_O_MonodTerm = state.C[S_O] / (parameters.K_O + state.C[S_O]);
+    state.S_PO_MonodTerm = state.C[S_PO] / (parameters.K_P + state.C[S_PO]);
+    state.X_PHA_MonodTerm = (state.C[X_PHA] / state.C[X_PAO]) / (parameters.K_PHA + state.C[X_PHA] / state.C[X_PAO]);
+    state.X_S_MonodTerm = (state.C[X_S] / state.C[X_H]) / (state.K_X_Temp + state.C[X_S] / state.C[X_H]);
+    state.b_AUT_Temp = parameters.b_AUT * pow(parameters.theta_b_AUT, state.Temp_Actual - parameters.Temp_Ref);
+    state.b_H_Temp = parameters.b_H * pow(parameters.theta_b_H, state.Temp_Actual - parameters.Temp_Ref);
+    state.b_PAO_Temp = parameters.b_PAO * pow(parameters.theta_b_PAO, state.Temp_Actual - parameters.Temp_Ref);
+    state.b_PHA_Temp = parameters.b_PHA * pow(parameters.theta_b_PHA, state.Temp_Actual - parameters.Temp_Ref);
+    state.b_PP_Temp = parameters.b_PP * pow(parameters.theta_b_PP, state.Temp_Actual - parameters.Temp_Ref);
+    state.k_h_Temp = parameters.k_h * pow(parameters.theta_k_h, state.Temp_Actual - parameters.Temp_Ref);
+    state.mu_AUT_Temp = parameters.mu_AUT * pow(parameters.theta_mu_AUT, state.Temp_Actual - parameters.Temp_Ref);
+    state.mu_H_Temp = parameters.mu_H * pow(parameters.theta_mu_H, state.Temp_Actual - parameters.Temp_Ref);
+    state.mu_PAO_Temp = parameters.mu_PAO * pow(parameters.theta_mu_PAO, state.Temp_Actual - parameters.Temp_Ref);
+
+    // Extra
+
+      // TT 3768 Obsolete
+      // state.S_O_Saturation = 14.65 - 0.41 * state.Temp_Actual + 0.00799 * state.Temp_Actual * state.Temp_Actual - 7.78e-005 * state.Temp_Actual * state.Temp_Actual * state.Temp_Actual ;
+      state.S_O_Saturation = 290326 * exp(- 66.7354 + 87.4755 / ((state.Temp_Actual + 273.15) / 100.0) + 24.4526 * log((state.Temp_Actual + 273.15) / 100.0)) ;
+
+    // Kinetics
+
+    #include "ASM2dModTemp/wwtp.VolumeASM2dModTempConversionModel.kinetics.msl"
+
+    // InterfaceVars
+
+    #include "ASM2dModTemp/wwtp.VolumeASM2dModTempModel.sensors.msl"
+  };
+

@@ -1,0 +1,64 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:26$
+ *
+ ******************************************************************************/
+
+#ifndef RIVER_SPLITTERS_COMBINERS_RIVER_COMBINERS
+#define RIVER_SPLITTERS_COMBINERS_RIVER_COMBINERS
+
+
+CLASS RivTwoCombiner (* icon = "two_combiner" *) "2-way combiner"
+EXTENDS River_TwoCombiner_Base WITH
+{:
+
+  comments <- "2-way combiner";
+
+:};
+ 
+ 
+CLASS RivThreeCombiner (* icon = "three_combiner" *) "3-way combiner"
+EXTENDS River_TwoCombiner_Base WITH
+{:
+
+  comments <- "3-way combiner";
+
+  interface <-
+  {
+    OBJ Inflow3 (* terminal = "in_3" *) "Inflow No.3" : InRiverTerminal := {: causality <- "CIN" ; group <- "Influent 3" :};
+  };
+
+:};
+ 
+
+CLASS River_TwoCombiner_Base "Base class for river combiners"
+EXTENDS RivAtomicModelWithoutVolume WITH
+{:
+
+  interface <-
+  {
+    OBJ Inflow1 (* terminal = "in_1" *) "Inflow No.1" : InRiverTerminal := {: causality <- "CIN" ; group <- "Influent 1" :};
+    OBJ Inflow2 (* terminal = "in_2" *) "Inflow No.2" : InRiverTerminal := {: causality <- "CIN" ; group <- "Influent 2" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutRiverTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+  };
+  
+  equations <-
+  {
+    {FOREACH Comp_Index IN {1 .. RWQMNrOfComponents}: interface.Outflow[Comp_Index] =
+        - state.InFluxPerComponent[Comp_Index] ;};
+  };
+
+:};
+
+
+#endif // RIVER_SPLITTERS_COMBINERS_RIVER_COMBINERS

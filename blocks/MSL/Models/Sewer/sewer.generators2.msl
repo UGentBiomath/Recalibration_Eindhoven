@@ -1,0 +1,108 @@
+/*******************************************************************************
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:27$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_GENERATORS2
+#define SEWER_GENERATORS2
+
+
+// (EURE 07/10/2016) this is an alternative version for a base generator
+// in which the Kosim1 components are specified as per-capita daily loads
+// as opposed to concentrations - which may in fact be more logical in the
+// scope of a catchment model
+CLASS SewGenerator_DWF "Base generator model for DWF model: Kosim1 components specified as per-capita daily loads"
+EXTENDS SewGenerator_Infiltration WITH //SewGenerator2 WITH //SPECIALISES PhysicalDAEModelType :=
+{:
+
+  comments <- "Base generator model for DWF model: Kosim1 components specified as per-capita daily loads";
+
+  parameters <-
+  {
+    OBJ Mean_L "Vector containing the mean loads in g/inh/d: (H2O), NH4, PO4, COD_sol, X_TSS, COD_part" : Kosim1ConcentrationVector :=
+     [{:value <-1 :}, {:value <- 10 :}, {:value <- 2 :}, {:value <- 30 :}, {:value <- 70 :}, {:value <-70 :};];
+  };
+  
+  state <-
+  {
+    OBJ Help_Pollution_S (* hidden = "1" *) "Help variable for soluble pollution load" : Real ;
+    OBJ Help_Pollution_X (* hidden = "1" *) "Help variable for particulate pollution load" : Real ;
+  };
+  
+  equations <-
+  {
+    interface.Outflow[NH4] = - parameters.Mean_L[NH4] * state.Help_Pollution_S ;		
+    interface.Outflow[PO4] = - parameters.Mean_L[PO4] * state.Help_Pollution_S ;	
+    interface.Outflow[SCOD] = - parameters.Mean_L[SCOD] * state.Help_Pollution_S ;
+    interface.Outflow[XCOD] = - parameters.Mean_L[XCOD] * state.Help_Pollution_X ;
+    interface.Outflow[XTSS] = - parameters.Mean_L[XTSS] * state.Help_Pollution_X ;
+  };
+  
+:};
+
+
+CLASS SewGenerator_Infiltration "Base infiltration flow generator, for both DWF and infiltration only"
+EXTENDS Sewer_Generator WITH
+{:
+
+  comments <- "Base infiltration flow generator, for both DWF and infiltration only";
+  
+  interface <-
+  {
+    OBJ Rain (* terminal = "in_2"; manip = "1" *) "Rainfall input (from file)" : RainfallIntensity := {: causality <- "CIN"; group <- "Data" :};
+    OBJ Evaporation (* terminal = "in_2"; manip = "1" *) "Evaporation" : RainfallIntensity := {: causality <- "CIN"; group <- "Data" :};
+    // Remark: this dry-weather flow has a slightly different meaning in the scope of a (full) DWF model vs. an infiltration-only model
+    // In the first instance, it's the infiltration + the municipal (population-dependent) and industrial contributions.
+    // In the second instance, it's only the infiltration term.
+    OBJ Q_DWF (* terminal = "out_2" *) "Dry weather flow" : FlowRate := {: causality <- COUT ; group <- "Data" :},
+  };
+  
+  parameters <-
+  {
+    // Catchment
+    OBJ TotalArea "Impervious area of the subcatchment" : Area := {: value <- 1 ; unit <- "ha" ; group <- "Catchment" :};
+    OBJ w_Rain "Window length for rain average" : Time := {: value <- 30.0 ; group <- "Catchment" :};
+    OBJ f_Rain "Rain factor" : Real := {: value <- 1.0 ; group <- "Catchment" :};
+    OBJ f1_Inf "Infiltration factor 1" : Real := {: value <- 0.3 ; group <- "Catchment" :};
+    OBJ f2_Inf "Infiltration factor 2" : Real := {: value <- 5.0 ; group <- "Catchment" :};
+    OBJ w_Evap "Window length for evaporation average" : Time := {: value <- 7.0 ; group <- "Catchment" :};
+  };
+
+  state <- 
+  {
+    OBJ Avg_Rain "Rain average" : RainfallIntensity := {: group <- "Catchment" :};
+    OBJ Avg_Evap "Evaporation average" : RainfallIntensity := {: group <- "Catchment" :};
+    OBJ Tot_Inf "Infiltration" : FlowRate := {: group <- "Catchment" :};
+    OBJ Help_Tot_Inf (* hidden = "1" *) "Infiltration" : FlowRate ;
+  };
+
+  initial <-
+  {
+    state.Avg_Rain := 0.0 ;
+    state.Avg_Evap := 0.0 ;
+  };
+
+  equations <-
+  { 
+    DERIV(state.Avg_Rain,[independent.t]) = (interface.Rain * parameters.f_Rain - state.Avg_Rain) / parameters.w_Rain ;
+    DERIV(state.Avg_Evap,[independent.t]) = (interface.Evaporation - state.Avg_Evap) / parameters.w_Evap ;
+
+    //state.Help_Tot_Inf =	(sqrt(state.rain_av) * (parameters.inf_factor2 - state.evap_av) * parameters.inf_factor1) * parameters.TotalArea * 10000; //ha to m2
+    state.Help_Tot_Inf =	(state.Avg_Rain * (parameters.f2_Inf - state.Avg_Evap) * parameters.f1_Inf) * parameters.TotalArea * 10000 ; //ha to m2
+    
+    state.Tot_Inf = IF (interface.Rain > 0.0) THEN 0.0
+      ELSE state.Help_Tot_Inf ;
+
+    interface.Q_DWF = state.Q_Out ;
+  };
+	
+:};
+
+
+#include "Sewer/generators/constant.msl"
+
+
+#endif // SEWER_GENERATORS2

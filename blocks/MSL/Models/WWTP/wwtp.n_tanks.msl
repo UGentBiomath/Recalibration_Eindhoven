@@ -1,0 +1,48 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:41$
+ *
+ ******************************************************************************/
+
+#ifndef N_TANKS
+#define N_TANKS
+
+// TWO
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumetwotank.msl"
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumeasutwotank.msl"
+// THREE
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumethreetank.msl"
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumeasuthreetank.msl"
+// FOUR
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumefourtank.msl"
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumeasufourtank.msl"
+// FIVE
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumefivetank.msl"
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumeasufivetank.msl"
+// SIX
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumesixtank.msl"
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumeasusixtank.msl"
+// SEVEN
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumeseventank.msl"
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumeasuseventank.msl"
+// EIGHT
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumeeighttank.msl"
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumeasueighttank.msl"
+// NINE
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumeninetank.msl"
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumeasuninetank.msl"
+// TEN
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumetentank.msl"
+#include "WWTP/activated_sludge_unit/wwtp.n_tanks.fixvolumeasutentank.msl"
+
+#endif // N_TANKS

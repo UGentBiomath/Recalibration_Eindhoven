@@ -1,0 +1,214 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 5. februar 2019 16:36:12$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_SAND_FILTER_AUTOBW
+#define WWTP_SAND_FILTER_AUTOBW
+
+
+CLASS DownFlow_AutoBW (* icon = "sand_filter" *)
+"Semicontinuous downflow granular medium filter - with automatic detection of backwash conditions"
+EXTENDS DownFlow_tbw WITH
+{:
+
+  comments <- "Semicontinuous downflow granular medium filter - with automatic detection of backwash conditions";
+
+  interface <-
+  {
+    // the following 2 output signals can be used to control flow valves to feed and backwash the tank respectively
+    OBJ Is_Qin (* terminal = "out_2"; is_favorite = "1" *) "Feeding state (1=on 0=off)" : Integer := {: causality <- "COUT" ; group <- "Operation" :};
+    OBJ Is_BW (* terminal = "out_2"; is_favorite = "1" *) "Backwashing state (1=on 0=off)" : Integer := {: causality <- "COUT" ; group <- "Operation" :};
+//    OBJ Qbw (* terminal = "in_2"; manip = "1" *) "Backwash flow" : FlowRate := {: causality <- "CIN" ; value <- 6000 ; group <- "Control action" :};
+//    OBJ Q_Pump (* terminal = "out_2" *) "Backwash flow" : FlowRate := {: causality <- "COUT" ; group <- "Backwash" :};
+    OBJ TSS_Max (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Maximum TSS density" : SurfaceDensity := {: causality <- "CIN" ; value <- 1000 ; group <- "Operation" :};
+  };
+
+  parameters <-
+  {
+    OBJ Tau (* hidden = "1" *) "Implicit loop breaker time constant" : Time := {: value <- 0.0005 :};
+  };
+  
+  state <-
+  {
+    OBJ Help_TSS (* hidden = "1" *) "Total in TSS per surface area" : SurfaceDensity := {: group <- "Operation" :};
+    OBJ IsTSS_Max (* hidden = "1" *) "TSS density exceeds max (1) or not (0)" : Integer := {: group <- "Operation" :};
+  	OBJ BW_Begin (* hidden = "1" *) "Start time of each backwash period (TSS density exceeds max)" : Time := {: group <- "Operation" :};
+  };
+  
+  initial <-
+  {
+    state.BW_On = 0 ;
+  	state.BW_Begin = 0.0 ;
+  	state.Help_TSS = 0.0 ;
+  };
+  
+  equations <-
+  {
+    // to solve the algebraic loop
+    DERIV(state.Help_TSS,[independent.t]) = - (1 / parameters.Tau) * (state.Help_TSS - state.M_TSS) ;
+
+    state.IsTSS_Max = IF (state.Help_TSS >= interface.TSS_Max) THEN 1.0 ELSE 0.0 ;
+    
+    state.BW_Begin = IF (state.IsTSS_Max == 1.0) THEN
+      IF (previous(state.IsTSS_Max) == 0.0) THEN independent.t ELSE previous(state.BW_Begin)
+      ELSE previous(state.BW_Begin) ;
+
+    state.BW_On = IF (state.BW_Begin > previous(state.BW_Begin)) THEN 1
+      ELSE IF (previous(state.BW_On) == 1 && state.M_TSS > 10.0) THEN 1 ELSE 0 ; 
+    
+    interface.Is_BW = state.BW_On ;
+    interface.Is_Qin = 1 - state.BW_On ;
+//    interface.Q_Pump = interface.Qbw ;
+  };
+
+:};
+
+
+//(EURE 26/10/2019) implementation where BW goes to (filtered) outflow ..... con t bw max
+CLASS DownFlow_tbw "Base class for a semicontinuous downflow granular medium filter, with backwash duration"
+EXTENDS DownFlow_Base WITH
+{:
+
+  comments <- "Base class for a semicontinuous downflow granular medium filter, with backwash duration" ;
+
+  interface <-
+  {
+    OBJ t_BW_Max (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Maximum duration BW" : Time := {: causality <- "CIN" ; value <- 0.002 ; group <- "Operation" :};    
+  };
+
+  equations <-
+  {
+    state.Help_I_bw = IF (state.Q_BW * interface.t_BW_Max > 0.0) THEN 1 / (state.Q_BW * interface.t_BW_Max) ELSE 0.0 ;
+  };
+
+:};
+
+
+//(EURE 06/11/2019) implementation where BW goes to BW outflow
+CLASS DownFlow_Base "Base class for a semicontinuous downflow granular medium filter"
+EXTENDS Base_DownFlow WITH
+{:
+
+  comments <- "Base class for a semicontinuous downflow granular medium filter" ;
+
+  interface <-
+  {
+    OBJ Overflow (* terminal = "out_4" *) "Outflow unfiltered" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Overflow" :};
+    OBJ Outflow_Backwash (* terminal = "out_3" *) "Outflow during backwash" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Backwash effluent" :};
+  };
+
+  state <-
+  {
+    OBJ BW_On (* hidden = "0" *) "Backwash mode: 0=off vs 1=on" : Real := {: interval <- {: lowerBound <- 0 ; upperBound <- 1 :} ; group <- "Operation" :};
+
+    OBJ Help_I_bw (* hidden = "0" *) "Backwash Intensity" : Real := {: unit <- "m-3" ; group <- "Filtration" :};
+    
+    OBJ X_TSS "Mass of total solids" : Mass := {: group <- "Operation" :};
+    
+    // (EURE 06/11/2018) mass balance check
+    OBJ Help_V_In (* hidden = "1" *) "Cumulated volume entered" : Volume := {: group <- "Mass balance" :}; ;
+    OBJ Help_V_Out (* hidden = "1" *) "Cumulated volume exited" : Volume := {: group <- "Mass balance" :}; ;
+    OBJ Help_V_Out2 (* hidden = "1" *) "Cumulated volume exited" : Volume := {: group <- "Mass balance" :}; ;
+    OBJ Help_V_Tot (* hidden = "1" *) "Cumulated volume exited + stored" : Volume := {: group <- "Mass balance" :}; ;
+  };
+
+  initial <-
+  {
+    state.Help_V_In = 0.0 ;
+    state.Help_V_Out = 0.0 ;
+    state.Help_V_Out2 = 0.0 ;
+  };
+  
+  equations <-
+  {
+    // (EURE 06/11/2018) mass balance check
+    // Help_V_In identical in both expressions - OK
+//    DERIV(state.Help_V_In,[independent.t]) = state.Q_In + state.Q_BW ;
+    DERIV(state.Help_V_In,[independent.t]) = (interface.Inflow[IndexOfSolvent] + interface.Inflow_Backwash[IndexOfSolvent]) * 1E-06 ;
+    DERIV(state.Help_V_Out,[independent.t]) = state.Q_Out + state.Q_Over - interface.Outflow_Backwash[IndexOfSolvent] * 1E-06 ;
+    DERIV(state.Help_V_Out2,[independent.t]) = - (interface.Outflow_Filtered[IndexOfSolvent] + interface.Overflow[IndexOfSolvent] + interface.Outflow_Backwash[IndexOfSolvent]) * 1E-06 ;
+    state.Help_V_Tot = state.Help_V_Out + state.V ;
+      
+    // Q_Out FILTERED (no Q_Out while backwashing -> all Q In goes to overflow)
+    // Accidental backwash influent while the filter is in operation is bypassed to filtered effluent
+//    state.Q_Out = IF (state.BW_On < 1) THEN state.Q_BW + state.Help_Q_Out ELSE 0.0 ;
+    state.Q_Out = IF (state.Q_BW <= 1E-08) THEN state.Q_BW + state.Help_Q_Out ELSE 0.0 ;
+
+    //(EURE 06/11/2018) !!! revised expression !!!
+    state.Q_Over = IF (state.H > parameters.H_Max) THEN
+      IF (state.Q_In - state.Q_Out >= 0.0) THEN (state.Q_In - state.Q_Out) ELSE 0.0
+      ELSE 0.0 ;
+
+    // Ratio filtered to total outflow
+//    state.f_Out = IF (state.BW_On <= 0) THEN
+    state.f_Out = IF (state.Q_BW <= 1E-08) THEN   // if not back-washing:
+      IF ((state.Q_Out + state.Q_Over) <= 0) THEN 0.0
+      ELSE state.Q_Out / (state.Q_Out + state.Q_Over)
+    ELSE 0.0 ;
+    
+    // Rate of backwash 
+    state.r_BW = IF (state.H > parameters.H_Max) THEN state.BW_On * state.Q_BW * state.Help_I_bw ELSE 0.0 ;
+
+    // Amount of sludge that remains on the filter (TSS per surface area)
+//    DERIV(state.M_TSS,[independent.t]) = ((state.X_In * state.Q_In + state.X_BW * state.Q_BW - state.Q_Out * state.X_Out - state.Q_Over * state.X_Over) / parameters.A) ;
+    // (EURE 23/10/2018) preferisco usare questa formula rispetto alla DERIV
+    state.M_TSS = state.X_TSS / parameters.A ;
+
+    // Per fraction in COD
+    {FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+    DERIV(state.M[Comp_Index],[independent.t]) =
+      (interface.Inflow[Comp_Index] + interface.Inflow_Backwash[Comp_Index] * state.BW_On + interface.Outflow_Filtered[Comp_Index] + interface.Overflow[Comp_Index] + interface.Outflow_Backwash[Comp_Index] ) ; };
+
+    // Solids in the Unfiltered flow
+    #ifdef CalculateTSSComponent
+    state.Help_X_Over = (SUMOVER Comp_Index IN {IndexOfFirstTSSComponent .. IndexOfLastTSSComponent}: - interface.Overflow[Comp_Index] * parameters.F_TSS_COD) ;
+
+    state.X_TSS = (SUMOVER Comp_Index IN {IndexOfFirstTSSComponent .. IndexOfLastTSSComponent}: state.M[Comp_Index] * parameters.F_TSS_COD) ;
+    #endif // CalculateTSSComponent
+
+    #ifdef UseTSSComponent
+    state.Help_X_Over = - interface.Overflow[IndexOfTSSComponent] ;
+
+    state.X_TSS = state.M[IndexOfTSSComponent] ;
+    #endif // UseTSSComponent
+
+//    state.X_BW = IF (state.BW_On < 1 || state.Q_BW <= 0.0) THEN 0.0 ELSE state.Help_X_Backwash / state.Q_BW ;
+    state.X_BW = IF (state.Q_BW <= 1E-08) THEN 0.0 ELSE state.Help_X_Backwash / state.Q_BW ;
+
+    // Outflows
+    {FOREACH Comp_Index IN {IndexOfSolvent .. IndexOfLastSolubleComponent}:
+      interface.Outflow_Filtered[Comp_Index] = - interface.Inflow[Comp_Index] * state.f_Out - (1 - state.BW_On) * interface.Inflow_Backwash[Comp_Index] ; };
+
+    {FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+      interface.Outflow_Filtered[Comp_Index] = - interface.Inflow[Comp_Index] * state.f_Out * parameters.f_nf - (1 - state.BW_On) * interface.Inflow_Backwash[Comp_Index] ; };
+
+    {FOREACH Comp_Index IN {IndexOfSolvent .. IndexOfLastSolubleComponent}:
+      interface.Overflow[Comp_Index] = - interface.Inflow[Comp_Index] * (1 - state.f_Out) ; };
+
+    {FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+      interface.Overflow[Comp_Index] = - interface.Inflow[Comp_Index] * (1 - state.f_Out) ; };
+
+    {FOREACH Comp_Index IN {IndexOfSolvent .. IndexOfLastSolubleComponent}:
+      interface.Outflow_Backwash[Comp_Index] = - state.BW_On * interface.Inflow_Backwash[Comp_Index] ; };
+
+    {FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+      interface.Outflow_Backwash[Comp_Index] = - state.BW_On * interface.Inflow_Backwash[Comp_Index] - state.M[Comp_Index] * state.r_BW ; };
+  };
+
+:};
+
+
+#endif // WWTP_SAND_FILTER_AUTOBW

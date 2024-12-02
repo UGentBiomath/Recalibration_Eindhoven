@@ -1,0 +1,144 @@
+/*******************************************************************************
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:58$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_ASTAGE_TWOSPLITTER
+#define WWTP_ASTAGE_TWOSPLITTER
+
+
+#ifdef ASM1Temp
+
+
+CLASS A_2Splitter_Valve (* icon = "two_fraction_splitter" *) "Relative 2-way splitter for ASM1 A-stage only"
+EXTENDS A_AtomicModelWithoutVolume WITH
+{:
+
+  comments <- "Relative 2-way splitter for ASM1 A-stage only" ;
+  
+  interface <-
+  { 
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : ASM1_ABInWWTPTerminal := {: causality <- "CIN" ; group <- "Influent":};
+    OBJ Outflow1 (* terminal = "out_1" *) "Outflow1" : ASM1_ABOutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 1":};
+    OBJ Outflow2 (* terminal = "out_2" *) "Outflow2" : ASM1_ABOutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 2":};
+    OBJ f_Out2 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Fraction of the fluxes going to outflow2" : Fraction := {: causality <- "CIN" ; value <- 0.9; group <- "Operational" :};
+  };
+  
+  state <-  
+  {
+    OBJ Q_Out1 (* is_favorite = "1" *) "Effluent flow rate from flow 1" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Out2 (* is_favorite = "1" *) "Effluent flow rate from flow 2" : FlowRate := {: group <- "Operational" :};
+  };
+  
+  equations <-
+  {
+    {FOREACH Comp_Index IN {1 .. ASM1_ABNrOfComponents}: interface.Outflow2[Comp_Index] =
+      IF (interface.f_Out2 < 1.0) THEN - state.InFluxPerComponent[Comp_Index] * interface.f_Out2
+      ELSE - state.InFluxPerComponent[Comp_Index] ; };   
+  
+    {FOREACH Comp_Index IN {1 .. ASM1_ABNrOfComponents}:
+      interface.Outflow1[Comp_Index] = - state.InFluxPerComponent[Comp_Index] - interface.Outflow2[Comp_Index] ; };  
+  
+    state.Q_Out1 = - interface.Outflow1[1] * 1E-06 ;
+    state.Q_Out2 = - interface.Outflow2[1] * 1E-06 ;
+  }; 
+
+:};
+
+
+CLASS A_2Splitter_Flow (* icon = "two_flow_splitter" *) "Absolute 2-way splitter for ASM1 A-stage only"
+EXTENDS A_2Splitter_Flow_Base WITH
+{:
+  comments <- "Absolute 2-way splitter for ASM1 A-stage only";
+
+  interface <-
+  { 
+    OBJ PumpingEnergy (* terminal = "out_3" *)"Pumping energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ PumpingPower (* terminal = "out_3" *) "Pumping power" : Real := {: causality <- "COUT"; unit <- "kWh/d" ; group <- "Energy" :};
+  };
+
+  parameters <- 
+  { 
+    // PUMPING ENERGY
+    OBJ F_Energy_FlowRate "Conversion factor Energy needed/Pump flow rate" : EnergyForPumping := {: value <- 0.04 ; group <- "Energy":};
+  };
+  
+  state <-
+  {
+    // PUMPING ENERGY
+    OBJ Integ_PE (* hidden = "1" *)"Integral Pumping energy" : ElectricalEnergy ;
+  };
+  
+  initial <-
+  {
+    state.Integ_PE = 0.0 ;
+  };
+  
+  equations <-
+  {
+    // PUMPING ENERGY
+    //(EURE 26/07/2019) [kWh/m3] * [m3/d] = [kWh/d]
+    interface.PumpingPower = parameters.F_Energy_FlowRate * state.Q_Out2_Actual ;
+    DERIV(state.Integ_PE,[independent.t])=  state.Q_Out2_Actual;
+    interface.PumpingEnergy = parameters.F_Energy_FlowRate * state.Integ_PE ;
+  }; 
+
+:};
+
+
+CLASS A_2Splitter_Flow_Base (* icon = "two_flow_splitter" *) "Base class for an absolute 2-way splitter for ASM1 A-stage only"
+EXTENDS A_AtomicModelWithoutVolume WITH
+{:
+
+  comments <- "Base class for an absolute 2-way splitter for ASM1 A-stage only";
+
+  interface <-
+  { 
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : ASM1_ABInWWTPTerminal := {: causality <- "CIN" ; group <- "Influent":};
+    OBJ Outflow1 (* terminal = "out_1" *) "Outflow1" : ASM1_ABOutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 1":};
+    OBJ Outflow2 (* terminal = "out_2" *) "Outflow2" : ASM1_ABOutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 2":};
+    OBJ Q_Out2 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Desired flow rate (outflow #2)" : FlowRate := {: causality <- "CIN" ; value <- 50; group <- "Operational" :};
+    // new 2016: necessary to link to new pump models for accurate energy calculations
+    OBJ Q_Op1 (* terminal = "out_3" *) "Actual operating flow rate no.1" : FlowRate := {: causality <- "COUT"; group <- "Operational" :};
+    OBJ Q_Op2 (* terminal = "out_3" *) "Actual operating flow rate no.2" : FlowRate := {: causality <- "COUT"; group <- "Operational" :};
+  };
+
+  state <-
+  {
+    OBJ Q_Out1 (* is_favorite = "1" *) "Outflow1 rate" : FlowRate := {: group <- "Operational" :};
+    OBJ f_Out2 (* hidden = "1" *) "Fraction of the influent flux going to outflow2" : Fraction ;
+    OBJ Q_Out2_Actual (* is_favorite = "1" *) "Help variable for outflow2 rate" : FlowRate := {: group <- "Operational" :};
+  };
+  
+  equations <-
+  {
+    state.Q_Out1 = IF(interface.Q_Out2 > state.Q_In) THEN 0.0
+      ELSE state.Q_In - state.Q_Out2_Actual ;
+    
+    state.Q_Out2_Actual = IF(interface.Q_Out2 > state.Q_In) THEN state.Q_In
+      ELSE interface.Q_Out2;
+    
+    state.f_Out2 = IF (state.Q_In == 0) THEN 0.0
+      ELSE state.Q_Out2_Actual / state.Q_In ;
+    
+    {FOREACH Comp_Index IN {1 .. ASM1_ABNrOfComponents}:
+      interface.Outflow1[Comp_Index] = - state.InFluxPerComponent[Comp_Index] * (1 - state.f_Out2) ;};
+    
+    {FOREACH Comp_Index IN {1 .. ASM1_ABNrOfComponents}:
+      interface.Outflow2[Comp_Index] = - state.InFluxPerComponent[Comp_Index] * state.f_Out2 ;};
+
+    // new 2016: necessary to link to new pump models for accurate energy calculations
+    interface.Q_Op1 = state.Q_Out1 ;
+    interface.Q_Op2 = state.Q_Out2_Actual ;
+  }; 
+
+:};
+
+
+#endif // ASM1Temp
+
+
+#endif // WWTP_ASTAGE_TWOSPLITTER

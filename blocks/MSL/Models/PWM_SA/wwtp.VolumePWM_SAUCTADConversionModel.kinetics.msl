@@ -1,0 +1,26 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    state.Kinetics[AC_decay] = state.Kd_ac * state.C[X_AC];
+    state.Kinetics[AD_decay] = state.Kd_ad * state.C[X_AD];
+    state.Kinetics[AM_decay] = state.Kd_am * state.C[X_AM];
+    state.Kinetics[Acet_methanogenesis] = state.Mu_am * (state.C[S_VFA] / parameters.MW_[S_VFA]) / (parameters.KS_AM + (state.C[S_VFA] / parameters.MW_[S_VFA])) * state.I_H_AM * state.C[X_AM];
+    state.Kinetics[Acetogenesis] = state.Mu_ac * (state.C[S_Pr] / parameters.MW_[S_Pr]) / (parameters.KS_AC + (state.C[S_Pr] / parameters.MW_[S_Pr])) * state.I_H2_AC * state.C[X_AC];
+    state.Kinetics[Acidogenesis_H] = state.Mu_ad * (state.C[S_Glu] / parameters.MW_[S_Glu]) / (parameters.KS_AD + (state.C[S_Glu] / parameters.MW_[S_Glu])) * state.A_H2_AD * state.C[X_AD];
+    state.Kinetics[Acidogenesis_L] = state.Mu_ad * (state.C[S_Glu] / parameters.MW_[S_Glu]) / (parameters.KS_AD + (state.C[S_Glu] / parameters.MW_[S_Glu])) * state.I_H2_AD * state.C[X_AD];
+    state.Kinetics[BPO_Hydrolysis] = state.Kh_bp * state.C[X_AD];
+    state.Kinetics[BPO_PS_Hydrolysis] = state.Kh_bps * state.C[X_AD];
+    state.Kinetics[CaP_dissoc] = state.K_cap * state.Driver_cap;
+    state.Kinetics[Calcite_dissoc] = state.K_cal * state.Driver_cal;
+    state.Kinetics[FSO_Hydrolysis] = state.Kh_fs * state.C[S_F];
+    state.Kinetics[HM_decay] = state.Kd_hm * state.C[X_HM];
+    state.Kinetics[Hyd_methanogenesis] = state.Mu_hm * (state.C[S_H2]/ parameters.MW_[S_H2]) / (parameters.KS_HM + (state.C[S_H2]/ parameters.MW_[S_H2])) * state.I_H_HM * state.C[X_HM];
+    state.Kinetics[Magnesite_dissoc] = state.K_mag * state.Driver_mag;
+    state.Kinetics[MgKP_dissoc] = state.K_mgkp * state.Driver_mgkp;
+    state.Kinetics[Newberyite_dissoc] = state.K_newb * state.Driver_newb;
+    state.Kinetics[OHO_Lysis] = state.Kd_oh * state.C[X_OHO];
+    state.Kinetics[PAO_Lysis] = state.Kd_pa * state.C[X_PAO];
+    state.Kinetics[PHA_Hydrolysis] = state.Kh_pha * state.C[X_PAO_Stor];
+    state.Kinetics[PP_Hydrolysis] = state.Kh_pp * state.C[X_PAO_PP];
+    state.Kinetics[PP_Release] = state.Kh_polyp * state.C[X_PAO_PP] / (parameters.KS_fPP_PAO_PHAstor + state.C[X_PAO_PP]);
+    state.Kinetics[Struvite_dissoc] = state.K_stru * state.Driver_Str;
+

@@ -1,0 +1,135 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:28$
+ *
+ ******************************************************************************/
+
+#ifndef SEWER_GENERATORS_FLOW_EVAPORATION
+#define SEWER_GENERATORS_FLOW_EVAPORATION
+
+
+// latest after WEFTEC 2014
+CLASS EvaporationFlow (* icon = "generator" *) "A dry weather evaporation generator for use within Kosim"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  {
+    OBJ Evaporation (* terminal = "out_2" *) "Evaporation outflow" : RainfallIntensity := {: causality <- "COUT"; group <- "Outflow" :};
+  };
+
+  parameters <-
+  {
+    OBJ EvaporationPattern (* hidden = "1" *) "Pattern of daily evaporation": HourlyDailyPattern
+      := [{: value <- 0.20:},{: value <- 0.20 :},{: value <- 0.20 :},
+      {: value <- 0.20 :},{: value <- 0.25 :},{: value <- 0.35 :},
+      {: value <- 0.55 :},{: value <- 0.65 :},{: value <- 0.75 :},
+      {: value <- 1.00 :},{: value <- 1.50 :},{: value <- 1.85 :},
+      {: value <- 1.95 :},{: value <- 2.00 :},{: value <- 2.00 :},
+      {: value <- 1.95 :},{: value <- 1.85 :},{: value <- 1.60 :},
+      {: value <- 1.35 :},{: value <- 1.05 :},{: value <- 0.85 :},
+      {: value <- 0.75 :},{: value <- 0.50 :},{: value <-0.35:};];
+    OBJ StartDay "Day of the year when the simulation starts" : Integer := {: value <- 1; group <- "General" :};
+    OBJ Evap_Year (* is_favorite = "1" *) "Average yearly potential evaporation (mm/year)" : Rainfall := {: value <- 657; group <- "General" :};   
+    //
+    OBJ Pival (* hidden = "1" *) "Pi" : Real := {: value <- 3.14159 :};
+  };
+
+  independent <- 
+  {
+    OBJ t : Time;
+  };
+
+  state <- 
+  { 
+    OBJ Evap_Day (* is_favorite = "1" *) "Mean evaporation per day" : RainfallIntensity:= {: group <- "General" :}; // in mm/d
+    //
+    OBJ DayOfTheYear (* hidden = "1" *) "Day of the year 01 jan = 01" : Integer ;
+    OBJ Timestep (* hidden = "1" *) "Hour of the day" : Integer ;
+    OBJ Month (* hidden = "1" *) "Month of the year" : Integer ;
+    OBJ Help_DayOfTheYear (* hidden = "1" *) "Work variable for the current day" : Integer ;
+  };
+
+  equations <-
+  { 
+    state.Help_DayOfTheYear = independent.t + parameters.StartDay;
+    
+    state.DayOfTheYear = (state.Help_DayOfTheYear - fmod(state.Help_DayOfTheYear,1)) 
+      - floor((state.Help_DayOfTheYear - fmod(state.Help_DayOfTheYear,1) -1) / 365) * 365 ;
+    
+    state.Evap_Day = (7.0 / 9.0 * sin(2 * parameters.Pival /365 * (state.DayOfTheYear - 91)) + 1)
+      * parameters.Evap_Year / 365 ;
+    
+    state.Timestep = floor(fmod(independent.t,1) * 24) + 1 ;  
+    
+    interface.Evaporation = IF (independent.t > 0)
+      THEN state.Evap_Day * parameters.EvaporationPattern[state.Timestep]
+      ELSE 0 ;
+  };
+  
+:};
+
+
+// ====
+// New models, version 2017
+// ====
+
+CLASS Evaporation_wRadiation (* icon = "generator" *)
+"Dry weather evaporation generator, with solar radiation and air temperature as inputs"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  comments <- "Dry weather evaporation generator, with solar radiation and air temperature as inputs" ;
+  
+  interface <-
+  {
+    OBJ I0 (* terminal = "in_2"; manip = "1" *) "Solar radiation" : Real := {: causality <- CIN ; unit <- "W/m2"; interval <- {: lowerBound <- 0 :}; group <- "Data":},
+    OBJ T_Air (* terminal = "in_2"; manip = "1" *) "Air temperature" : CelsiusTemperature := {:causality <- CIN ; group <- "Data" :},
+    OBJ Evaporation (* terminal = "out_2" *) "Evaporation outflow" : RainfallIntensity := {: causality <- "COUT"; group <- "Outflow" :};
+  };
+
+  parameters <-
+  {
+    //YearlyEvaporation -> Evap_Year
+    OBJ Evap_Year (* is_favorite = "1" *) "Average yearly potential evaporation (mm/year)" : Rainfall := {: value <- 657; group <- "Data" :};   
+    // MeanI0 -> I0_Mean 
+    OBJ I0_Mean "Mean solar radiation" : Real := {: value <- 400.0 ; unit <- "W/m2"; interval <- {: lowerBound <- 0 :}; group <- "Data" :},
+    // MeanT_air -> T_Air_Mean 
+    OBJ T_Air_Mean "Mean air temperature" : CelsiusTemperature := {: value <- 11.0 ; group <- "Data" :};
+    OBJ f_T "Temperature factor for GSA" : Real := {: value <- 1 ; group <- "General" :};
+    OBJ f_I0 "I0 factor for GSA" : Real := {: value <- 1 ; group <- "General" :};
+  };
+
+  independent <- 
+  {
+    OBJ t : Time;
+  };
+
+  state <- 
+  { 
+    // T_air_h -> Help_T_Air
+    OBJ Help_T_Air "Air temperature: 0 if T_air < 0" : CelsiusTemperature ;
+  };
+
+  equations <-
+  { 
+    state.Help_T_Air = IF (interface.T_Air < 0.0) THEN 0.0
+      ELSE interface.T_Air ;
+      
+    interface.Evaporation = parameters.Evap_Year / 365 * (interface.I0 * parameters.f_I0 / parameters.I0_Mean + state.Help_T_Air * parameters.f_T / parameters.T_Air_Mean) / 2 ;
+  };
+  
+:};
+
+
+#endif // SEWER_GENERATORS_FLOW_EVAPORATION

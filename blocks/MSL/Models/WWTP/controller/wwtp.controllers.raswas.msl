@@ -1,0 +1,51 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:56$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_CONTROLLERS_RASWAS
+#define WWTP_CONTROLLERS_RASWAS
+
+
+// CLASS RAS_WAS_Base SPECIALISES PhysicalDAEModelType :=
+CLASS Ctl_Qas_Base SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  {
+    OBJ y_Q (* terminal = "in_1"; is_favorite = "1" *) "Flow rate Q-in" : FlowRate := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Q_ML (* terminal = "out_1"; is_favorite = "1" *) "Flow rate Q ML" : FlowRate := {: causality <- "COUT" ; group <- "ML" :};
+    OBJ Q_Under (* terminal = "out_1"; is_favorite = "1" *) "SST underflow" : FlowRate := {: causality <- "COUT" ; group <- "Action" :};
+    OBJ Q_RAS (* terminal = "out_1"; is_favorite = "1" *) "Flow rate Q RAS" : FlowRate := {: causality <- "COUT" ; group <- "RAS & WAS" :};
+    OBJ Q_WAS (* terminal = "out_1"; is_favorite = "1" *) "Flow rate Q WAS" : FlowRate := {: causality <- "COUT" ; group <- "RAS & WAS" :};
+  };
+  
+  independent <-
+  { 
+    OBJ t "Time" : Time := {: group <- "Time" :} ; 
+  };
+  
+  equations <-
+  {
+  };
+  
+:};
+ 
+ 
+#include "WWTP/controller/wwtp.controllers.raswas.flow.msl"
+#include "WWTP/controller/wwtp.controllers.raswas.ratio.msl"
+
+
+#endif // WWTP_CONTROLLERS_RASWAS

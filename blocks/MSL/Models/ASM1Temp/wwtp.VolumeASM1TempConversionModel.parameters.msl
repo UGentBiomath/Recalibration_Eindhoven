@@ -1,0 +1,34 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ F_BOD_COD (* *) "Conversion factor BOD/COD" : Fraction := {: unit <- "-"; value <- 0.65; interval <- {: lowerBound <- 0.000000; upperBound <- 1.000000; :}; group <- "Conversion factors"; :};
+    OBJ F_TSS_COD (* *) "Fraction TSS/COD" : Fraction := {: unit <- "-"; value <- 0.75; interval <- {: lowerBound <- 0.000000; upperBound <- 1.000000; :}; group <- "Conversion factors"; :};
+    OBJ K_NH (* *) "Ammonia Half-Saturation Coefficient For Autotrophic Biomass" : AmmonHalfSatCoeffForAutotr := {: unit <- "gNH3-N/m3"; value <- 1.0; interval <- {: lowerBound <- 0.000000; upperBound <- 10.000000; :}; group <- "Kinetic"; :};
+    OBJ K_NH_H (* *) "Saturation coeff of heterotrophs for ammonium" : SaturationCoefficient := {: unit <- "g/m3"; value <- 0.05; interval <- {: lowerBound <- 0.000000; upperBound <- 100.000000; :}; group <- "Kinetic"; :};
+    OBJ K_NO (* *) "Nitrate Half-Saturation Coefficient For Denitrifying Heterotrophic Biomass" : NitrateHalfSatCoeffForDenitrifHetero := {: unit <- "gNO3-N/m3"; value <- 0.5; interval <- {: lowerBound <- 0.000000; upperBound <- 2.000000; :}; group <- "Kinetic"; :};
+    OBJ K_OA (* *) "Oxygen Half-Saturation Coefficient For Autotrophic Biomass" : OxygenHalfSatCoeffForAutotr := {: unit <- "gO2/m3"; value <- 0.4; interval <- {: lowerBound <- 0.000000; upperBound <- 10.000000; :}; group <- "Kinetic"; :};
+    OBJ K_OH (* *) "Oxygen Half-Saturation Coefficient For Heterotrophic Biomass" : OxygenHalfSatCoeffForHetero := {: unit <- "gO2/m3"; value <- 0.2; interval <- {: lowerBound <- 0.000000; upperBound <- 10.000000; :}; group <- "Kinetic"; :};
+    OBJ K_S (* *) "Half-Saturation Coefficient For Heterotrophic Biomass" : HalfSatCoeffForHetero := {: unit <- "gCOD/m3"; value <- 20.0; interval <- {: lowerBound <- 0.000000; upperBound <- 100.000000; :}; group <- "Kinetic"; :};
+    OBJ K_X (* *) "Half Saturation Coefficient For Hydrolysis Of Slowly Biodegradable Substrate" : HalfSatCoeffForHydrolysis := {: unit <- "gCOD/gCOD"; value <- 0.03; interval <- {: lowerBound <- 0.000000; upperBound <- 100.000000; :}; group <- "Kinetic"; :};
+    OBJ Temp_Ref (* *) "Reference temperature of the activated sludge" : CelsiusTemperature := {: unit <- "degC"; value <- 20.0; interval <- {: lowerBound <- -273.15; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ Y_A (* *) "Yield For Autotrophic Biomass" : YieldForAutotrophicBiomass := {: unit <- "gCOD/gN"; value <- 0.24; interval <- {: lowerBound <- 0.000000; upperBound <- 4.57; :}; group <- "Stoichiometry"; :};
+    OBJ Y_H (* *) "Yield For Heterotrophic Biomass" : YieldForHeterotrophicBiomass := {: unit <- "gCOD/gCOD"; value <- 0.67; interval <- {: lowerBound <- 0.000000; upperBound <- 1.000000; :}; group <- "Stoichiometry"; :};
+    OBJ b_A (* *) "Decay Coefficient For Autotrophic Biomass" : DecayCoeffAutotr := {: unit <- "1/d"; value <- 0.15; interval <- {: lowerBound <- 0.000000; upperBound <- 25.000000; :}; group <- "Kinetic"; :};
+    OBJ b_H (* *) "Decay Coefficient For Heterotrophic Biomass" : DecayCoeffHeterotr := {: unit <- "1/d"; value <- 0.62; interval <- {: lowerBound <- 0.000000; upperBound <- 25.000000; :}; group <- "Kinetic"; :};
+    OBJ f_P (* *) "Fraction Of Biomass Converted To Inert Matter" : FractOfBiomassLeadingToPartProd := {: unit <- "-"; value <- 0.08; interval <- {: lowerBound <- 0.000000; upperBound <- 1.000000; :}; group <- "Stoichiometry"; :};
+    OBJ i_N_S_I (* *) "Mass of nitrogen per mass of inert soluble COD" : MassOfNitrogenPerMassOfCODInProdFromBiomass := {: unit <- "gN/gCOD"; value <- 0.0; interval <- {: lowerBound <- 0.0; upperBound <- 0.2; :}; group <- "Composition parameters"; :};
+    OBJ i_X_B (* *) "Mass Of Nitrogen Per Mass Of COD In Biomass" : MassOfNitrogenPerMassOfCODInBiomass := {: unit <- "gN/gCOD"; value <- 0.086; interval <- {: lowerBound <- 0.000000; upperBound <- 0.2; :}; group <- "Composition parameters"; :};
+    OBJ i_X_P (* *) "Mass Of Nitrogen Per Mass Of COD In Products Formed" : MassOfNitrogenPerMassOfCODInProdFromBiomass := {: unit <- "gN/gCOD"; value <- 0.06; interval <- {: lowerBound <- 0.000000; upperBound <- 0.2; :}; group <- "Composition parameters"; :};
+    OBJ k_a (* *) "Maximum Specific Ammonification Rate" : AmmonificationRate := {: unit <- "m3/(gCOD*d)"; value <- 0.08; interval <- {: lowerBound <- 0.000000; upperBound <- 0.25; :}; group <- "Kinetic"; :};
+    OBJ k_h (* *) "Maximum Specific Hydrolysis Rate" : MaxSpecificHydrolysisRate := {: unit <- "gCOD/(gCOD*d)"; value <- 3.0; interval <- {: lowerBound <- 0.000000; upperBound <- 25.000000; :}; group <- "Kinetic"; :};
+    OBJ mu_A (* *) "Maximum Specific Growth Rate For Autotrophic Biomass" : MaxSpecifGrowthRateAutotr := {: unit <- "1/d"; value <- 0.8; interval <- {: lowerBound <- 0.000000; upperBound <- 5.000000; :}; group <- "Kinetic"; :};
+    OBJ mu_H (* *) "Maximum Specific Growth Rate For Heterotrophic Biomass" : MaxSpecifGrowthRateHetero := {: unit <- "1/d"; value <- 6.0; interval <- {: lowerBound <- 0.000000; upperBound <- 20.000000; :}; group <- "Kinetic"; :};
+    OBJ n_g (* *) "Correction Factor For Anoxic Growth Of Heteritrophs" : CorrectionFactor := {: unit <- "-"; value <- 0.8; interval <- {: lowerBound <- 0.000000; upperBound <- 1.000000; :}; group <- "Kinetic"; :};
+    OBJ n_h (* *) "Correction Factor For Anoxic Hydrolysis" : CorrectionFactor := {: unit <- "-"; value <- 0.4; interval <- {: lowerBound <- 0.000000; upperBound <- 1.000000; :}; group <- "Kinetic"; :};
+    OBJ theta_K_X (* *) "Temperature correction factor for K_X" : Real := {: value <- 1.116; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ theta_b_A (* *) "Temperature correction factor for b_A" : Real := {: value <- 1.116; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ theta_b_H (* *) "Temperature correction factor for b_H" : Real := {: value <- 1.12; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ theta_k_a (* *) "Temperature correction factor for k_a" : Real := {: value <- 1.072; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ theta_k_h (* *) "Temperature correction factor for k_h" : Real := {: value <- 1.116; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ theta_mu_A (* *) "Temperature correction factor for mu_A" : Real := {: value <- 1.103; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ theta_mu_H (* *) "Temperature correction factor for mu_H" : Real := {: value <- 1.072; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+

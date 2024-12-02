@@ -1,0 +1,55 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 3. oktober 2019 09:32:56$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_DOSING_CHEMP_NAALO2
+#define WWTP_DOSING_CHEMP_NAALO2
+
+
+#if (defined ASM2dModTemp || defined ASM2dMod1 || defined ASMG2d || defined IUWS1 || defined IUWS2)
+
+// (EURE 09/01/2018) this model is written in accordance to the 'old' scheme
+// It may be better to rather calculate the C_Dose from the known Strength and Rho of the solution (cf. FeCl3)
+CLASS NaAlO2 (* icon = "dosing_unit_iron" *) "Dosing unit for sodium aluminate, NaAlO2"
+EXTENDS P_Precipitation WITH
+{:
+
+  comments <- "Dosing unit for sodium aluminate, NaAlO2";
+
+  interface <-
+  {
+    OBJ M_Chem (* terminal = "out_2" *) "Amount of chemical dosed" : Real := {: causality <- "COUT" ; unit <- "g/d" ; group <- "Measurement data" :};
+    OBJ Q_Chem (* terminal = "out_2" *) "Flow rate of chemical dosed" : FlowRate := {: causality <- "COUT" ; group <- "Measurement data" :};
+  };
+
+  initial <-
+  {
+    parameters.MW = 82.0 ;
+  };
+
+  equations <-
+  {
+    interface.M_Chem = interface.Q_Dose * interface.C_Dose ;
+    interface.Q_Chem = interface.Q_Dose ;
+  };
+
+:};
+
+
+#endif // ASM2dModTemp || defined ASMG2d || defined ASM2dM
+
+
+#endif // WWTP_DOSING_CHEMP_NAALO2

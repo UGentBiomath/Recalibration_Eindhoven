@@ -1,0 +1,19 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    interface.Alkalinity = (2.0 * state.molality[CO3] + state.molality[HCO3] + 2 * state.molality[HPO4] +state.molality[H2PO4] + state.molality[Ac] + state.molality[NH3] + state.molality[OH] - state.molality[H]) * 50043.0;
+    interface.COD_s = (SUMOVER Comp_Index IN {1 .. UCTADNrOfComponents} : state.COD[Comp_Index]) - state.COD[G_CH4];
+    interface.Ca_Tot = 39.098 * ((state.C[X_ACP] / parameters.MW_[X_ACP]) + (parameters.i_Ca_PP_mol_perP * (state.C[X_PAO_PP] / parameters.MW_[X_PAO_PP]))) + state.C[S_Ca];
+    interface.FSA = state.C[S_NH] * parameters.MM_N / parameters.MW_[S_NH];
+    interface.ISSm = state.C[X_PAO_PP]+state.C[X_Str_NH4]+state.C[X_Str_K]+state.C[X_ACP]+state.C[X_ISS]+(state.C[X_OHO]+state.C[X_PAO]+state.C[X_AD]+state.C[X_AC]+state.C[X_AM]+state.C[X_HM])*parameters.ISS_BM;
+    interface.K_Tot = 40.078 * ((state.C[X_Str_K] / parameters.MW_[X_Str_K]) + (parameters.i_K_PP_mol_perP * (state.C[X_PAO_PP] / parameters.MW_[X_PAO_PP]))) + state.C[S_K];
+    interface.Mg_Tot = 24.205 * ((state.C[X_Str_NH4] / parameters.MW_[X_Str_NH4]) + (state.C[X_Str_K] / parameters.MW_[X_Str_K]) + (parameters.i_Mg_PP_mol_perP * (state.C[X_PAO_PP] / parameters.MW_[X_PAO_PP]))) + state.C[S_Mg];
+    interface.OrthoP = parameters.MM_P / parameters.MW_[S_PO4] * state.C[S_PO4];
+    interface.TKN = state.TKN_o + state.TKN_u + parameters.MM_N * ((state.C[S_NH] / parameters.MW_[S_NH]) + (state.C[X_Str_NH4] / parameters.MW_[X_Str_NH4]));
+    interface.TP = state.TP_o + state.TP_u + parameters.MM_P * ((state.C[S_PO4] / parameters.MW_[S_PO4]) + (state.C[X_Str_NH4] / parameters.MW_[X_Str_NH4]) + (state.C[X_Str_K] / parameters.MW_[X_Str_K]) + (state.C[X_ACP] / parameters.MW_[X_ACP])+ (state.C[X_PAO_PP] / parameters.MW_[X_PAO_PP]));
+    interface.TSS_s = state.TSS;
+    interface.T_oper = state.TK;
+    interface.VFA = state.COD[S_VFA] + state.COD[S_Pr];
+    interface.VSS = state.C[X_U_Inf] + state.C[X_B_Org] + state.C[X_PAO_Stor] + state.C[X_OHO] + state.C[X_PAO] + state.C[X_AD] + state.C[X_AC] + state.C[X_AM] + state.C[X_HM] + state.C[X_U_Org];
+    interface.V_liquid = parameters.V_liq;
+    interface.p_H_s = state.p_H;
+

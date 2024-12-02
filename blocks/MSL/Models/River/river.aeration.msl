@@ -1,0 +1,68 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:25$
+ *
+ ******************************************************************************/
+
+#ifndef RIVER_AERATION
+#define RIVER_AERATION
+
+  
+CLASS RiverAeration_Base "A base dosing unit model" SPECIALISES PhysicalDAEModelType :=
+{:
+
+  comments <- "..";
+  
+  interface <-
+  {
+    OBJ Q_Dose (* terminal = "in_1"; manip = "1"; is_favorite = "1" *) "Flow rate of the solution" : FlowRate := {: causality <- "CIN" ; value <- 1.0; group <- "Operational" :};
+  };
+  
+  parameters <-
+  {
+    OBJ WWTPSpecificVolume (* hidden = "1" *) "The specific volumes (= 1/density) of the components" : SpecificVolumeVector;
+    OBJ C_Dose "Concentration of the solution" : Concentration := {: value <- 1000000 ; group <- "Concentration" :};
+    //   OBJ MW (* hidden = "1" *) "Molecular weight of the chemical species dosed" : Real := {: group <- "System" :};
+  };
+  
+  independent <-
+  {
+    OBJ t "Time": Time := {: group <- "Time" :};
+  };
+  
+  initial <-
+  {
+    parameters.WWTPSpecificVolume[IndexOfSolvent] := 0.000001;
+  };
+  
+  state <-
+  {
+    OBJ DO_flux (* hidden = "1" *) "Flux of oxygen" : MassFlux := {: group <- "Operational" :};
+    OBJ DO_mass "Mass of oxygen added since start of simulation" : Mass := {: group <- "Operational" :};
+  };
+  
+  equations <-
+  {
+    state.DO_flux = interface.Q_Dose * parameters.C_Dose ;
+    
+    DERIV(state.DO_mass, [independent.t]) = state.DO_flux ;
+  };
+
+:};
+
+
+#include "River/aeration/aeration.effluent.msl"
+#include "River/aeration/aeration.instream.msl"
+
+
+#endif // RIVER_AERATION

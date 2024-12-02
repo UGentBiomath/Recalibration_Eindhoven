@@ -1,0 +1,22 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    state.Kinetics[AerGrowthHetero] = state.rate01;
+    state.Kinetics[Aeration] = state.Kla_Actual_Temp * (state.S_O_Saturation - state.C[S_O]);
+    state.Kinetics[AmmonOfSolOrgN] = state.k_a_Temp * state.C[S_ND] * state.C[X_BH];
+    state.Kinetics[AnGrowthHeteroN2O_N2] = state.rate05;
+    state.Kinetics[AnGrowthHeteroNO2_NO] = state.rate03;
+    state.Kinetics[AnGrowthHeteroNO3_NO2] = state.rate02;
+    state.Kinetics[AnGrowthHeteroNO_N2O] = state.rate04;
+    state.Kinetics[AutoGrowthAOB] = state.rate07;
+    state.Kinetics[AutoGrowthNOB] = state.rate08;
+    state.Kinetics[AutoNO2_NO] = parameters.switch_model * parameters.n_AOB * (state.mu_A1_Temp * state.C[X_BA1] * (state.S_FNA / (parameters.K_FNA_aob + state.S_FNA)) * (state.S_FA / (parameters.K_FA_aob + state.S_FA)) * (state.C[S_O] / (parameters.K_SO_aob1 + state.C[S_O]))) + (1 - parameters.switch_model) * parameters.n_AOB * (state.mu_A1_Temp * state.C[X_BA1] * (state.S_FNA / (parameters.K_FNA_aob + state.S_FNA)) * (state.S_FA / (parameters.K_FA_aob + state.S_FA)) * (state.SO_Comp_AOBden1));
+    state.Kinetics[AutoNO_N2O] = parameters.switch_model * parameters.n_AOB * (state.mu_A1_Temp * state.C[X_BA1] * (state.C[S_NO] / (parameters.K_SNO_aob + state.C[S_NO])) * (state.S_FA / (parameters.K_FA_aob + state.S_FA)) * (state.C[S_O] / (parameters.K_SO_aob2 + state.C[S_O]))) + (1 - parameters.switch_model) * parameters.n_AOB * (state.mu_A1_Temp * state.C[X_BA1] * (state.C[S_NO] / (parameters.K_SNO_aob + state.C[S_NO])) * (state.S_FA / (parameters.K_FA_aob + state.S_FA)) * (state.SO_Comp_AOBden2));
+    state.Kinetics[DecayOfAOB] = state.rate09;
+    state.Kinetics[DecayOfHetero] = state.b_H_Temp * state.C[X_BH];
+    state.Kinetics[DecayOfNOB] = state.rate10;
+    state.Kinetics[HydrolOfEntrOrg] = state.k_h_Temp * (state.C[X_S] / state.C[X_BH]) / (parameters.K_X + (state.C[X_S] / state.C[X_BH])) * ((state.C[S_O] / (parameters.K_OH + state.C[S_O])) + parameters.n_h * (parameters.K_OH / (parameters.K_OH + state.C[S_O])) * (state.S_NOx / (parameters.K_NO3 + state.S_NOx))) * state.C[X_BH];
+    state.Kinetics[HydrolOfEntrOrgN] = state.k_h_Temp * (state.C[X_S] / state.C[X_BH]) / (parameters.K_X + (state.C[X_S] / state.C[X_BH])) * ((state.C[S_O] / (parameters.K_OH + state.C[S_O])) + parameters.n_h * (parameters.K_OH / (parameters.K_OH + state.C[S_O])) * (state.S_NOx / (parameters.K_NO3 + state.S_NOx))) * state.C[X_BH] * (state.C[X_ND] / state.C[X_S]);
+    state.Kinetics[StrippingN2] = state.Kla_N2 * ((parameters.P_N2_air * 28 / parameters.H_N2) - state.C[S_N2]);
+    state.Kinetics[StrippingN2O] = state.Kla_N2O * ((parameters.P_N2O_air * 28 / parameters.H_N2O) - state.C[S_N2O]);
+    state.Kinetics[StrippingNO] = state.Kla_NO * ((parameters.P_NO_air * 14 / parameters.H_NO) - state.C[S_NO]);
+

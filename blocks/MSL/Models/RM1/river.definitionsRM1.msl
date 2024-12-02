@@ -1,0 +1,27 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE RWQMComponents "The components considered" = 
+ENUM
+{
+  H2O,
+  NH4,
+  O2,
+  BOD1,
+  BOD2,
+  BODs,
+  BOD1p,
+  BOD2p
+};
+
+#define RWQMStandardCategoryModels
+OBJ RWQMIndexOfSolvent "Index of the solvent in the component vector" : Integer := 1;
+#define RWQMSolublesPresent
+OBJ RWQMIndexOfFirstSolubleComponent "Index of the first soluble component in the component vector" : Integer := 2;
+OBJ RWQMIndexOfLastSolubleComponent "Index of the last soluble component in the component vector" : Integer := 6;
+#define RWQMParticulatesPresent
+OBJ RWQMIndexOfFirstParticulateComponent "Index of the first particulate component in the component vector" : Integer := 7;
+OBJ RWQMIndexOfLastParticulateComponent "Index of the last particulate component in the component vector" : Integer := 8;
+#define RWQMCalculateTSSComponent
+OBJ RWQMIndexOfFirstTSSComponent "Index of the first TSS component in the component vector" : Integer := 7;
+OBJ RWQMIndexOfLastTSSComponent "Index of the last TSS component in the component vector" : Integer := 8;
+

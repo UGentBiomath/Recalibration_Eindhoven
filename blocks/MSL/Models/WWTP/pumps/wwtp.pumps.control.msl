@@ -1,0 +1,86 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 6. december 2016 12:22:10$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_PUMPS_CONTROL
+#define WWTP_PUMPS_CONTROL
+
+
+CLASS Base_Pump_Controller "A base model for a multi-pump control model"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  comments <- "A base model for a multi-pump control model";
+  
+  interface <-
+  {
+    OBJ Q_In (* manip = "1"; hidden = "1" *) "Desired flow rate" : FlowRate := {: value <- 20000.0; causality <- "CIN" :};
+    // Pumps on/off :: input FROM wrapper
+    OBJ IsOn_PC1 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN"; value <- 1; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOn_PC2 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN"; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOn_PC3 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN"; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOn_PC4 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN"; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOn_PC5 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN"; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOn_PU1 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN"; value <- 1; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOn_PU2 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN"; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOn_PU3 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN"; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOn_PU4 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN"; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOn_PU5 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: causality <- "CIN"; value <- 0; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+  };
+  
+  state <-
+  {
+    // State On/Off
+    OBJ help_IsOn_PC1 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ help_IsOn_PC2 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ help_IsOn_PC3 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ help_IsOn_PC4 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ help_IsOn_PC5 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ help_IsOn_PU1 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ help_IsOn_PU2 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ help_IsOn_PU3 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ help_IsOn_PU4 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ help_IsOn_PU5 (* hidden = "1" *) "Pump exists (1) or not (0)?" : Integer := {: interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+  };
+  
+  independent <- 
+  { 
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+  };
+  
+  equations <-
+  {
+    // Pump #i can exist only pump #(i-1) also exist
+    // Remark: Integer/Boolean does not work in MSL
+    state.help_IsOn_PC1 = IF (interface.IsOn_PC1 < 1) THEN 0 ELSE 1 ; 
+    state.help_IsOn_PC2 = IF (interface.IsOn_PC1 < 1) THEN 0 ELSE IF (interface.IsOn_PC2 < 1) THEN 0 ELSE 1 ; 
+    state.help_IsOn_PC3 = IF (interface.IsOn_PC2 < 1) THEN 0 ELSE IF (interface.IsOn_PC3 < 1) THEN 0 ELSE 1 ; 
+    state.help_IsOn_PC4 = IF (interface.IsOn_PC3 < 1) THEN 0 ELSE IF (interface.IsOn_PC4 < 1) THEN 0 ELSE 1 ; 
+    state.help_IsOn_PC5 = IF (interface.IsOn_PC4 < 1) THEN 0 ELSE IF (interface.IsOn_PC5 < 1) THEN 0 ELSE 1 ; 
+    state.help_IsOn_PU1 = IF (interface.IsOn_PU1 < 1) THEN 0 ELSE 1 ; 
+    state.help_IsOn_PU2 = IF (interface.IsOn_PU1 < 1) THEN 0 ELSE IF (interface.IsOn_PU2 < 1) THEN 0 ELSE 1 ; 
+    state.help_IsOn_PU3 = IF (interface.IsOn_PU2 < 1) THEN 0 ELSE IF (interface.IsOn_PU3 < 1) THEN 0 ELSE 1 ; 
+    state.help_IsOn_PU4 = IF (interface.IsOn_PU3 < 1) THEN 0 ELSE IF (interface.IsOn_PU4 < 1) THEN 0 ELSE 1 ; 
+    state.help_IsOn_PU5 = IF (interface.IsOn_PU4 < 1) THEN 0 ELSE IF (interface.IsOn_PU5 < 1) THEN 0 ELSE 1 ; 
+  };
+
+:};
+
+
+#include "WWTP/pumps/wwtp.pumps.control.multipipe.10p.msl"
+
+
+#endif // WWTP_PUMPS_CONTROL

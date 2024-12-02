@@ -1,0 +1,247 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:15:55$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_TRANSFORMER_SIEGRIST
+#define WWTP_TRANSFORMER_SIEGRIST
+
+#ifdef ASM1Temp
+
+CLASS ASM1ToSiegrist "ASM1 to Siegrist anaerobic model states flow transformer"
+SPECIALISES PhysicalDAEModelType :=
+{:
+  comments <- "ASM1 to Siegrist anaerobic model states flow transformer";
+  
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InWWTPTerminal  := {: causality <- "CIN"; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : SiegristWWTPTerminal := {: causality <- "COUT"; group <- "Effluent" :};
+  };
+
+  parameters <-
+  {
+    //FtoC conversion
+    OBJ SiegristSpecificVolume (* hidden = "1" *) "Specific volume for all Siegrist components" : SiegristSpecificVolumeVector ;
+    OBJ pH_In "pH of incoming wastewater" : pH := {: value <- 7.0 ; group <- "Influent characterization" :};
+    OBJ S_H_In (* hidden = "0" *) "Proton concentration in incoming wastewater" : MolConcentration := {: group <- "Influent characterization" :};
+    OBJ Keq_CO2 (* hidden = "1" *) "Equilibrium constant for CO2" : PhysicalQuantityType := {: unit <- "mol.m-3"; interval <- {: lowerBound <- 0; upperBound <- PLUS_INF; :}; :};
+    //
+    // ASM1 to Anaerobic Digestion conversion parameters
+    OBJ i_X_B "Mass of N per mass of COD in biomass (ASM1)" : Fraction := {: value <- 0.086 ; group <- "Conversion factors" :};
+    OBJ i_X_P "Mass of N per mass of COD in products formed (ASM1)" : Fraction := {: value <- 0.04 ; group <- "Conversion factors" :};
+    OBJ i_S_AS "Mass of N per mass of COD in Amino Acids (S_AS)" : Fraction := {: value <- 0.040 ; group <- "Conversion factors" :};
+    OBJ i_X_S_An "Mass of N per mass of COD in slowly biodegradable matter (X_S)" : Fraction := {: value <- 0.020 ; group <- "Conversion factors" :};
+    OBJ i_X_An "Mass of N per mass of COD in anaerobic biomass" : Fraction := {: value <- 0.080 ; group <- "Conversion factors" :};
+    OBJ i_X_IN "Mass of N per mass of COD in inert particulates" : Fraction := {: value <- 0.040 ; group <- "Conversion factors" :};
+    OBJ f_AC_S "Acetate (S_AC) fraction of S_S" : Fraction := {: value <- 0.30 ; group <- "Conversion factors" :};
+    OBJ f_PRO_S "Propionate (S_PRO) fraction of S_S" : Fraction := {: value <- 0.10 ; group <- "Conversion factors" :};
+    OBJ f_AS_S "Amino Acids and sugar (S_AS) fraction of S_S" : Fraction := {: value <- 0.10 ; group <- "Conversion factors" :};
+    OBJ f_XS_I "X_I fraction that becomes biodegradable in anaerobic conditions" : Fraction := {: value <- 0.10 ; group <- "Conversion factors" :};
+    OBJ f_XS_H "X_BH fraction that becomes biodegradable in anaerobic conditions" : Fraction := {: value <- 0.08 ; group <- "Conversion factors" :};
+    OBJ f_XS_A "X_BA fraction that becomes biodegradable in anaerobic conditions" : Fraction := {: value <- 0.92 ; group <- "Conversion factors" :};
+    OBJ f_XS_P "X_P fraction that becomes biodegradable in anaerobic conditions" : Fraction := {: value <- 0.10 ; group <- "Conversion factors" :};
+    OBJ f_AS_H "Fraction of X_BH that are capable of fermenting" : Fraction := {: value <- 0.50 ; group <- "Conversion factors" :};
+  };
+
+  initial <-
+  {
+    parameters.SiegristSpecificVolume[H2O] := 0.000001 ;
+    state.f_FA_S := 1 - (parameters.f_AC_S + parameters.f_PRO_S + parameters.f_AS_S) ;
+    state.f_X_IN_H := 1 - (parameters.f_XS_H + parameters.f_AS_H);
+    parameters.S_H_In := (pow(10, - parameters.pH_In)) * 1e+3;
+  };
+
+  independent <- 
+  {
+    OBJ t "Time" : Time := {: group <- "Time" :};
+  };
+
+  state <- 
+  {
+    OBJ InFluxPerComponent (* hidden = "1" *) "Vector containing incoming fluxes for all ASM components" : MassFluxVector ;
+    OBJ Help_InFlux_SS (* hidden = "1" *) "Incoming S_S after oxidizing with S_O and S_NO" : MassFlux ;
+    OBJ InFlux_SS (* hidden = "1" *) "Influx of S_S after correction for oxidizing with incoming S_O and S_NO" : MassFlux;
+    OBJ InFlux_XS (* hidden = "1" *) "Influx of X_S after correction for oxidizing with incoming S_O and S_NO" : MassFlux;
+    // If lower than zero: change parameters f_AC_S, f_PRO_S and f_AS_S
+    OBJ f_FA_S "Calculated fraction of S_S that are Fatty Acids" : Fraction := {: group <- "Conversion factors" :};
+    // If lower than zero: change parameters f_XS_H and f_AS_H
+    OBJ f_X_IN_H "Calculated fraction of X_BH that becomes X_IN in the digester" : Fraction := {: group <- "Conversion factors" :}; 
+  };
+
+  equations <- 
+  {
+    {FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}: state.InFluxPerComponent[Comp_Index] =
+        SUMOVER In_Terminal IN {SelectByType(interface,InWWTPTerminal)}: (In_Terminal[Comp_Index]) ; };
+
+    // Water flow
+    interface.Outflow[H2O] = - state.InFluxPerComponent[IndexOfSolvent] ;
+
+    // Hydrogen and methane concentrations are zero in the incoming stream
+    interface.Outflow[S_H2] = 0 ;
+    interface.Outflow[S_CH4] = 0 ;
+
+    // Equilibrium constant K = [H+][HCO3-]/[CO2] =
+    // = parameters.CO2EquilibriumConstant = parameters.k_CO2 / parameters.k_HCO3
+    // ([H+] = 1e(-pH) mol/L = 1e+3 * 1e(-pH) mol/m3)
+
+    interface.Outflow[S_H] =  - parameters.S_H_In * (parameters.SiegristSpecificVolume[H2O] * state.InFluxPerComponent[IndexOfSolvent]);
+
+    interface.Outflow[S_CO2] = - (parameters.S_H_In / (parameters.S_H_In + parameters.Keq_CO2)) * state.InFluxPerComponent[S_ALK];
+
+    interface.Outflow[S_HCO3] = - (parameters.Keq_CO2 / (parameters.S_H_In + parameters.Keq_CO2)) * state.InFluxPerComponent[S_ALK];
+
+    // Mass balance for N is kept in equilibrium by compensation in S_NH4:
+    // S_NH4 = SUM (i * S_ASMi) + SUM (i * X_ASMi) - SUM (i * X_ANi) - SUM (i * S_ANi)
+    // If S_NH4 < 0, parameters for fractioning ASM components must be changed
+
+    interface.Outflow[S_NH4] = - ( state.InFluxPerComponent[S_NH] + state.InFluxPerComponent[S_ND] + state.InFluxPerComponent[X_ND] +
+      parameters.i_X_B * (state.InFluxPerComponent[X_BH] + state.InFluxPerComponent[X_BA]) + parameters.i_X_P * (state.InFluxPerComponent[X_P] +
+      state.InFluxPerComponent[X_I]) + parameters.i_S_AS * interface.Outflow[S_AS] + parameters.i_X_S_An * interface.Outflow[X_S] +
+      parameters.i_X_An * interface.Outflow[X_AS] + parameters.i_X_IN * interface.Outflow[X_IN] );
+    
+    // Incoming S_O oxidizes part of the S_S or -when S_S becomes lower than zero-, X_S  
+    // An analogous reasoning for denitrification of S_NO
+    state.Help_InFlux_SS = state.InFluxPerComponent[S_S] - state.InFluxPerComponent[S_O] - (4.57 * state.InFluxPerComponent[S_NO]) ;
+    
+    state.InFlux_SS = IF (state.Help_InFlux_SS < 0) THEN 0 ELSE state.Help_InFlux_SS ;
+    
+    state.InFlux_XS = IF (state.Help_InFlux_SS < 0) THEN state.InFluxPerComponent[X_S] + state.Help_InFlux_SS
+      ELSE state.InFluxPerComponent[X_S] ;
+
+    // S_S is devided into S_AC, S_PRO, S_AS and S_FA
+    interface.Outflow[S_AC] = - parameters.f_AC_S * state.InFlux_SS;
+    interface.Outflow[S_PRO] = - parameters.f_PRO_S * state.InFlux_SS;
+    interface.Outflow[S_AS] = - parameters.f_AS_S * state.InFlux_SS;
+    interface.Outflow[S_FA] = state.f_FA_S * state.InFlux_SS;
+
+    // Concentration inert solubles is the same in both models
+    interface.Outflow[S_IN] = - state.InFluxPerComponent[S_I] ;
+
+    // Particulate biodegradable matter in anaerobic conditions consists of several fractions of particulate matter from ASM
+    interface.Outflow[X_S] =  - (state.InFlux_XS + parameters.f_XS_I * state.InFluxPerComponent[X_I] + parameters.f_XS_H *
+      state.InFluxPerComponent[X_BH] + parameters.f_XS_A * state.InFluxPerComponent[X_BA] + parameters.f_XS_P * state.InFluxPerComponent[X_P] );
+
+    // According to Henze et al. (1995) heterotrophs are capable of fermenting
+    interface.Outflow[X_AS] = - parameters.f_AS_H * state.InFluxPerComponent[X_BH] ;
+
+    // Incoming concentration anaerobic biomass is zero (except for fermenters)
+    interface.Outflow[X_FA] = 0;
+    interface.Outflow[X_PRO] = 0;
+    interface.Outflow[X_AC] = 0;
+    interface.Outflow[X_H2] = 0;
+
+    // Inert particulate matter in anaerobic conditions consists of several fractions of particulate matter from ASM
+    interface.Outflow[X_IN] = - ( (1 - parameters.f_XS_I) * state.InFluxPerComponent[X_I] + state.f_X_IN_H * state.InFluxPerComponent[X_BH] +
+      (1 - parameters.f_XS_A) * state.InFluxPerComponent[X_BA] + (1 - parameters.f_XS_P) * state.InFluxPerComponent[X_P] );
+
+  };
+
+:};
+
+
+
+CLASS SiegristToASM1 "Siegrist anaerobic model to ASM1  states flow transformer"
+SPECIALISES PhysicalDAEModelType :=
+{:
+  comments <- "Siegrist anaerobic model to ASM1  states flow transformer";
+  
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : SiegristWWTPTerminal  := {: causality <- "CIN"; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutWWTPTerminal := {: causality <- "COUT"; group <- "Effluent" :};
+  };
+
+  parameters <-
+  {
+    OBJ i_X_B "Mass of N per mass of COD in biomass (ASM1)" : Fraction := {: value <- 0.086 ; group <- "Conversion factors" :};
+    OBJ i_X_P "Mass of N per mass of COD in products formed (ASM1)" : Fraction := {: value <- 0.04 ; group <- "Conversion factors" :};
+    OBJ i_S_AS "Mass of N per mass of COD in Amino Acids (S_AS)" : Fraction := {: value <- 0.040 ; group <- "Conversion factors" :};
+    OBJ i_X_S_An "Mass of N per mass of COD in slowly biodegradable matter (X_S)" : Fraction := {: value <- 0.020 ; group <- "Conversion factors" :};
+    OBJ i_X_An "Mass of N per mass of COD in anaerobic biomass" : Fraction := {: value <- 0.080 ; group <- "Conversion factors" :};
+    OBJ i_X_IN "Mass of N per mass of COD in inert particulates" : Fraction := {: value <- 0.040 ; group <- "Conversion factors" :};
+    OBJ f_P_An "Fraction of anaerobic biomass that leads to inert matter" : Fraction := {: value <- 0.08 ; group <- "Conversion factors" :};
+    OBJ f_H_AS "Fraction of fermenting biomass that are heterotrophs" : Fraction := {: value <- 0.50 ; group <- "Conversion factors" :};
+  };
+
+  independent <- 
+  {
+    OBJ t "Time" : Time := {: group <- "Time" :};
+  };
+
+  state <- 
+  {
+    OBJ InFluxPerComponent (* hidden = "1" *) "Vector containing incoming fluxes for all ASM components" : SiegristMassFluxVector ;
+  };
+
+  equations <- 
+  {
+    {FOREACH Comp_Index IN {1 .. SiegristNrOfComponents}: state.InFluxPerComponent[Comp_Index] =
+        SUMOVER Siegrist_Terminal IN {SelectByType(interface, SiegristWWTPTerminal)}: (Siegrist_Terminal[Comp_Index]) ; };
+
+    // Water flow
+    interface.Outflow[H2O] = - state.InFluxPerComponent[IndexOfSolvent] ;
+
+    // S_H2 and S_CH4 are neglected (not modelled in ASM1)
+
+    // Inert solubles are the same in both models
+    interface.Outflow[S_I] = - state.InFluxPerComponent[S_IN] ;
+
+    // S_S in ASM is the sum of S_AC, S_PRO, S_AS and S_FA
+    interface.Outflow[S_S] = state.InFluxPerComponent[S_AC] + state.InFluxPerComponent[S_PRO] + state.InFluxPerComponent[S_AS] + state.InFluxPerComponent[S_FA] ;
+
+    // S_O and S_NO were set to zero at inlet and are not produced in the anaerobic digester
+    interface.Outflow[S_O] = 0.0 ;
+    interface.Outflow[S_NO] = 0.0 ;
+
+    // Ammonia is the same in both models
+    interface.Outflow[S_NH] = state.InFluxPerComponent[S_NH4];
+
+    // Amino acids contain some biodegradable nitrogen
+    interface.Outflow[S_ND] = parameters.i_S_AS * state.InFluxPerComponent[S_AS];
+
+    // Alkalinity in ASM is expressed as Mol HCO3-
+    // S_CO2 is added to complete C-balance (see also ASM -> Anaerobic conversion)
+    interface.Outflow[S_ALK] = state.InFluxPerComponent[S_HCO3] + state.InFluxPerComponent[S_CO2] ;
+
+    // Inert particulate matter in anaerobic conditions remains inert in ASM
+    interface.Outflow[X_I] = state.InFluxPerComponent[X_IN];
+
+    // A fraction f_H_AS of fermenters are heterotrophs
+    interface.Outflow[X_BH] = parameters.f_H_AS * state.InFluxPerComponent[X_AS];
+
+    // f_P_An is fraction of anaerobic biomass leading to inert products
+    interface.Outflow[X_P] = parameters.f_P_An * (SUMOVER Comp_Index IN {X_AS .. X_H2}: (state.InFluxPerComponent[Comp_Index])) ;
+
+    // Anaerobic biomass that doesn't lead to inert particulate matter
+    interface.Outflow[X_S] = state.InFluxPerComponent[X_S] + (1 - (parameters.f_P_An + parameters.f_H_AS)) * state.InFluxPerComponent[X_AS] +
+      (1 - parameters.f_P_An) * (SUMOVER Comp_Index IN {X_FA .. X_H2}: (state.InFluxPerComponent[Comp_Index])) ;
+
+    // No autotrophs
+    interface.Outflow[X_BA] = 0.0 ;
+
+    // Mass balance for particulate N is kept in equilibrium by compensation in X_ND:
+    // SUM (i * X_ANi) = SUM (i * X_ASMi)
+    // If X_ND < 0, parameters for fractioning anaerobic components must be changed
+    interface.Outflow[X_ND] = parameters.i_X_S_An * state.InFluxPerComponent[X_S] + parameters.i_X_IN * state.InFluxPerComponent[X_IN] +
+      parameters.i_X_An * (SUMOVER Comp_Index IN {X_AS .. X_H2}: (state.InFluxPerComponent[Comp_Index])) - parameters.i_X_P * (interface.Outflow[X_I]
+      + interface.Outflow[X_P]) - parameters.i_X_B * (interface.Outflow[X_BH] + interface.Outflow[X_BA]) ;
+
+  };
+
+:};
+
+#endif // ASM1Temp 
+
+#endif // WWTP_TRANSFORMER_SIEGRIST

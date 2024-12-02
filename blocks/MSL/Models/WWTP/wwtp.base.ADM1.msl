@@ -1,0 +1,311 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 7. september 2017 11:18:14$
+ *
+ ******************************************************************************/
+
+// EURE 11/03/2015 COMPLETELY RE-ARRANGED COMPARED TO W2014
+
+#ifndef WWTP_BASE_ADM1
+#define WWTP_BASE_ADM1
+
+#if (defined ASM1Temp || defined ASMG1 || defined ASM2dModTemp || defined IUWS1 || defined IUWS2)
+
+
+#include "ADM1/wwtp.extra.definitionsADM1.msl"
+
+CLASS ADM1ConcVector = Concentration[ADM1NrOfComponents;];
+CLASS ADM1IonConcVector = MolConcentration[ADM1NrOfIonComponents;];
+
+
+//this one will have to replaced by the actual true digester model
+CLASS ADM1_Digester EXTENDS ADM1_DigesterConversionModel WITH
+{:
+
+  comments <- "ADM1 model for anaerobic digestion according to BSM2. This is different from the STR \
+      implementation in terms of the Hill functions used for inhibition and the alternative simple equation \
+      for the gas flow calculation. This implementation uses an algebraic model to calculate S_H for speeding \
+      up calculations (DAE2 - both pH and H2 are calculated algebraically)";
+      
+  interface <-
+  {
+    // pH_ADM -> AD_pH, T_oper -> AD_T, p_gas_ch4 -> Gas_p_ch4, .. gas_flowrate -> Gas_Q, V_liquid -> AD_V_liq, ..
+    OBJ AD_pH (* is_favorite = "1"; terminal = "out_4" *) "pH in the digester" : pH := {: causality <- "COUT"; group <- "Data" :};
+    OBJ AD_T (* terminal = "out_4" *) "Measured temperature" : CelsiusTemperature := {: causality <- "COUT"; group <- "Data" :};
+    OBJ Gas_p_ch4 (* is_favorite = "1"; terminal = "out_4" *) "Methane partial pressure" : Pressure := {: unit <- "bar"; causality <- "COUT"; group <- "Data" :};
+    OBJ Gas_p_h2 (* terminal = "out_4" *) "Hydrogen partial pressure" : Pressure := {: unit <- "bar"; causality <- "COUT"; group <- "Data" :};
+    OBJ Gas_p_co2 (* is_favorite = "1"; terminal = "out_4" *) "CO2 partial pressure" : Pressure := {: unit <- "bar"; causality <- "COUT"; group <- "Data" :};
+    OBJ Gas_p_tot (* terminal = "out_4" *) "Total headspace pressure" : Pressure := {: unit <- "bar"; causality <- "COUT"; group <- "Data" :};
+    OBJ Gas_Q (* is_favorite = "1"; terminal = "out_4" *) "Biogas flow rate" : FlowRate := {: causality <- "COUT"; group <- "Data" :};
+    OBJ AD_V_liq (* terminal = "out_4" *) "Liquor volume" : Volume := {: causality <- "COUT"; group <- "Data" :};
+    OBJ AD_V_tot (* terminal = "out_4" *) "Total volume" : Volume := {: causality <- "COUT"; group <- "Data" :};
+    // ER2009: easier to provide multi-probe sensor within the digester
+    // Conc_An -> AD_C
+    OBJ AD_C (* terminal = "out_4" *) "Vector containing masses for components of ADM1" : ADM1ConcVector := {: causality <- "COUT"; group <- "Concentration" :};
+    OBJ AD_C_Ion (* terminal = "out_4" *) "Vector containing masses for all ion components of ADM1" : ADM1IonConcVector := {: causality <- "COUT"; group <- "Concentration" :};
+  };
+  
+  parameters <-
+  {
+    OBJ K_p "Gas flow constant": Real := {: value <- 5e4; group <- "System" :};
+    OBJ P_atm "Pressure of atmosphere" : Pressure := {: value <- 1.013; unit <- "bar"; group <- "Operational" :};
+  };
+  
+  state <-
+  {
+    // Mantis #3592, TT 22658
+    OBJ P_headspace "Total pressure in the gas phase" : Pressure := {: unit <- "bar"; group <- "Operational" :};
+    OBJ p_ch4 "CH4 partial pressure" : Pressure := {: unit <- "bar"; group <- "Operational" :};
+    OBJ p_co2 "CO2 partial pressure" : Pressure := {: unit <- "bar"; group <- "Operational" :};
+    OBJ p_h2 "H2 partial pressure" : Pressure := {: unit <- "bar"; group <- "Operational" :};
+    OBJ p_h2o "Water partial pressure" : Pressure := {: unit <- "bar"; group <- "Operational" :};
+    // (end) Mantis #3592
+  };
+
+  equations <-
+  {
+    // Mantis #3592, TT 22658
+    state.P_headspace = state.p_co2 + state.p_h2 + state.p_ch4 + state.p_h2o;
+    state.p_ch4 = (state.C[G_CH4] * parameters.R * state.help_T_op / 64.0);
+    state.p_co2 = (state.C[G_CO2] * parameters.R * state.help_T_op);
+    state.p_h2 = (state.C[G_H2] * parameters.R * state.help_T_op / 16.0);
+    state.p_h2o = 0.0313 * exp(5290*(1.0/parameters.T_Ref - 1.0/state.help_T_op));
+    // (end) Mantis #3592
+
+	  // Gas transfer equations (can only go at this level because P_headspace is defined in conversion model)
+	  state.Q_Gas = IF ((state.P_headspace - parameters.P_atm) * parameters.K_p <= 0.0) THEN 0.0
+	     ELSE (state.P_headspace - parameters.P_atm) * parameters.K_p ;
+  
+    state.C_Ion[S_nh3] = (state.C[S_INN] - state.S_nh4_ion) ;
+    state.C_Ion[S_hco3_ion] = MSLU_HCO_ion(state.Ka_ic, state.C[S_IC], state.S_h_ion) ;
+    state.C_Ion[S_ac_ion] = MSLU_ac_ion(parameters.Ka_ac, state.C[S_ac], state.S_h_ion) ;
+    state.C_Ion[S_pro_ion] = MSLU_pro_ion(parameters.Ka_pro, state.C[S_pro], state.S_h_ion) ;
+    state.C_Ion[S_bu_ion] = MSLU_bu_ion(parameters.Ka_bu, state.C[S_bu], state.S_h_ion) ;
+    state.C_Ion[S_va_ion] = MSLU_va_ion(parameters.Ka_va, state.C[S_va], state.S_h_ion) ;
+    
+    state.C_h2 = MSLUNewtonRaphson_h2(state.Q_In, parameters.V_liq, interface.Inflow[S_h2], previous(state.C_h2),
+      parameters.Y_su, parameters.f_h2_su, state.Kinetics[uptake_su], parameters.Y_aa, parameters.f_h2_aa,
+      state.Kinetics[uptake_aa], parameters.Y_fa, parameters.km_fa, state.C[S_fa], parameters.Ks_fa,state.C[X_fa],
+      state.I_pH_bac, state.I_NH_limit, parameters.KI_h2_fa, parameters.Y_c4, parameters.km_c4, state.C[S_va],
+      parameters.Ks_c4, state.C[X_c4], state.C[S_bu], parameters.KI_h2_c4, parameters.Y_pro, parameters.km_pro, 
+      state.C[S_pro], parameters.Ks_pro, state.C[X_pro], parameters.KI_h2_pro, parameters.km_h2, parameters.Ks_h2,
+      state.C[X_h2], state.I_pH_h2, parameters.kla, state.KH_h2, state.p_h2);
+
+    interface.AD_pH = state.pH_;
+    interface.AD_T = interface.T_op ; // (EURE 19/03/2015) better option would be a help state var that can be computed (for different models)
+    interface.Gas_p_ch4 = state.p_ch4;
+    interface.Gas_p_h2 = state.p_h2;
+    interface.Gas_p_co2 = state.p_co2;
+    interface.Gas_p_tot = state.P_headspace;
+    interface.Gas_Q = state.Q_Gas * (state.P_headspace / parameters.P_atm);
+    interface.AD_V_liq = parameters.V_liq ;
+    interface.AD_V_tot = parameters.V_liq + parameters.V_gas ;
+    // (EURE 19/03/2015) kg/m3 -> g/m3
+    {FOREACH Comp_Index IN {1 .. ADM1NrOfComponents}: interface.AD_C[Comp_Index] = state.C[Comp_Index] * 1000 ; };
+    {FOREACH Comp_Index IN {1 .. ADM1NrOfIonComponents}: interface.AD_C_Ion[Comp_Index] = state.C_Ion[Comp_Index] * 1000 ; };
+  };
+
+:};
+
+CLASS ADM1_DigesterConversionModel EXTENDS DigesterConversionModel WITH
+{:
+
+  #include "ADM1/wwtp.VolumeADM1ConversionModel.body.msl"
+
+:};
+
+CLASS DigesterConversionModel EXTENDS BaseDigester WITH
+{:
+
+  parameters <- 
+  { 
+    OBJ Stoichiometry (* hidden = "1" *) "A matrix structure containing stoichiometry" : PhysicalQuantityType[ADM1NrOfReactions;][ADM1NrOfComponents,];
+  };
+
+  state <- 
+  { 
+    OBJ Kinetics (* hidden = "1" *) "A vector containing kinetics for all reactions" : PhysicalQuantityType[ADM1NrOfReactions;];
+//    OBJ Temp_liq (* is_favorite = "1" *) "Actual temperature in reactor" : CelsiusTemperature  := {: group <- "Operational" :}; 
+  };
+
+  equations <- 
+  {
+    // CONVERSION TERMS
+    state.ConversionTermPerComponent[S_INN] = SUMOVER Reaction_Index IN {1 .. ADM1NrOfReactions}:
+      (parameters.Stoichiometry[Reaction_Index][S_INN] * state.Kinetics[Reaction_Index]) * parameters.V_liq ;
+     
+    state.ConversionTermPerComponent[S_IC] = parameters.Stoichiometry[transfer_co2][S_IC_liq] * state.Kinetics[transfer_co2] * parameters.V_liq +
+      (SUMOVER Reaction_Index IN {1 .. ADM1NrOfReactions}:
+      (parameters.Stoichiometry[Reaction_Index][S_IC] * state.Kinetics[Reaction_Index]) * parameters.V_liq) ;
+
+    state.ConversionTermPerComponent[S_ch4] = parameters.Stoichiometry[transfer_ch4][S_ch4_liq] * state.Kinetics[transfer_ch4] * parameters.V_liq +
+      (SUMOVER Reaction_Index IN {1 .. ADM1NrOfReactions}:
+      (parameters.Stoichiometry[Reaction_Index][S_ch4] * state.Kinetics[Reaction_Index]) * parameters.V_liq) ;
+
+    {FOREACH Comp_Index IN {S_aa .. S_cat} :
+    state.ConversionTermPerComponent[Comp_Index] = SUMOVER Reaction_Index IN {1 .. ADM1NrOfReactions}:
+      (parameters.Stoichiometry[Reaction_Index][Comp_Index] * state.Kinetics[Reaction_Index]) * parameters.V_liq ; };
+    
+    // GAS FLUXES (they are liquid volume specific)
+    {FOREACH Comp_Index IN {G_CO2 .. G_CH4} :
+    state.ConversionTermPerComponent[Comp_Index] = SUMOVER Reaction_Index IN {transfer_co2 .. transfer_ch4}:
+      (parameters.Stoichiometry[Reaction_Index][Comp_Index] * state.Kinetics[Reaction_Index]) * parameters.V_liq ; };
+  };
+
+:};
+
+CLASS BaseDigester SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" :  ADM1ConcTerminal := {: causality <- "CIN"; unit <- "kg/m3"; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : ADM1ConcTerminal := {: causality <- "COUT"; unit <- "kg/m3"; group <- "Concentrate" :};
+//    OBJ Underflow (* terminal = "out_2" *) "Underflow" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Underflow" :};   
+    // Q_Gas_LD -> Gas_Outflow
+    OBJ Gas_Outflow (* terminal = "out_3" *) "Gasflow" : ADM1GasConcTerminal := {: causality <- "COUT"; group <- "Data" :};
+  };
+  
+  parameters <-
+  {
+    OBJ V_liq (* is_favorite = "1";  *) "Volume of liquid in the reactor" : Volume := {: value <- 3400; group <- "Dimension"; :};
+    OBJ V_gas (* is_favorite = "1";  *) "Volume of gas in the reactor" : Volume := {: value <- 300; group <- "Dimension"; :};
+    OBJ f_X_Out "Fraction of solids that leaves the reactor" : Fraction := {: value <- 1.0; group <- "Operational" :};
+  };
+  
+  state <-
+  {
+    OBJ M "Vector containing masses for all the components" : ADM1MassVector := [{: value <- 3400000:}, 
+//    S_INN,              S_IC,             S_IC_liq,         S_ch4,              S_ch4_liq,            S_h2,               
+    {: value <- 10 :}, {: value <- 10 :}, {: value <- 0.1 :}, {: value <- 0.1 :}, {: value <- 0.0001 :}, {: value <- 0.1 :},
+//    S_h2_liq,              S_aa,             S_ac,
+    {: value <- 0.0001 :}, {: value <- 0.1 :}, {: value <- 0.1 :},
+//    S_bu,               S_fa,               S_Inert,            S_pro,              S_su,               S_va,
+    {: value <- 0.1 :}, {: value <- 0.1 :}, {: value <- 0.1 :}, {: value <- 0.1 :}, {: value <- 0.1 :}, {: value <- 0.1 :},
+//    X_aa,               X_ac,                 X_c,                X_c4,               X_ch,               X_fa,
+    {: value <- 100 :}, {: value <- 100 :}, {: value <- 100 :}, {: value <- 100 :}, {: value <- 100 :}, {: value <- 100 :},
+//    X_h2,               X_Inert,              X_li,             X_pr,               X_pro,              X_su,
+    {: value <- 100 :}, {: value <- 100 :}, {: value <- 100 :}, {: value <- 100 :}, {: value <- 100 :}, {: value <- 100 :},
+//      S_an,               S_cat,
+    {: value <- 0.1 :}, {: value <- 100 :},
+    {: value <- 0.01 :}, {: value <- 0.01 :}, {: value <- 10 :} ; ] ; // G_CO2, G_H2, G_CH4
+
+    OBJ InFluxPerComponent (* hidden = "1" *) "Vector containing incoming fluxes for all the components": ADM1MassFluxVector;
+    OBJ OutFluxPerComponent (* hidden = "1" *) "Vector containing outgoing fluxes for all the components": ADM1MassFluxVector;
+    OBJ ConversionTermPerComponent (* hidden = "1" *) "Vector containing conversion terms for all the components": ADM1MassFluxVector;
+    //
+    OBJ C "Vector containing concentrations for all the components" : ADM1ConcentrationVector := {: group <- "Concentration" :};
+    OBJ C_Ion "Vector containing masses for all ion components" : ADM1IonConcentrationVector := {: group <- "Concentration" :};
+    OBJ C_h2 "Hydrogen concentration" : Concentration := {: group <- "Concentration" :};
+    /*
+    OBJ V (* is_favorite = "1" *) "Reactor volume" : Volume := {: group <- "Operational"; :};
+    OBJ Q_Out (* is_favorite = "1" *) "Effluent flow rate" : FlowRate := {: group <- "Operational"; :};
+    OBJ Q_Over (* is_favorite = "1" *) "Overflow rate" : FlowRate := {: group <- "Operational" :};
+*/    
+    OBJ Q_In (* hidden = "1" *) "Influent flow rate" : FlowRate := {: group <- "Operational"; :};
+    OBJ Q_Gas "Gas flow rate" : FlowRate := {: group <- "Effluent" :};
+    OBJ SRT "Sludge age" : Time := {: group <- "Operational" :};
+  };
+
+  independent <- 
+  { 
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+  };
+  
+  initial <-
+  {
+    state.M[H2O] = 1000 * parameters.V_liq ;    
+  };
+  
+  equations <-
+  {
+	  // If Q_In = 0 -> SRT = 0 but if f_X_Out = 0 -> SRT = +INF
+	  state.SRT = IF (state.Q_In <= 0.0) THEN 0.0 ELSE (parameters.V_liq / state.Q_In) / parameters.f_X_Out ;
+
+    // Fluxes IN
+	  state.Q_In = interface.Inflow[H2O] ;
+
+	  {FOREACH Comp_Index IN {S_INN .. S_cat}:
+	     state.InFluxPerComponent[Comp_Index] = interface.Inflow[Comp_Index] * state.Q_In ; };
+	   
+	  state.InFluxPerComponent[H2O]= state.Q_In * 1000 ;
+
+    // Fluxes OUT: constant volume is assumed
+    // EURE 19/03/2015: added S_IC_liq and S_ch4_liq compared to W2014
+    {FOREACH Comp_Index IN {S_INN .. S_ch4}:
+        state.OutFluxPerComponent[Comp_Index] = (state.C[Comp_Index]) * state.Q_In ; };
+    // EURE 19/03/2015: S_h2_liq is left out ?!?!
+    state.OutFluxPerComponent[S_h2] = (state.C_h2) * state.Q_In ;
+    // all remaining soluble components
+    {FOREACH Comp_Index IN {S_aa .. S_va}:
+        state.OutFluxPerComponent[Comp_Index] = (state.C[Comp_Index]) * state.Q_In ; };
+    // anions, cations
+    state.OutFluxPerComponent[S_an] = (state.C[S_an]) * state.Q_In ;
+    state.OutFluxPerComponent[S_cat] = (state.C[S_cat]) * state.Q_In ;
+    // gas components
+    {FOREACH Comp_Index IN {G_CO2 .. G_CH4}:
+        state.OutFluxPerComponent[Comp_Index] = (state.C[Comp_Index]) * state.Q_Gas ; };
+        
+    // Because of the very low growth rate of anaerobic biomass, only 'f_X_Out' of the particulates
+    // is leaving the system via the outflow, the remaining particulate matter stays in the reactor
+    {FOREACH Comp_Index IN {X_aa .. X_su}:
+        state.OutFluxPerComponent[Comp_Index] = parameters.f_X_Out * ((state.C[Comp_Index]) * state.Q_In) ; };
+    
+    // CONCENTRATIONS
+	  state.C[ADM1IndexOfSolvent] = 1000;
+	  
+    {FOREACH Comp_Index IN {S_INN .. S_ch4}: state.C[Comp_Index] = state.M[Comp_Index] / parameters.V_liq ; };
+    
+    {FOREACH Comp_Index IN {S_aa .. S_cat}: state.C[Comp_Index] = state.M[Comp_Index] / parameters.V_liq ; };
+    
+    {FOREACH Comp_Index IN {G_CO2 .. G_CH4} : state.C[Comp_Index] = state.M[Comp_Index] / parameters.V_gas ; };
+
+    // RATE EQUATIONS
+    {FOREACH Comp_Index IN {S_INN .. S_ch4}: DERIV(state.M[Comp_Index],[independent.t]) =
+      state.InFluxPerComponent[Comp_Index] - state.OutFluxPerComponent[Comp_Index] + state.ConversionTermPerComponent[Comp_Index] ; };
+
+    DERIV(state.M[S_h2],[independent.t]) = 0;
+    
+    {FOREACH Comp_Index IN {S_aa .. X_su}: DERIV(state.M[Comp_Index],[independent.t]) =
+      state.InFluxPerComponent[Comp_Index] - state.OutFluxPerComponent[Comp_Index] + state.ConversionTermPerComponent[Comp_Index] ; };
+
+    {FOREACH Comp_Index IN {S_an .. S_cat}: DERIV(state.M[Comp_Index],[independent.t]) =
+      state.InFluxPerComponent[Comp_Index] - state.OutFluxPerComponent[Comp_Index] ; };
+    
+    {FOREACH Comp_Index IN {G_CO2 .. G_CH4} : DERIV(state.M[Comp_Index],[independent.t]) =
+      - state.OutFluxPerComponent[Comp_Index] + state.ConversionTermPerComponent[Comp_Index] ; };
+
+    // OUTFLOW
+    // TT 20406 no multiplication by 1000
+    interface.Outflow[H2O] = state.Q_In; //provided the volume be constant
+    {FOREACH Comp_Index IN {S_INN .. S_ch4_liq}:
+        interface.Outflow[Comp_Index] = state.C[Comp_Index] ; };
+
+    interface.Outflow[S_h2] = state.C_h2 ; 
+  
+    {FOREACH Comp_Index IN {S_aa .. S_cat}:
+        interface.Outflow[Comp_Index] = state.C[Comp_Index] ; };
+
+    {FOREACH Comp_Index IN {G_CO2 .. G_CH4}:
+        interface.Gas_Outflow[Comp_Index-30] = state.C[Comp_Index] ; };
+  };
+
+:};
+
+
+#include "WWTP/anaerobic_digestion_unit/wwtp.digester.adm1.msl"
+
+
+#endif // ASM1Temp
+
+#endif // WWTP_BASE_ADM1

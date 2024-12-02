@@ -1,0 +1,67 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 15:21:58$
+ *
+ ******************************************************************************/
+
+#ifndef IUWS_CONNECTORS
+#define IUWS_CONNECTORS
+
+
+CLASS SewerConnectors_Base
+"Base class for sewer connectors"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  {
+   OBJ Inflow (* terminal = "in_1" *) "Inflow" : InSewTerminal  := {: causality <- "CIN" ; group <- "Influent" :};
+//   OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+  };
+ 
+  independent <-
+  {
+   OBJ t "Time": Time ;
+  };
+
+  state <-
+  {
+   OBJ help_Int_Q (* hidden = "1" *) "Integral of Q_In (total volume since start of simulation)" : Volume := {: group <- "_Buffer" :};
+   // Actual dynamic time series
+   OBJ Q_In (* is_favorite = "1" *) "Actual influent flow rate" : FlowRate := {: group <- "Results" :};
+  };
+
+  initial <-
+  {
+   state.help_Int_Q = 0.0 ;
+  };
+
+  equations <-
+  {
+   state.Q_In = interface.Inflow[H2O] / 1000000 ;
+   DERIV(state.help_Int_Q,[independent.t]) = state.Q_In ;
+  };
+
+:};
+
+
+// Sew_WWTPin -> SewerToWWTP, Eindhoven_fract -> SewerToWWP_COD_NH4, SewCSO_to_DuflowSimple -> CSOToRiver_Simple_FixConc
+#include "Connectors/iuws.sewer.wwtp.msl"
+#include "Connectors/iuws.sewer.wwtp.COD_NH.msl"
+#include "Connectors/iuws.cso.msl"
+#include "Connectors/iuws.wwtp.river.msl"
+// W2017
+//#include "IUWS/Connectors/connectors.sewer.river.msl"
+
+
+#endif // IUWS_CONNECTORS

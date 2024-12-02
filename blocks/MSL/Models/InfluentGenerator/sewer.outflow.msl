@@ -1,0 +1,69 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 6. maj 2019 17:34:13$
+ *
+ ******************************************************************************/
+
+
+#ifndef INFLUENTGENERATOR_SEWER_OUTFLOW
+#define INFLUENTGENERATOR_SEWER_OUTFLOW
+
+
+CLASS SewerOutflow (* icon = "Tank" *) "Switch between gravity (freeflow) and pumped sewer outflow"
+EXTENDS SewRetentionVolume WITH
+{:
+
+  parameters <-
+  { 
+    OBJ mode (* is_favorite = "1" *) "Gravity (0) or Pumped (1)" : Integer := {: value <- 0; interval <- {: lowerBound <- 0; upperBound <- 1; :}; group <- "Operation":};
+    // Freeflow
+    OBJ D_Pipe "Diameter of the connected (circular) pipe downstream" : Length := {: value <- 0.6 ; group <- "Tank characteristics" :};
+    OBJ c_o "Throttle coefficient (1=total cross-section)" : Real := {: value <- 1.0 ; group <- "Tank characteristics" :};
+    // Gravity
+    OBJ Q_Max (* is_favorite = "1" *) "Maximum outflow" : FlowRate := {: value <- 50.0 ; group <- "Tank characteristics" :};
+    // Pumped
+    OBJ Q_Pump (* is_favorite = "1" *) "Pump flow rate" : FlowRate := {: value <- 50.0; group <- "Tank characteristics" :};
+    OBJ f_on (* hidden = "1" *) "Fraction of volume above which Qout=Qpump" : Fraction := {: value <- 0.01; group <- "Tank characteristics" :};
+  };
+  
+  state <-
+  { 
+    OBJ Help_Q_Freeflow (* hidden = "1" *) "Theoretical flow rate for gravity outflow" : FlowRate ;
+    OBJ Help_Q_Out_Freeflow (* hidden = "1" *) "Actual effluent flow rate" : FlowRate ;
+    OBJ Help_Q_Out_Pumped (* hidden = "1" *) "Actual effluent flow rate" : FlowRate ;
+  };
+  
+  equations <-
+  { 
+    // BEGIN Freeflow
+    state.Help_Q_Freeflow = sqrt(2 * state.WaterLevel * 9.81) * 86400 * 0.785 * parameters.D_Pipe * parameters.c_o ;
+
+    state.Help_Q_Out_Freeflow = IF (state.V < parameters.V_Min) THEN 0.0
+      ELSE IF (state.Help_Q_Freeflow < parameters.Q_Max) THEN state.Help_Q_Freeflow
+        ELSE parameters.Q_Max ;
+    // END Freeflow
+
+    // BEGIN Gravity
+    state.Help_Q_Out_Pumped = IF (state.V < parameters.V_Min) THEN 0.0
+      ELSE IF ((state.Q_In > parameters.Q_Pump) || (state.V >= parameters.V_Max * parameters.f_on)) THEN parameters.Q_Pump
+        ELSE state.Q_In ;    
+    // END Gravity
+
+    state.Q_Out = IF (parameters.mode == 0) THEN state.Help_Q_Out_Freeflow
+      ELSE state.Help_Q_Out_Pumped ;
+  };
+
+:};
+
+
+#endif // INFLUENTGENERATOR_SEWER_OUTFLOW

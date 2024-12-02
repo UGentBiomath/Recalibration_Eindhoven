@@ -1,0 +1,68 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+
+#ifndef SEWER_SPLITTERS_COMBINERS_SEWER_COMBINERS
+#define SEWER_SPLITTERS_COMBINERS_SEWER_COMBINERS
+
+
+CLASS SewTwoCombiner
+  (* icon = "two_combiner" *)
+  "2-way combiner"
+  EXTENDS Sewer_TwoCombiner_Base WITH
+  {:
+
+  comments <- "2-way combiner";
+  
+  :};
+ 
+ 
+CLASS SewThreeCombiner
+  (* icon = "three_combiner" *)
+  "3-way combiner"
+  EXTENDS Sewer_TwoCombiner_Base WITH
+  {:
+
+  comments <- "3-way combiner";
+
+  interface <-
+  {
+   OBJ Inflow3 (* terminal = "in_3" *) "Inflow No.3" : InSewTerminal := {: causality <- "CIN" ; group <- "Influent 3" :};
+  };
+  
+  :};
+ 
+
+CLASS Sewer_TwoCombiner_Base "Base class for sewer combiners"
+EXTENDS SewerAtomicModelNoVolume WITH
+{:
+
+  interface <-
+  {
+//   OBJ Inflow1 (* terminal = "in_1" *) "Inflow No.1" : InSewTerminal := {: causality <- "CIN" ; group <- "Influent 1" :};
+   OBJ Inflow2 (* terminal = "in_2" *) "Inflow No.2" : InSewTerminal := {: causality <- "CIN" ; group <- "Influent 2" :};
+   OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+  };
+
+  equations <-
+  {
+   {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}: interface.Outflow[Comp_Index] =
+   		- state.InFluxPerComponent[Comp_Index] ;};
+  };
+
+:};
+
+
+#endif // SEWER_SPLITTERS_COMBINERS_SEWER_TWOCOMBINERS

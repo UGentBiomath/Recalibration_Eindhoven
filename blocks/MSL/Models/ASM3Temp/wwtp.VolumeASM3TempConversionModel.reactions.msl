@@ -1,0 +1,20 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE Reactions "The reactions between the components considered" = 
+ENUM
+{
+  Hydrolysis,
+  AerStorageOfCOD,
+  AnoxStorageOfCOD,
+  AerGrowth,
+  AnoxGrowth,
+  AerEndogRespOfXH,
+  AnoxEndogRespOfXH,
+  AerRespOfPHA,
+  AnoxRespOfPHA,
+  Nitrification,
+  AerEndogRespOfXA,
+  AnoxEndogRespOfXA,
+  Aeration
+};
+

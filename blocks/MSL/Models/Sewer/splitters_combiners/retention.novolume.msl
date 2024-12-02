@@ -1,0 +1,82 @@
+/*******************************************************************************
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+
+
+#ifndef RETENTION_NOVOLUME
+#define RETENTION_NOVOLUME
+
+
+CLASS SewerRetention_NoVolume (* icon = "two_flow_splitter" *)
+"Model for point-separator in sewer: overflow is determined by max flow allowed through"
+EXTENDS SewerAtomicModelNoVolume WITH
+{:
+
+  comments <- "Model for point-separator in sewer: overflow is determined by max flow allowed through";
+  
+  interface <-
+  {
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {:causality <- "COUT"; group <- "Outflow":};
+    OBJ Overflow (* terminal = "out_2" *) "Overflow" : OutSewTerminal := {: causality <- "COUT"; group <- "Overflow" :};
+    OBJ Q_Max (* terminal = "in_2"; manip = "1" *) "Max outflow" : FlowRate := {: causality <- "CIN"; value <- 10.0 ; group <- "Hydraulics" :};
+    OBJ Q_Out (* terminal = "out_3" *) "Outflow" : FlowRate := {: causality <- "COUT"; group <- "Data" :};
+    OBJ Q_Over (* terminal = "out_3" *) "Overflow" : FlowRate := {: causality <- "COUT"; group <- "Data" :};
+    OBJ V_Over (* terminal = "out_3" *) "Outflow from wet weather" : Volume := {: causality <- "COUT"; group <- "Data" :},
+    OBJ En_Pump (* terminal = "out_3" *) "Pumping energy" : EnergyIndex := {: causality <- "COUT"; group <- "Data" :};
+  };
+  
+  parameters <-
+  {
+    OBJ TotalArea "Impervious area of the subcatchment" : Area := {: value <- 1; unit <- "ha" :};
+    OBJ E_unit "Power consumption per unit flow (kWh/m3)" : EnergyForPumping := {: group <- "Power consumption"; value <- 0.09 :};
+  };
+  
+  state <-
+  {
+    OBJ Help_Q_Over (* hidden = "1" *) "Overflow flow rate" : FlowRate := {: group <- "_Flow" :} ;	  
+    OBJ Help_Q_Out (* hidden = "1" *) "Overflow flow rate" : FlowRate := {: group <- "_Flow" :} ;	  
+    OBJ Help_V_In (* hidden = "1" *) "Cumulated inflow volume" : Volume := {: group <- "Flow" :} ;	  
+  };
+  
+  initial <-
+  { 
+    state.Help_V_In := 0.0 ;
+  };
+  
+  equations <-
+  {
+    state.Help_Q_Out = IF (state.Q_In <= interface.Q_Max) THEN state.Q_In
+      ELSE interface.Q_Max ;
+   
+    state.Help_Q_Over = IF (state.Q_In <= interface.Q_Max) THEN 0.0
+      ELSE state.Q_In - interface.Q_Max ;
+    
+    interface.Outflow[H2O] = - state.Help_Q_Out * 1E-06 ; 
+    interface.Overflow[H2O] = - state.Help_Q_Over * 1E-06 ;
+    
+    {FOREACH Comp_Index IN {2 .. Kosim1NrOfComponents}: interface.Outflow[Comp_Index] =
+      IF (state.Q_In > 0.0) THEN - interface.Inflow[Comp_Index] * state.Help_Q_Out / state.Q_In
+        ELSE 0.0 ; };
+      
+    {FOREACH Comp_Index IN {2 .. Kosim1NrOfComponents}: interface.Overflow[Comp_Index] =
+      IF (state.Q_In > 0.0) THEN - interface.Inflow[Comp_Index] * state.Help_Q_Over / state.Q_In
+        ELSE 0.0 ; };
+
+    interface.Q_Out = state.Help_Q_Out ;
+    
+    interface.Q_Over = state.Help_Q_Over ;
+  
+    DERIV(state.Help_V_In,[independent.t]) = state.Help_Q_Over ; // ???
+    
+    interface.V_Over = state.Help_V_In ;
+    
+    interface.En_Pump = parameters.E_unit * state.Help_Q_Out ;  
+  };
+  
+:};
+
+
+#endif // RETENTION_NOVOLUME

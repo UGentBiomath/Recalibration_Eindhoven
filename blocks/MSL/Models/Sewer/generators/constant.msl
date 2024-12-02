@@ -1,0 +1,43 @@
+/*******************************************************************************
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:28$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_GENERATORS_CONSTANT
+#define SEWER_GENERATORS_CONSTANT
+
+
+CLASS Sewer_Constant (* icon = "generator" *) "Generator for constant flow, constant concentration sewer type influent"
+EXTENDS Sewer_Generator WITH
+{:
+
+  comments <- "Generator for constant flow, constant concentration sewer type influent" ;
+  
+  interface <-
+  {
+    OBJ Q_const (* terminal = "in_2"; manip = "1" *) "Flow rate (constant)" : FlowRate := {: causality <- "CIN"; value <- 10.0 ; group <- "Influent specs" :} ;
+    OBJ C_NH4_const (* terminal = "in_2"; manip = "1" *) "NH4 conc (constant)" : Concentration := {: causality <- "CIN"; value <- 30.0 ; group <- "Influent specs" :} ;
+    OBJ C_PO4_const (* terminal = "in_2"; manip = "1" *) "PO4 conc (constant)" : Concentration := {: causality <- "CIN"; value <- 10.0 ; group <- "Influent specs" :} ;
+    OBJ C_SCOD_const (* terminal = "in_2"; manip = "1" *) "S_COD conc (constant)" : Concentration := {: causality <- "CIN"; value <- 100.0 ; group <- "Influent specs" :} ;
+    OBJ C_XCOD_const (* terminal = "in_2"; manip = "1" *) "X_COD conc (constant)" : Concentration := {: causality <- "CIN"; value <- 200.0 ; group <- "Influent specs" :} ;
+    OBJ C_TSS_const (* terminal = "in_2"; manip = "1" *) "TSS conc (constant)" : Concentration := {: causality <- "CIN"; value <- 150.0 ; group <- "Influent specs" :} ;
+  };
+
+  equations <-
+  {
+//    interface.Outflow[1] = - interface.Q_const * 1E06 ;
+    state.Help_Flow = interface.Q_const ;
+    interface.Outflow[NH4] = - interface.Q_const * interface.C_NH4_const ;
+    interface.Outflow[PO4] = - interface.Q_const * interface.C_PO4_const ;
+    interface.Outflow[SCOD] = - interface.Q_const * interface.C_SCOD_const ;
+    interface.Outflow[XCOD] = - interface.Q_const * interface.C_XCOD_const ;
+    interface.Outflow[XTSS] = - interface.Q_const * interface.C_TSS_const ;
+  };
+  
+:};
+
+
+#endif // SEWER_GENERATORS_CONSTANT

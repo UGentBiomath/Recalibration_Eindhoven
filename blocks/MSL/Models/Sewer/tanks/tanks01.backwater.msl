@@ -1,0 +1,68 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:30$
+ *
+ ******************************************************************************/
+ 
+
+#ifndef SEWER_TANKS_TANKS01_BACKWATER
+#define SEWER_TANKS_TANKS01_BACKWATER
+
+
+CLASS Tanks01_Backwater (* icon = "Tank" *)
+".."
+SPECIALISES CoupledModelType :=
+ {:
+
+  interface <-
+  { 
+   OBJ Inflow (* terminal = "in_1" *) "Inflow" : InSewTerminal := {: causality <- "CIN"; group <- "Inflow" :};
+   OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {: causality <- "COUT"; group <- "Outflow" :};
+   OBJ Backflow (* terminal = "in_2" *) "Backflow" : InSewTerminal := {: causality <- "CIN"; group <- "Backflow" :};
+   OBJ Overflow (* terminal = "out_2" *) "Overflow" : OutSewTerminal := {: causality <- "COUT"; group <- "Overflow" :};
+  };
+
+  parameters <-
+  { 
+   OBJ k (* is_favorite = "1" *) "Reservoir time constant" : Time := {: value <- 0.0056 ; group <- "Hydraulics" :};
+   OBJ m (* is_favorite = "1" *) "Exponent (1 = linearity)" : Real := {:value <- 1.0 ; group <- "Hydraulics" :};
+   OBJ Q_Back "Maximum outflow from the pipe" : FlowRate := {:value <- 86400.0; group <- "Hydraulics":};
+  };
+
+  sub_models <-
+  { 
+   OBJ Tank1 : Tank_wReaction ;
+   OBJ Combi : SewTwoCombiner ;
+   OBJ Split : SewAbsTwoSplitter; 
+  }; 
+
+  coupling <-
+  { 
+   // parameter coupling
+   sub_models.Tank1.parameters.k.value := parameters.k.value,
+   sub_models.Tank1.parameters.m.value := parameters.m.value,
+   sub_models.Tank1.parameters.Q_max.value := parameters.Q_Back.value,
+   sub_models.Split.parameters.Q_Out2.value := parameters.Q_Back.value,
+   // sub-model coupling
+   connect(interface.Inflow, sub_models.Tank1.interface.Inflow),
+   connect(sub_models.Tank1.interface.Outflow, sub_models.Combi.interface.Inflow1),
+   connect(sub_models.Combi.interface.Outflow, sub_models.Split.interface.Inflow),
+   connect(sub_models.Split.interface.Outflow1, interface.Overflow),
+   connect(interface.Backflow, sub_models.Combi.interface.Inflow2),
+   connect(sub_models.Split.interface.Outflow2, interface.Outflow),
+  };
+
+:};
+
+
+#endif //SEWER_TANKS_TANKS01_BACKWATER

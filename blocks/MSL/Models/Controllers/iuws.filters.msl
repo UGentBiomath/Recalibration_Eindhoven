@@ -1,0 +1,65 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 15:21:58$
+ *
+ ******************************************************************************/
+
+#ifndef IUWS_CONTROLLERS_FILTERS
+#define IUWS_CONTROLLERS_FILTERS
+
+// Remark: not derived from controller base class
+
+CLASS SewerFilters_Base
+"Base class for sewer filters"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  {
+   OBJ yM_1 (* terminal = "in_1"; is_favorite = "1" *) "Signal No.1" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+   OBJ yM_2 (* terminal = "in_1"; is_favorite = "1" *) "Signal No.2" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+   OBJ u (* terminal = "out_1"; is_favorite = "1" *) "Signal out" : Real := {: causality <- "COUT" ; group <- "Control action" :};
+  };
+  
+  independent <-
+  {
+   OBJ t "Time": Time ;
+  };
+
+:};
+
+
+
+CLASS Filter_MinMax
+  (* icon = "Controller" *)
+  "Filters the min or max out of 2 incoming signals"
+  EXTENDS SewerFilters_Base WITH 
+  {:
+
+  comments <- "Filters the min or max out of 2 incoming signals";
+
+  parameters <-
+  {
+   OBJ min_max (* is_favorite = "1" *) "Switch for min (1) or max (2)" : Integer := {: value <- 1; interval  <- {: lowerBound <- 1; upperBound <- 2 :}; group <- "Operational" :};
+  };
+
+  equations <-
+  {
+   interface.u = IF (parameters.min_max == 1) THEN MSLUGetMin2(interface.yM_1, interface.yM_2)
+		ELSE MSLUGetMax2(interface.yM_1, interface.yM_2) ;
+  };
+
+ :};
+
+
+#endif // IUWS_CONTROLLERS_FILTERS

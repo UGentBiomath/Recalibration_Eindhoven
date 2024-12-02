@@ -1,0 +1,114 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:41$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_MULTI_SPLITTERS_COMBINERS
+#define WWTP_MULTI_SPLITTERS_COMBINERS
+
+
+CLASS WeightPos "Positive weight"
+SPECIALISES PhysicalQuantityType :=
+{:
+  unit     <- "-";
+  interval  <- {: lowerBound <- 0; upperBound <- PLUS_INF :};
+:};
+
+
+CLASS CombiSplit_Base EXTENDS WWTPAtomicModelWithoutVolume WITH
+{:
+
+  interface <-
+  { 
+    OBJ Inflow01 (* terminal = "in_1" *) "Inflow 1" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent 1" :};
+    OBJ Inflow02 (* terminal = "in_1" *) "Inflow 2" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent 2" :};
+    OBJ Inflow03 (* terminal = "in_1" *) "Inflow 3" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent 3" :};
+    OBJ Inflow04 (* terminal = "in_1" *) "Inflow 4" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent 4" :};
+    OBJ Inflow05 (* terminal = "in_1" *) "Inflow 5" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent 5" :};
+    OBJ Inflow06 (* terminal = "in_1" *) "Inflow 6" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent 6" :};
+    OBJ Inflow07 (* terminal = "in_1" *) "Inflow 7" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent 7" :};
+    OBJ Inflow08 (* terminal = "in_1" *) "Inflow 8" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent 8" :};
+    OBJ Inflow09 (* terminal = "in_1" *) "Inflow 9" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent 9" :};
+    OBJ Inflow10 (* terminal = "in_1" *) "Inflow 10" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent 10" :};
+    OBJ Outflow01 (* terminal = "out_1" *) "Outflow 1" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 1" :};
+    OBJ Outflow02 (* terminal = "out_1" *) "Outflow 2" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 2" :};
+    OBJ Outflow03 (* terminal = "out_1" *) "Outflow 3" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 3" :};
+    OBJ Outflow04 (* terminal = "out_1" *) "Outflow 4" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 4" :};
+    OBJ Outflow05 (* terminal = "out_1" *) "Outflow 5" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 5" :};
+    OBJ Outflow06 (* terminal = "out_1" *) "Outflow 6" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 6" :};
+    OBJ Outflow07 (* terminal = "out_1" *) "Outflow 7" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 7" :};
+    OBJ Outflow08 (* terminal = "out_1" *) "Outflow 8" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 8" :};
+    OBJ Outflow09 (* terminal = "out_1" *) "Outflow 9" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 9" :};
+    OBJ Outflow10 (* terminal = "out_1" *) "Outflow 10" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 10" :};
+  };
+
+  state <-  
+  {
+    OBJ Q_In01 (* is_favorite = "1" *) "Influent flow rate #1" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_In02 (* is_favorite = "1" *) "Influent flow rate #2" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_In03 (* is_favorite = "1" *) "Influent flow rate #3" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_In04 "Influent flow rate #4" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_In05 "Influent flow rate #5" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_In06 "Influent flow rate #6" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_In07 "Influent flow rate #7" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_In08 "Influent flow rate #8" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_In09 "Influent flow rate #9" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_In10 "Influent flow rate #10" : FlowRate := {: group <- "Operational" :};
+
+    OBJ Q_Out (* is_favorite = "1" *) "Effluent flow rate" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Out01 (* is_favorite = "1" *) "Effluent flow rate #1" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Out02 (* is_favorite = "1" *) "Effluent flow rate #2" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Out03 (* is_favorite = "1" *) "Effluent flow rate #3" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Out04 "Effluent flow rate #4" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Out05 "Effluent flow rate #5" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Out06 "Effluent flow rate #6" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Out07 "Effluent flow rate #7" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Out08 "Effluent flow rate #8" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Out09 "Effluent flow rate #9" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Out10 "Effluent flow rate #10" : FlowRate := {: group <- "Operational" :};
+  };   
+
+  equations <-
+  {
+    state.Q_In01 = interface.Inflow01[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_In02 = interface.Inflow02[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_In03 = interface.Inflow03[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_In04 = interface.Inflow04[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_In05 = interface.Inflow05[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_In06 = interface.Inflow06[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_In07 = interface.Inflow07[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_In08 = interface.Inflow08[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_In09 = interface.Inflow09[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_In10 = interface.Inflow10[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    
+    state.Q_Out01 = - interface.Outflow01[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_Out02 = - interface.Outflow02[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_Out03 = - interface.Outflow03[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_Out04 = - interface.Outflow04[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_Out05 = - interface.Outflow05[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_Out06 = - interface.Outflow06[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_Out07 = - interface.Outflow07[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_Out08 = - interface.Outflow08[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_Out09 = - interface.Outflow09[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+    state.Q_Out10 = - interface.Outflow10[IndexOfSolvent] * parameters.WWTPSpecificVolume[IndexOfSolvent];
+  }; 
+
+:};
+
+
+#include "WWTP/splitter_combiner/wwtp.splitters_combiners.rel.msl"
+// [EURE: unfinished 01/12/2016] #include "WWTP/splitter_combiner/wwtp.splitters_combiners.abs.msl"
+
+
+#endif // WWTP_MULTI_SPLITTERS_COMBINERS

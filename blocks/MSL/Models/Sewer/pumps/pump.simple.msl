@@ -1,0 +1,58 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_PUMPS_PUMP_SIMPLE
+#define SEWER_PUMPS_PUMP_SIMPLE
+
+
+CLASS Pump_Simple
+(* icon = "transformer" *)
+"Pumping station: a pump with a volume"
+EXTENDS SewerAtomicModelWithVolume WITH
+{:
+
+  comments <- "Pumping station: a pump with a volume";
+
+  interface <-
+  {
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {: causality <- "COUT"; group <- "Outflow" :};
+  };
+
+  parameters <-
+  {
+    OBJ V_start "Volume when pump starts": Volume := {:value <- 3.0:};
+    OBJ V_stop "Volume when pump stops" : Volume := {:value <- 1.0:};
+    OBJ Q_pump "Pumping rate" : FlowRate := {:value <- 3024.0:};
+    OBJ Q_min (* hidden="1" *) "Minimum pumping rate to avoid loggings" : FlowRate := {:value <- 1.0:};
+    OBJ Vmin (* hidden = "1" *) "Minimum volume of the tank, to avoid problems with to low numbers": Volume := {: value <- 0.001:};
+  };
+
+  equations <-
+  {
+    state.V = 1E-06 * state.SewM[H2O] ;
+    
+    state.Q_Out = IF (state.V > parameters.V_start) THEN parameters.Q_pump
+      ELSE parameters.Q_min ; 
+    
+    {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}: state.C[Comp_Index] = state.SewM[Comp_Index] / state.V ; };
+    
+    {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}: interface.Outflow[Comp_Index] = - state.C[Comp_Index] * state.Q_Out ; };
+  };
+
+:};
+
+#endif // SEWER_PUMPS_PUMP_SIMPLE

@@ -1,0 +1,84 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+  interface <-
+  {
+    #include "ADM1/wwtp.VolumeADM1Model.interface.msl"
+  };
+
+  parameters <-
+  {
+    #include "ADM1/wwtp.VolumeADM1ConversionModel.parameters.msl"
+  };
+
+  state <-
+  {
+    #include "ADM1/wwtp.VolumeADM1ConversionModel.state.msl"
+  };
+
+  initial <-
+  {
+    // Params
+
+    parameters.T_Ref := 25 + 273.15;
+
+    // StateVars
+
+    state.n_ac := 3.0 / (parameters.pH_ac_ul - parameters.pH_ac_ll);
+    state.n_bac := 3.0 / (parameters.pH_bac_ul - parameters.pH_bac_ll);
+    state.n_h2 := 3.0 / (parameters.pH_h2_ul - parameters.pH_h2_ll);
+    state.pHLim_ac := pow(10,(-(parameters.pH_ac_ul + parameters.pH_ac_ll)/2.0));
+    state.pHLim_bac := pow(10,(-(parameters.pH_bac_ul + parameters.pH_bac_ll)/2.0));
+    state.pHLim_h2 := pow(10,(-(parameters.pH_h2_ul + parameters.pH_h2_ll)/2.0));
+
+    // Extra
+
+        // It needs an initial value for pH
+        // This is NOT the ideal solution of course. It should come from a parameter that can be set from the GUI
+        // state.S_h_ion = 5E-011 ;
+        state.S_h_ion = pow(10, -parameters.pHss) ;
+        
+
+    // Stoichiometry
+
+    #include "ADM1/wwtp.VolumeADM1ConversionModel.stoichiometry.msl"
+  };
+
+  equations <-
+  {
+    // StateVars
+
+    state.I_NH_limit = IF (state.C[S_INN] < 0.00000001) THEN 0 ELSE 1 / (parameters.Ks_IN / state.C[S_INN] + 1);
+    state.I_h2_c4 = 1 / (state.C_h2 / parameters.KI_h2_c4 + 1);
+    state.I_h2_fa = 1 / (state.C_h2 / parameters.KI_h2_fa + 1);
+    state.I_h2_pro = 1 / ( state.C_h2 / parameters.KI_h2_pro + 1);
+    state.I_nh3_ac = 1 / (state.C_Ion[S_nh3] / parameters.KI_nh3_ac + 1);
+    state.I_pH_ac = pow(state.pHLim_ac,state.n_ac)/(pow(state.S_h_ion,state.n_ac)+pow(state.pHLim_ac ,state.n_ac));
+    state.I_pH_bac = pow(state.pHLim_bac,state.n_bac)/(pow(state.S_h_ion,state.n_bac)+pow(state.pHLim_bac ,state.n_bac));
+    state.I_pH_h2 = pow(state.pHLim_h2,state.n_h2)/(pow(state.S_h_ion,state.n_h2)+pow(state.pHLim_h2 ,state.n_h2));
+    state.KH_ch4 = 0.0014 * exp(-14240/(parameters.R*100)*(1/parameters.T_Ref - 1/state.help_T_op));
+    state.KH_co2 = 0.035 * exp(-19410/(parameters.R*100)*(1/parameters.T_Ref - 1/state.help_T_op));
+    state.KH_h2 = 7.8e-4 * exp(-4180/(parameters.R*100)*(1/parameters.T_Ref - 1/state.help_T_op));
+    state.Ka_ic = pow(10,-6.35)*(exp(7646*(1/parameters.T_Ref - 1/state.help_T_op)/(100*parameters.R)));
+    state.Ka_in = pow(10,-9.25)*(exp(51965*(1/parameters.T_Ref - 1/state.help_T_op)/(100*parameters.R)));
+    state.Kw = pow(10,-14)*(exp(55900*(1/parameters.T_Ref - 1/state.help_T_op)/(100*parameters.R)));
+    state.S_co2 = state.C[S_IC] - state.C_Ion[S_hco3_ion];
+    state.S_nh4_ion = MSLU_NH_ion(state.Ka_in,state.C[S_INN],state.S_h_ion);
+    state.charge_balance = state.S_h_ion + state.C[S_cat] + state.S_nh4_ion - state.C[S_an] - state.Kw/state.S_h_ion - state.C_Ion[S_hco3_ion] - state.C_Ion[S_ac_ion]/64.0 - state.C_Ion[S_pro_ion]/112.0 - state.C_Ion[S_bu_ion]/160.0 - state.C_Ion[S_va_ion]/208.0;
+    state.help_T_op = interface.T_op + 273.15;
+    state.pH_ = -log10(state.S_h_ion);
+
+    // Extra
+
+        state.S_h_ion = IF (parameters.mode > 0.0) THEN MSLUNewtonRaphson_pH(state.Ka_in, state.Ka_ic, parameters.Ka_ac, parameters.Ka_bu, parameters.Ka_va, parameters.Ka_pro, state.Kw, state.C[S_INN], state.C[S_IC], state.C[S_ac], state.C[S_bu], state.C[S_va], state.C[S_pro], state.C[S_cat], state.C[S_an], previous(state.S_h_ion))
+          ELSE pow(10, -parameters.pHss) ;
+        
+
+    // Kinetics
+
+    #include "ADM1/wwtp.VolumeADM1ConversionModel.kinetics.msl"
+
+    // InterfaceVars
+
+    #include "ADM1/wwtp.VolumeADM1Model.sensors.msl"
+  };
+

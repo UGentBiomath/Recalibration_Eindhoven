@@ -1,0 +1,379 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 5. december 2016 11:01:58$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_PUMPS_GENERIC_Q
+#define WWTP_PUMPS_GENERIC_Q
+
+
+CLASS Generic_Q "A base model to calculate a generic pump's power consumption based on the flow rate Q"
+EXTENDS Base_Generic_Q WITH //Pump_Characteristics WITH
+{:
+
+  interface <-
+  {
+    OBJ HeadLoss_Ext (* terminal = "in_2"; manip = "1" *) "Head loss due to external factors (optional)" : Length := {: causality <- "CIN" ; group <- "Operational" :};
+    OBJ Elevation (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Elevation head to be overcome" : Length := {: causality <- "CIN" ; group <- "Operational" :};
+  };
+
+  parameters <- 
+  {
+    // Parameters needed for characterising the system curve
+    OBJ PipeDiameter "Diameter of pipes that conduct the pumped fluid" : Length := {: value <- 0.5 ; group <- "Head losses":};
+    OBJ PipeLength "Length of pipes that conduct the pumped fluid" : Length := {: value <- 60.0 ; group <- "Head losses":};
+    OBJ Epsilon "Absolute internal roughness of the pipes" : Length := {: value <- 0.00015 ; group <- "Head losses":};
+    // REMARK : value for water at 10°C, but in fact strongly depending on temperature, so could be implemented as a variable
+    OBJ ViscosityWater "Dynamic viscosity of water" : DynamicViscosity := {: value <- 1.5972E-08 ; group <- "Head losses":};
+    // REMARK: unit is meter pipe length, not meter water head! E.g. 30/PipeDiameter for a 90° elbow, 20/PipeDiameter for a 45° elbow 
+    OBJ PipeLength_Equiv "Equivalent pipe length of elements causing minor losses (elbows, inlet, outlet, ...)" : Length := {: value <- 75.0 ; group <- "Head losses":};
+    OBJ Friction_InLine "Head losses due to control valves, flow sensors, .." : Length := {: value <- 0.0 ; group <- "Head losses":};
+  };
+  
+  state <-
+  {
+    OBJ help_Viscosity_k (* hidden = "1" *) "Dummy variable for calculations" : Real ;
+    OBJ help_Viscosity_n (* hidden = "1" *) "Dummy variable for calculations" : Real ;
+    //  for calculation of the dynamic viscosity, Reynolds number and friction factor
+    OBJ IsThick (* hidden = "1" *) "0=Newtonian (water), 1=non-Newtonian (thick sludge)" : Integer := {: interval  <- {: lowerBound <- 0; upperBound <- 1 :} :};
+    OBJ FluidViscosity "Dynamic viscosity of the pumped fluid" : DynamicViscosity := {: group <- "Head losses":};
+
+    OBJ Q_Max "Maximum flow rate in the specified system" : FlowRate := {: group <- "Pump curve" :};
+    // (EURE: 27/11/2014) Q_Min: allows for generic control layer, valid for both throttling and VFD control
+    OBJ Q_Min "Minimum flow rate in the specified system" : FlowRate := {: group <- "Pump curve" :};
+
+    OBJ H_Pump "Operating head at Q_Out according to pump curve" : Length := {: group <- "Operational" :};
+    
+    // Variables needed for characterising the system curve at non-controlled operating point (maximum flow rate possible given the system resistance)
+    OBJ Q_NoCtl_Duty (* hidden = "1" *) "Maximum flow rate" : FlowRate := {: group <- "Pump curve" :};
+    OBJ H_NoCtl_Duty (* hidden = "1" *) "Operating head at max flow rate for the given pump and system" : Length := {: group <- "Pump curve" :};
+    OBJ H_Pump_NoCtl (* hidden = "1" *) "Vector discretizing the pump curve: heads for n different flow rate values" : Length[21;] := {: group <- "_ H Pump no ctl" :};
+    OBJ H_System_NoCtl (* hidden = "1" *) "Vector discretizing the system curve: heads for n different flow rate values" : Length[21;] := {: group <- "_ H System no ctl" :};
+    
+    // Should be around 0.03 for water and mixed liquor according to Gernaey et al. ("An updated proposal for including further detail in the BSM2 PE calculation")
+    OBJ Friction_NoCtl (* hidden = "1" *) "Darcy-Weisbach friction factor f (depending on the Reynolds number)" : Real[n;] := {: interval  <- {: lowerBound <- 0.0 :} :};
+    // (Pa*s?)
+    OBJ FluidViscosity_NoCtl (* hidden = "1" *) "Dynamic viscosity vector of the pumped fluid at n different flow rate values" : DynamicViscosity[n;] ;
+    OBJ ReynoldsNr_NoCtl (* hidden = "1" *) "Reynolds number of pipes that conduct the pumped fluid" : Real[n;] ;
+    // (m/h?)
+    OBJ FluidVelocity_NoCtl (* hidden = "1" *) "Velocity of pumped fluid" : Velocity[n;] ; // (assumed to be equal before and after the pump)
+    OBJ Friction_Pipe_NoCtl (* hidden = "1" *) "Friction head losses due to flow through pipes" : Length[n;] ;
+    OBJ Friction_MinorLosses_NoCtl (* hidden = "1" *) "Head losses due to elbows, inlet, outlet, .." : Length[n;] ;
+    // Variables needed for characterising the system curve at actual operating conditions
+    OBJ Friction "Darcy-Weisbach friction factor f (depending on the Reynolds number)" : Real := {: interval  <- {: lowerBound <- 0.0 :}; group <- "Head losses" :};
+    OBJ ReynoldsNr "Reynolds number of the pipes" : Real := {: interval  <- {: lowerBound <- 0.0 :}; group <- "Head losses" :};
+    // (m/h?)
+    OBJ FluidVelocity "Velocity of pumped fluid" : Velocity := {: group <- "Head losses" :}; // (assumed to be equal before and after the pump)
+    OBJ Friction_Pipe "Friction head losses due to flow through pipes" : Length := {: group <- "Head losses" :};
+    OBJ Friction_MinorLosses "Head losses due to elbows, inlet, outlet, .." : Length := {: group <- "Head losses" :};
+
+    OBJ help_N (* hidden = "1" *) "Relative pump speed: actual pump speed / nominal pump speed" : Fraction ;
+    OBJ help_Eta_Pump (* hidden = "1" *) "Efficiency of the pump" : Fraction := {: group <- "_ Energy" :};  
+  };
+  
+  initial <-
+  {
+    // Constrainted operating conditions
+    // Attention! Q_nocontrol[1] is largest, Q_nocontrol[n] is 0 (needed for interpolation in calculation of Q_nocontrol_dutypoint)
+    { FOREACH i IN {1 .. n}: state.Q_NoCtl[i] := state.help_Q_3 / (n - 1) * (i - 1) ; };
+    
+    // H_pumpcurve_nocontrol[1] is 0, H_pumpcurve_nocontrol[n] is largest
+    { FOREACH i IN {1 .. n}: state.H_Pump_NoCtl[i] :=
+      state.PumpCurveCoeff_A - state.PumpCurveCoeff_B * pow(state.Q_NoCtl[i], state.PumpCurveCoeff_C) ; }; 
+    
+    // to avoid division by zero in the calculation of DynamicViscosity
+    { FOREACH i IN {1 .. n}: state.FluidVelocity_NoCtl[i] :=
+      IF (state.Q_NoCtl[i] > 0.0) THEN state.Q_NoCtl[i] / (3.14 * pow(parameters.PipeDiameter,2) / 4) ELSE 1E-20 ; };
+    
+    state.Q_Min := 0.0 ;
+  };
+  
+  equations <-
+  {
+    state.IsThick = IF (interface.TSS > 8000) THEN 1 ELSE 0 ;
+    // No control (finding the operating point (Q_nocontrol,H_nocontrol) corresponding to maximum flow rate)
+    state.help_Viscosity_k = 0.001 * exp(2.0 * pow(interface.TSS/1000, 0.41)) ;
+    state.help_Viscosity_n = 1 - 0.23 * pow((interface.TSS/1000), 0.37) ; // 1E-03 to convert to kg/m3
+    
+    // mu = k * ((3n+1)/4n)^n * (8 * v/d)^(n-1)
+    { FOREACH i IN {1 .. n}: state.FluidViscosity_NoCtl[i] =
+      IF (state.IsThick == 0) THEN parameters.ViscosityWater
+        ELSE (1/86400) * state.help_Viscosity_k * pow((0.75 + 0.25/state.help_Viscosity_n), state.help_Viscosity_n) *
+          pow((8.0 * state.FluidVelocity_NoCtl[i]/86400 / parameters.PipeDiameter), state.help_Viscosity_n - 1) ; }; 
+    
+    // Re = rho * v * d / mu
+    { FOREACH i IN {1 .. n}: state.ReynoldsNr_NoCtl[i] =
+      IF (state.FluidVelocity_NoCtl[i] <= 0.0) THEN 1E-20 // to avoid devision by zero in the calculation of FrictionFactor
+        ELSE IF (state.IsThick == 0) THEN parameters.Rho_Water/1000 * (state.FluidVelocity_NoCtl[i]/86400) * parameters.PipeDiameter / (state.FluidViscosity_NoCtl[i]) // Newtonian
+          ELSE state.Rho_Fluid/1000 * (state.FluidVelocity_NoCtl[i]/86400) * parameters.PipeDiameter / state.FluidViscosity_NoCtl[i] ; }; // non-Newtonian
+    
+    // f = 0.25 * (log10(Epsilon/(3.7*d) + 5.74/(Re^0.9)))^(-2)
+    { FOREACH i IN {1 .. n}: state.Friction_NoCtl[i] =
+      IF (state.IsThick == 0) THEN 0.25 * pow(log10(parameters.Epsilon/(3.7 * parameters.PipeDiameter) + 5.74/pow(state.ReynoldsNr_NoCtl[i], 0.9)), -2) // Swamee-Jain equation to approximate the Darcy friction factor for Newtonian fluids
+        //(-1.8 * log10((PipeRoughness/3.7/PipeDiameter) ^ 1.11 + 6.9/ReynoldsNumber_nocontrol[i])) ^ (-2) else  // Haaland equation to approximate the Darcy friction factor for Newtonian fluids
+        ELSE IF (state.ReynoldsNr_NoCtl[i] <= 2400.0) THEN 4 * 16 / state.ReynoldsNr_NoCtl[i]
+          ELSE 4 * 0.0792 * pow(state.help_Viscosity_n, 0.675) * pow(state.ReynoldsNr_NoCtl[i], -0.25); }; // equation to approximate 4 * the Fanning friction factor (= Darcy friction factor) for non-Newtonian fluids 
+    
+    { FOREACH i IN {1 .. n}: state.Friction_Pipe_NoCtl[i] =
+      state.Friction_NoCtl[i] * pow(state.FluidVelocity_NoCtl[i]/86400, 2) * parameters.PipeLength / parameters.PipeDiameter / 2 / 9.81 ; };
+    
+    { FOREACH i IN {1 .. n}: state.Friction_MinorLosses_NoCtl[i] = state.Friction_Pipe_NoCtl[i] * parameters.PipeLength_Equiv / parameters.PipeLength ; };
+     
+    // H_System_NoCtl[1] is largest, H_System_NoCtl[n] is smallest
+    { FOREACH i IN {1 .. n}: state.H_System_NoCtl[i] =
+      state.Friction_Pipe_NoCtl[i] + state.Friction_MinorLosses_NoCtl[i] + parameters.Friction_InLine + interface.Elevation + interface.HeadLoss_Ext ; };
+
+    state.H_NoCtl_Duty = IF ((state.H_Pump_NoCtl[1] > state.H_System_NoCtl[1]) && (state.H_Pump_NoCtl[2] <= state.H_System_NoCtl[2])) THEN
+      ((state.H_Pump_NoCtl[1] * state.H_System_NoCtl[2] - state.H_Pump_NoCtl[2] * state.H_System_NoCtl[1]) / (state.H_System_NoCtl[2] - state.H_System_NoCtl[1] + state.H_Pump_NoCtl[1] - state.H_Pump_NoCtl[2]))
+        ELSE IF (state.H_Pump_NoCtl[2] > state.H_System_NoCtl[2] && state.H_Pump_NoCtl[3] <= state.H_System_NoCtl[3]) THEN
+          ((state.H_Pump_NoCtl[2] * state.H_System_NoCtl[3] - state.H_Pump_NoCtl[3] * state.H_System_NoCtl[2]) / (state.H_System_NoCtl[3] - state.H_System_NoCtl[2] + state.H_Pump_NoCtl[2] - state.H_Pump_NoCtl[3]))
+            ELSE IF (state.H_Pump_NoCtl[3] > state.H_System_NoCtl[3] && state.H_Pump_NoCtl[4] <= state.H_System_NoCtl[4]) THEN
+              ((state.H_Pump_NoCtl[3] * state.H_System_NoCtl[4] - state.H_Pump_NoCtl[4] * state.H_System_NoCtl[3]) / (state.H_System_NoCtl[4] - state.H_System_NoCtl[3] + state.H_Pump_NoCtl[3] - state.H_Pump_NoCtl[4]))
+                  ELSE IF (state.H_Pump_NoCtl[4] > state.H_System_NoCtl[4] && state.H_Pump_NoCtl[5] <= state.H_System_NoCtl[5]) THEN
+                    ((state.H_Pump_NoCtl[4] * state.H_System_NoCtl[5] - state.H_Pump_NoCtl[5] * state.H_System_NoCtl[4]) / (state.H_System_NoCtl[5] - state.H_System_NoCtl[4] + state.H_Pump_NoCtl[4] - state.H_Pump_NoCtl[5]))
+                      ELSE IF (state.H_Pump_NoCtl[5] > state.H_System_NoCtl[5] && state.H_Pump_NoCtl[6] <= state.H_System_NoCtl[6]) THEN
+      ((state.H_Pump_NoCtl[5] * state.H_System_NoCtl[6] - state.H_Pump_NoCtl[6] * state.H_System_NoCtl[5]) / (state.H_System_NoCtl[6] - state.H_System_NoCtl[5] + state.H_Pump_NoCtl[5] - state.H_Pump_NoCtl[6]))
+        ELSE IF (state.H_Pump_NoCtl[6] > state.H_System_NoCtl[6] && state.H_Pump_NoCtl[7] <= state.H_System_NoCtl[7]) THEN
+         ((state.H_Pump_NoCtl[6] * state.H_System_NoCtl[7] - state.H_Pump_NoCtl[7] * state.H_System_NoCtl[6]) / (state.H_System_NoCtl[7] - state.H_System_NoCtl[6] + state.H_Pump_NoCtl[6] - state.H_Pump_NoCtl[7]))
+          ELSE IF (state.H_Pump_NoCtl[7] > state.H_System_NoCtl[7] && state.H_Pump_NoCtl[8] <= state.H_System_NoCtl[8]) THEN
+            ((state.H_Pump_NoCtl[7] * state.H_System_NoCtl[8] - state.H_Pump_NoCtl[8] * state.H_System_NoCtl[7]) / (state.H_System_NoCtl[8] - state.H_System_NoCtl[7] + state.H_Pump_NoCtl[7] - state.H_Pump_NoCtl[8]))
+              ELSE IF (state.H_Pump_NoCtl[8] > state.H_System_NoCtl[8] && state.H_Pump_NoCtl[9] <= state.H_System_NoCtl[9]) THEN
+                ((state.H_Pump_NoCtl[8] * state.H_System_NoCtl[9] - state.H_Pump_NoCtl[9] * state.H_System_NoCtl[8]) / (state.H_System_NoCtl[9] - state.H_System_NoCtl[8] + state.H_Pump_NoCtl[8] - state.H_Pump_NoCtl[9]))
+                  ELSE IF (state.H_Pump_NoCtl[9] > state.H_System_NoCtl[9] && state.H_Pump_NoCtl[10] <= state.H_System_NoCtl[10]) THEN
+                    ((state.H_Pump_NoCtl[9] * state.H_System_NoCtl[10] - state.H_Pump_NoCtl[10] * state.H_System_NoCtl[9]) / (state.H_System_NoCtl[10] - state.H_System_NoCtl[9] + state.H_Pump_NoCtl[9] - state.H_Pump_NoCtl[10]))
+                      ELSE IF (state.H_Pump_NoCtl[10] > state.H_System_NoCtl[10] && state.H_Pump_NoCtl[11] <= state.H_System_NoCtl[11]) THEN
+      ((state.H_Pump_NoCtl[10] * state.H_System_NoCtl[11] - state.H_Pump_NoCtl[11] * state.H_System_NoCtl[10]) / (state.H_System_NoCtl[11] - state.H_System_NoCtl[10] + state.H_Pump_NoCtl[10] - state.H_Pump_NoCtl[11]))
+        ELSE IF (state.H_Pump_NoCtl[11] > state.H_System_NoCtl[11] && state.H_Pump_NoCtl[12] <= state.H_System_NoCtl[12]) THEN
+          ((state.H_Pump_NoCtl[11] * state.H_System_NoCtl[12] - state.H_Pump_NoCtl[12] * state.H_System_NoCtl[11]) / (state.H_System_NoCtl[12] - state.H_System_NoCtl[11] + state.H_Pump_NoCtl[11] - state.H_Pump_NoCtl[12]))
+            ELSE IF (state.H_Pump_NoCtl[12] > state.H_System_NoCtl[12] && state.H_Pump_NoCtl[13] <= state.H_System_NoCtl[13]) THEN
+             ((state.H_Pump_NoCtl[12] * state.H_System_NoCtl[13] - state.H_Pump_NoCtl[13] * state.H_System_NoCtl[12]) / (state.H_System_NoCtl[13] - state.H_System_NoCtl[12] + state.H_Pump_NoCtl[12] - state.H_Pump_NoCtl[13]))
+                ELSE IF (state.H_Pump_NoCtl[13] > state.H_System_NoCtl[13] && state.H_Pump_NoCtl[14] <= state.H_System_NoCtl[14]) THEN
+              		((state.H_Pump_NoCtl[13] * state.H_System_NoCtl[14] - state.H_Pump_NoCtl[14] * state.H_System_NoCtl[13]) / (state.H_System_NoCtl[14] - state.H_System_NoCtl[13] + state.H_Pump_NoCtl[13] - state.H_Pump_NoCtl[14]))
+                    ELSE IF (state.H_Pump_NoCtl[14] > state.H_System_NoCtl[14] && state.H_Pump_NoCtl[15] <= state.H_System_NoCtl[15]) THEN
+      ((state.H_Pump_NoCtl[14] * state.H_System_NoCtl[15] - state.H_Pump_NoCtl[15] * state.H_System_NoCtl[14]) / (state.H_System_NoCtl[15] - state.H_System_NoCtl[14] + state.H_Pump_NoCtl[14] - state.H_Pump_NoCtl[15]))
+       ELSE IF (state.H_Pump_NoCtl[15] > state.H_System_NoCtl[15] && state.H_Pump_NoCtl[16] <= state.H_System_NoCtl[16]) THEN
+          ((state.H_Pump_NoCtl[15] * state.H_System_NoCtl[16] - state.H_Pump_NoCtl[16] * state.H_System_NoCtl[15]) / (state.H_System_NoCtl[16] - state.H_System_NoCtl[15] + state.H_Pump_NoCtl[15] - state.H_Pump_NoCtl[16]))
+              ELSE IF (state.H_Pump_NoCtl[16] > state.H_System_NoCtl[16] && state.H_Pump_NoCtl[17] <= state.H_System_NoCtl[17]) THEN
+                  ((state.H_Pump_NoCtl[16] * state.H_System_NoCtl[17] - state.H_Pump_NoCtl[17] * state.H_System_NoCtl[16]) / (state.H_System_NoCtl[17] - state.H_System_NoCtl[16] + state.H_Pump_NoCtl[16] - state.H_Pump_NoCtl[17]))
+                    ELSE IF (state.H_Pump_NoCtl[17] > state.H_System_NoCtl[17] && state.H_Pump_NoCtl[18] <= state.H_System_NoCtl[18]) THEN
+      ((state.H_Pump_NoCtl[17] * state.H_System_NoCtl[18] - state.H_Pump_NoCtl[18] * state.H_System_NoCtl[17]) / (state.H_System_NoCtl[18] - state.H_System_NoCtl[17] + state.H_Pump_NoCtl[17] - state.H_Pump_NoCtl[18]))
+        ELSE IF (state.H_Pump_NoCtl[18] > state.H_System_NoCtl[18] && state.H_Pump_NoCtl[19] <= state.H_System_NoCtl[19]) THEN
+          ((state.H_Pump_NoCtl[18] * state.H_System_NoCtl[19] - state.H_Pump_NoCtl[19] * state.H_System_NoCtl[18]) / (state.H_System_NoCtl[19] - state.H_System_NoCtl[18] + state.H_Pump_NoCtl[18] - state.H_Pump_NoCtl[19]))
+              ELSE IF (state.H_Pump_NoCtl[19] > state.H_System_NoCtl[19] && state.H_Pump_NoCtl[20] <= state.H_System_NoCtl[20]) THEN
+               ((state.H_Pump_NoCtl[19] * state.H_System_NoCtl[20] - state.H_Pump_NoCtl[20] * state.H_System_NoCtl[19]) / (state.H_System_NoCtl[20] - state.H_System_NoCtl[19] + state.H_Pump_NoCtl[19] - state.H_Pump_NoCtl[20]))
+                  ELSE IF (state.H_Pump_NoCtl[20] > state.H_System_NoCtl[20] && state.H_Pump_NoCtl[21] <= state.H_System_NoCtl[21]) THEN
+      ((state.H_Pump_NoCtl[20] * state.H_System_NoCtl[21] - state.H_Pump_NoCtl[21] * state.H_System_NoCtl[20]) / (state.H_System_NoCtl[21] - state.H_System_NoCtl[20] + state.H_Pump_NoCtl[20] - state.H_Pump_NoCtl[21]))
+        ELSE state.H_Pump_NoCtl[1]; // pump curve does not intersect system curve
+    
+    state.Q_NoCtl_Duty = IF (state.H_Pump_NoCtl[n] > state.H_System_NoCtl[n]) THEN 0.0
+      ELSE MSLUGetInterpolated(ref(state.H_System_NoCtl[1]), ref(state.Q_NoCtl[1]), n, state.H_NoCtl_Duty) ;
+    
+    // Head in function of actual flow rate via system curve
+    state.FluidVelocity = state.help_Q / (3.14 * pow(parameters.PipeDiameter, 2) / 4.0);  
+    
+    state.FluidViscosity = IF (state.FluidVelocity <= 0) THEN parameters.ViscosityWater
+      ELSE IF (state.IsThick == 0) THEN parameters.ViscosityWater
+        ELSE (1/86400) * state.help_Viscosity_k * pow((0.75 + 0.25/state.help_Viscosity_n), state.help_Viscosity_n) *
+          pow((8.0 * state.FluidVelocity/86400 / parameters.PipeDiameter), state.help_Viscosity_n - 1) ;
+    
+    state.ReynoldsNr = IF (state.FluidVelocity <= 0.0) THEN 1E-20 // to avoid devision by zero in the calculation of FrictionFactor
+      ELSE IF (state.IsThick == 0) THEN parameters.Rho_Water/1000 * (state.FluidVelocity/86400) * parameters.PipeDiameter / (state.FluidViscosity) // Newtonian
+        ELSE state.Rho_Fluid/1000 * (state.FluidVelocity/86400) * parameters.PipeDiameter / state.FluidViscosity ; // non-Newtonian
+    
+    state.Friction = IF (state.IsThick == 0) THEN 0.25 * pow(log10(parameters.Epsilon/(3.7 * parameters.PipeDiameter) + 5.74/pow(state.ReynoldsNr, 0.9)), -2) // Swamee-Jain equation to approximate the Darcy friction factor for Newtonian fluids
+      ELSE IF (state.ReynoldsNr <= 2400.0) THEN 4 * 16 / state.ReynoldsNr
+        ELSE 4 * 0.0792 * pow(state.help_Viscosity_n, 0.675) * pow(state.ReynoldsNr, -0.25); // equation to approximate 4 * the Fanning friction factor (= Darcy friction factor) for non-Newtonian fluids 
+    
+    state.Friction_Pipe = state.Friction * pow(state.FluidVelocity/86400, 2) * parameters.PipeLength / parameters.PipeDiameter / 2 / 9.81 ; 
+    
+    state.Friction_MinorLosses = state.Friction_Pipe * parameters.PipeLength_Equiv / parameters.PipeLength ;
+    
+    state.H_System = state.Friction_Pipe + state.Friction_MinorLosses + parameters.Friction_InLine + interface.Elevation + interface.HeadLoss_Ext ;
+    
+    // Head in function of actual flow rate via pump curve
+    state.H_Pump = state.PumpCurveCoeff_A - state.PumpCurveCoeff_B * pow(state.help_Q, state.PumpCurveCoeff_C) ;
+    
+    // Pump efficiency (the rest in derived classes)
+    state.help_Eta_Pump = - (parameters.Eta_Pump_Max - parameters.Eta_Pump_Min) / pow(parameters.Q_BEP, 2) * pow(state.help_Q/state.help_N, 2) +
+      2 * (parameters.Eta_Pump_Max - parameters.Eta_Pump_Min) / parameters.Q_BEP * (state.help_Q/state.help_N) + parameters.Eta_Pump_Min ;  
+    
+    state.Eta_Pump = IF (state.help_Eta_Pump >= parameters.Eta_Pump_Min) THEN state.help_Eta_Pump ELSE parameters.Eta_Pump_Min ;  
+    
+    // Power consumption [kg m^2 / s^3 = W]
+    // differences wrt VFD_HQ: interface.H_Op -> state.H, SUM(Eta's) -> Eta_Total
+    // (moved to base class)
+//    interface.PowerConsumption = IF ((state.help_Q <= 0.0) || (state.Eta_Total <= 0.0)) THEN 0.0
+//      ELSE (state.Rho_Fluid / 1000) * 9.81 * (state.help_Q / 86400) * state.H / (state.Eta_Total);
+  };
+
+:};
+
+
+// Second base class for centrifugal pumps
+CLASS Base_Pump_VFD "A base model for VFD-controlled centrifugal pumps" EXTENDS Base_Generic_Q WITH
+{:
+
+  interface <-
+  {
+    // sensors
+// can go here?    OBJ Nr_Pumps (* terminal = "out_2" *) "Nr of pumps required" : Integer := {: causality <- "COUT" ; value <- 1 ; interval  <- {: lowerBound <- 1 :}; group <- "Operational" :};
+    OBJ N (* terminal = "out_2" *) "Relative pump speed: actual pump speed / nominal pump speed" : Fraction := {: causality <- "COUT" ; group <- "Operational" :};
+  };
+  
+  parameters <-
+  {
+    // Efficiency related parameters
+    OBJ Eta_VFD_Max "Efficiency of the VFD at full speed (N = 1)" : Fraction := {: value <- 0.95 ; group <- "Efficiency":};
+    OBJ Eta_VFD_Half "Efficiency of the VFD at half speed (N = 0.5)" : Fraction := {: value <- 0.89 ; group <- "Efficiency":};
+    // Nmin -> N_min
+    OBJ N_min "Minimum relative pump speed for VFD controlled pumps" : Fraction := {: value <- 0.60 ; group <- "Efficiency":};
+    OBJ N_max "Maximum relative pump speed for VFD controlled pumps" : Fraction := {: value <- 1.0 ; group <- "Efficiency":};
+  };
+  
+  state <-
+  {
+    OBJ Eta_VFD "Efficiency of the VFD" : Fraction := {: group <- "Energy" :};
+  };
+  
+  equations <-
+  {
+    // Pump efficiency
+    state.Eta_Pump = IF (interface.N <= 0.0) THEN 1.0
+      ELSE - (parameters.Eta_Pump_Max - parameters.Eta_Pump_Min) / pow(parameters.Q_BEP, 2) * pow(state.help_Q/interface.N, 2) +
+      2 * (parameters.Eta_Pump_Max - parameters.Eta_Pump_Min) / parameters.Q_BEP * (state.help_Q/interface.N) + parameters.Eta_Pump_Min ;  
+
+    state.Eta_VFD = IF (interface.N <= 0.0) THEN 1.0
+      ELSE (parameters.Eta_VFD_Max - parameters.Eta_VFD_Half) * (pow(interface.N, 4) - pow(0.5, 4)) / (pow(1.0, 4) - pow(0.5, 4)) + parameters.Eta_VFD_Half ;
+
+    state.Eta_Total = state.Eta_Pump * parameters.Eta_motor * state.Eta_VFD ;  
+  };
+
+:};
+
+
+// One base class for centrifugal pumps
+CLASS Base_Generic_Q EXTENDS Pump_Characteristics WITH
+{:
+
+  parameters <-
+  {
+    // Efficiency related parameters
+    OBJ Q_BEP "Flow rate at Best Efficiency Point" : FlowRate := {: value <- 1000 ; group <- "Efficiency":};
+  };
+  
+  state <-
+  {
+    // Variables needed for characterising the system curve at non-controlled operating point (maximum flow rate possible given the system resistance)
+    OBJ Q_NoCtl (* hidden = "1" *) "Dummy vector containing n different flow rate values" : FlowRate[n;] := {: group <- "_ Q no ctl" :};
+  };
+  
+  initial <-
+  {    
+    // Constrained operating conditions
+    // Attention! Q_nocontrol[1] is largest, Q_nocontrol[n] is 0 (needed for interpolation in calculation of Q_nocontrol_dutypoint)
+    { FOREACH i IN {1 .. n}: state.Q_NoCtl[i] := state.help_Q_3 / (n - 1) * (i - 1) ; };
+  };
+
+:};
+
+
+CLASS Pump_Characteristics "some generic pump characteristics shared by different pump models"
+EXTENDS Pump_Base WITH
+{:
+
+  interface <-
+  {
+    //  OBJ H_Op (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Desired operating head" : Length := {: causality <- "CIN" ; value <- 2; group <- "Operational" :};
+    OBJ SpecificEnergy (* terminal = "out_2" *) "Specific energy consumption since start of simulation" : EnergyForPumping := {: causality <- "COUT" ; group <- "Energy" :};
+    OBJ PumpedVolume (* terminal = "out_2"; hidden = "1" *) "Pumped quantity since start of simulation" : Volume := {: causality <- "COUT" ; group <- "Energy" :};
+    // (08/12/2015 - CONSIDER DELETING)
+    OBJ PumpingEnergy_Ave (* terminal = "out_2" *) "Average energy consumption since start of simulation" : EnergyForPumping := {: causality <- "COUT" ; group <- "Energy" :};
+  };
+  
+  parameters <- 
+  {
+    // Parameters needed for characterising the pump curve
+    OBJ H_1 "Shutoff head (if unknown: -1 for automatic estimation based on H_2)" : Real := {: unit <- "m" ; interval  <- {: lowerBound <- - 1.0 :}; value <- -1.0 ; group <- "Pump curve":};
+    OBJ Q_2 "Design flow rate" : FlowRate := {: value <- 10.0 ; group <- "Pump curve":};
+    OBJ H_2 "Design head" : Length := {: value <- 10.0 ; group <- "Pump curve":};
+    OBJ Q_3 "Some point (flow rate) on the pump curve (if unknown: -1.0 for automatic estimation based on Q_2)" : Real := {: unit <- "m3/d" ; interval  <- {: lowerBound <- - 1.0 :}; value <- -1.0 ; group <- "Pump curve":};
+    OBJ H_3 "Some point (head) on the pump curve (if unknown: -1 for automatic estimation)" : Real := {: unit <- "m" ; interval  <- {: lowerBound <- - 1.0 :}; value <- -1.0 ; group <- "Pump curve":};
+
+    // Efficiency related parameters
+    OBJ Eta_motor "Efficiency of the motor" : Fraction := {: value <- 0.9 ; group <- "Efficiency":};
+    OBJ Eta_Pump_Max "Maximum efficiency of the pump (at Q_BEP)" : Fraction := {: value <- 0.9 ; group <- "Efficiency":};
+    OBJ Eta_Pump_Min "Minimum efficiency of the pump" : Fraction := {: value <- 0.0 ; group <- "Efficiency":};
+  };
+  
+  state <-
+  {
+    OBJ PumpCurveCoeff_A (* hidden = "1" *) "Coefficient of the power-law to represent the pump curve" : Real := {: group <- "Operational" :};
+    OBJ PumpCurveCoeff_B (* hidden = "1" *) "Coefficient of the power-law to represent the pump curve" : Real := {: group <- "Operational" :};
+    OBJ PumpCurveCoeff_C (* hidden = "1" *) "Coefficient of the power-law to represent the pump curve" : Real := {: group <- "Operational" :};
+    OBJ help_H_1 (* hidden = "1" *) "Shutoff head" : Length := {: group <- "Operational" :};
+    OBJ help_Q_3 (* hidden = "1" *) "Some point (flow rate) on the pump curve" : FlowRate := {: group <- "Operational" :};
+    OBJ help_H_3 (* hidden = "1" *) "Some point (head) on the pump curve" : Length := {: group <- "Operational" :};
+
+    OBJ Eta_Pump "Efficiency of the pump" : Fraction := {: group <- "Energy" :};
+
+    // PUMPING ENERGY: PumpingEnergy_Ave, help_PumpedVolume moved to interface 
+    OBJ help_PumpedVolume (* hidden = "1" *) "Pumped quantity since start of simulation" : Volume ;  
+    OBJ help_EnergyConsumption (* hidden = "1" *) "Energy consumption since start of simulation" : ElectricalEnergy ;
+  };
+  
+  initial <-
+  {
+    // General
+    state.help_PumpedVolume := 0.0 ;
+    state.help_EnergyConsumption := 0.0 ;
+    
+    // Calculating the coefficients for the pump curve equation
+    state.help_H_1 := IF (parameters.H_1 <= -0.5) THEN 1.33 * parameters.H_2 ELSE parameters.H_1 ;
+    state.help_Q_3 := IF (parameters.Q_3 <= -0.5) THEN 2.0 * parameters.Q_2 ELSE parameters.Q_3 ;
+    state.help_H_3 := IF (parameters.H_3 <= -0.5) THEN 0.0 ELSE parameters.H_3 ;
+    
+    // BEGIN == In W2016 this was in Generic_Q
+    state.PumpCurveCoeff_A := IF (parameters.H_2 <= 0.0 || parameters.Q_2 <= 0.0) THEN 0.0 ELSE state.help_H_1 ;
+    state.PumpCurveCoeff_B := IF (parameters.H_2 <= 0.0 || parameters.Q_2 <= 0.0) THEN 0.0
+      ELSE (state.help_H_1 - state.help_H_3) * exp((log(state.help_Q_3) * log((state.help_H_1 - state.help_H_3)/(state.help_H_1 - parameters.H_2))) / (log(parameters.Q_2 / state.help_Q_3)));
+    state.PumpCurveCoeff_C := IF (parameters.H_2 <= 0.0 || parameters.Q_2 <= 0.0) THEN 1.0
+      ELSE - log((state.help_H_1 - state.help_H_3)/(state.help_H_1 - parameters.H_2)) / log(parameters.Q_2/state.help_Q_3);
+    // END == In W2016 this was in Generic_Q
+  };
+  
+  equations <-
+  {
+    // General
+    DERIV(state.help_PumpedVolume,[independent.t]) = state.help_Q ;
+    
+    // ENERGY
+    DERIV(state.help_EnergyConsumption,[independent.t]) = interface.PowerConsumption * 24.0 / 1000 ;
+    interface.SpecificEnergy = IF (state.help_PumpedVolume > 0.0) THEN state.help_EnergyConsumption / state.help_PumpedVolume ELSE 0.0 ;
+    interface.PumpingEnergy = state.help_EnergyConsumption ;
+    interface.PumpedVolume = state.help_PumpedVolume ;
+    // (08/12/2015 - CONSIDER DELETING)
+  	interface.PumpingEnergy_Ave = IF (state.help_PumpedVolume > 0.0) THEN state.help_EnergyConsumption / state.help_PumpedVolume ELSE 0.0 ;
+  };
+    
+:};
+
+
+// centrifugal pump with throttling valve control, f(Q) 
+#include "WWTP/pumps/wwtp.pumps.centrifugal.q.throttling.msl"
+// centrifugal pump with Variable Frequency Drive control, f(Q) 
+#include "WWTP/pumps/wwtp.pumps.centrifugal.q.vfd.msl"
+
+
+#endif // WWTP_PUMPS_GENERIC_Q

@@ -1,0 +1,240 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:36$
+ *
+ ******************************************************************************/
+
+#ifdef PWM_SA
+
+// Alpha values - see grau et al. (CEIT)	
+// H2O
+parameters.alpha_H_[H2O] = parameters.MW_H/parameters.MW_[H2O] ;
+parameters.alpha_O_[H2O] = (2*parameters.MW_O)/parameters.MW_[H2O] ;
+
+// S_H
+parameters.alpha_H_[S_H] = 1 ;
+
+// Na
+parameters.alpha_Na_[S_Na] = 1 ;
+
+// S_K
+parameters.alpha_K_[S_K] = 1 ;
+
+//S_Ca
+parameters.alpha_Ca_[S_Ca] = 1 ;
+
+//S_Mg
+parameters.alpha_Mg_[S_Mg] = 1 ;
+
+//S_NH
+parameters.alpha_N_[S_NH] = parameters.MW_N/parameters.MW_[S_NH] ;
+parameters.alpha_H_[S_NH] = (4*parameters.MW_H)/parameters.MW_[S_NH] ;
+
+//S_Cl
+parameters.alpha_Cl_[S_Cl] = 1 ;
+
+// S_VFA
+parameters.alpha_C_[S_VFA] = (2*parameters.MW_C)/parameters.MW_[S_VFA] ;
+parameters.alpha_H_[S_VFA] = (3*parameters.MW_H)/parameters.MW_[S_VFA] ;
+parameters.alpha_O_[S_VFA] = (2*parameters.MW_O)/parameters.MW_[S_VFA] ;
+
+//S_Pr
+parameters.alpha_C_[S_Pr] = (3*parameters.MW_C)/parameters.MW_[S_Pr] ;
+parameters.alpha_H_[S_Pr] = (6*parameters.MW_H)/parameters.MW_[S_Pr] ;
+parameters.alpha_O_[S_Pr] = (2*parameters.MW_O)/parameters.MW_[S_Pr] ;
+
+//S_CO3
+parameters.alpha_C_[S_CO3] = parameters.MW_C/parameters.MW_[S_CO3] ;
+parameters.alpha_O_[S_CO3] = (3*parameters.MW_O)/parameters.MW_[S_CO3] ;
+
+//S_SO4
+parameters.alpha_S_[S_SO4] = parameters.MW_S/parameters.MW_[S_SO4] ;
+parameters.alpha_O_[S_SO4] = (4*parameters.MW_O)/parameters.MW_[S_SO4] ;
+
+//S_PO4
+parameters.alpha_P_[S_PO4] = parameters.MW_P/parameters.MW_[S_PO4] ;
+parameters.alpha_O_[S_PO4] = (4*parameters.MW_O)/parameters.MW_[S_PO4] ;
+
+//S_H
+parameters.alpha_H_[S_H2] = 1 ;
+
+//USO
+parameters.alpha_C_[S_U] = parameters.MW_C/parameters.MW_[S_U] ;
+parameters.alpha_H_[S_U] = (parameters.i_H_SU_mol_perC*parameters.MW_H)/parameters.MW_[S_U] ;
+parameters.alpha_O_[S_U] = (parameters.i_O_SU_mol_perC*parameters.MW_O)/parameters.MW_[S_U] ;
+parameters.alpha_N_[S_U] = (parameters.i_N_SU_mol_perC*parameters.MW_N)/parameters.MW_[S_U] ;
+parameters.alpha_P_[S_U] = (parameters.i_P_SU_mol_perC*parameters.MW_P)/parameters.MW_[S_U] ;
+
+//FSO
+parameters.alpha_C_[S_F] = parameters.MW_C/parameters.MW_[S_F] ;
+parameters.alpha_H_[S_F] = (parameters.i_H_SF_mol_perC*parameters.MW_H)/parameters.MW_[S_F] ;
+parameters.alpha_O_[S_F] = (parameters.i_O_SF_mol_perC*parameters.MW_O)/parameters.MW_[S_F] ;
+parameters.alpha_N_[S_F] = (parameters.i_N_SF_mol_perC*parameters.MW_N)/parameters.MW_[S_F] ;
+parameters.alpha_P_[S_F] = (parameters.i_P_SF_mol_perC*parameters.MW_P)/parameters.MW_[S_F] ;
+
+
+//Glu
+parameters.alpha_C_[S_Glu] = (6*parameters.MW_C)/parameters.MW_[S_Glu] ;
+parameters.alpha_H_[S_Glu] = (12*parameters.MW_H)/parameters.MW_[S_Glu] ;
+parameters.alpha_O_[S_Glu] = (6*parameters.MW_O)/parameters.MW_[S_Glu] ;
+
+//S_O
+parameters.alpha_O_[S_O] = 1 ;
+
+//S_NO
+parameters.alpha_N_[S_NOx] = parameters.MW_N/parameters.MW_[S_NOx] ;
+parameters.alpha_O_[S_NOx] = (3*parameters.MW_O)/parameters.MW_[S_NOx] ;
+
+//G_N2
+parameters.alpha_N_[G_N2] = 1 ;
+
+//UPO
+parameters.alpha_C_[X_U_Inf] = parameters.MW_C/parameters.MW_[X_U_Inf] ;
+parameters.alpha_H_[X_U_Inf] = (parameters.i_H_XUInf_mol_perC*parameters.MW_H)/parameters.MW_[X_U_Inf] ;
+parameters.alpha_O_[X_U_Inf] = (parameters.i_O_XUInf_mol_perC*parameters.MW_O)/parameters.MW_[X_U_Inf] ;
+parameters.alpha_N_[X_U_Inf] = (parameters.i_N_XUInf_mol_perC*parameters.MW_N)/parameters.MW_[X_U_Inf] ;
+parameters.alpha_P_[X_U_Inf] = (parameters.i_P_XUInf_mol_perC*parameters.MW_P)/parameters.MW_[X_U_Inf] ;
+
+//BPO
+parameters.alpha_C_[X_B_Org] = parameters.MW_C/parameters.MW_[X_B_Org] ;
+parameters.alpha_H_[X_B_Org] = (parameters.i_H_XBOrg_mol_perC*parameters.MW_H)/parameters.MW_[X_B_Org] ;
+parameters.alpha_O_[X_B_Org] = (parameters.i_O_XBOrg_mol_perC*parameters.MW_O)/parameters.MW_[X_B_Org] ;
+parameters.alpha_N_[X_B_Org] = (parameters.i_N_XBOrg_mol_perC*parameters.MW_N)/parameters.MW_[X_B_Org] ;
+parameters.alpha_P_[X_B_Org] = (parameters.i_P_XBOrg_mol_perC*parameters.MW_P)/parameters.MW_[X_B_Org] ;
+
+
+//PolyPhosphate
+parameters.alpha_O_[X_PAO_PP] = (3*parameters.MW_O)/parameters.MW_[X_PAO_PP] ;
+parameters.alpha_P_[X_PAO_PP] = parameters.MW_P/parameters.MW_[X_PAO_PP] ;
+parameters.alpha_Mg_[X_PAO_PP] = (parameters.i_Mg_PP_mol_perP*parameters.MW_Mg)/parameters.MW_[X_PAO_PP] ;
+parameters.alpha_K_[X_PAO_PP] = (parameters.i_K_PP_mol_perP*parameters.MW_K)/parameters.MW_[X_PAO_PP] ;
+parameters.alpha_Ca_[X_PAO_PP] = (parameters.i_Ca_PP_mol_perP*parameters.MW_Ca)/parameters.MW_[X_PAO_PP] ;
+
+//PHA
+parameters.alpha_C_[X_PAO_Stor] = (4*parameters.MW_C)/parameters.MW_[X_PAO_Stor] ;
+parameters.alpha_H_[X_PAO_Stor] = (6*parameters.MW_H)/parameters.MW_[X_PAO_Stor] ;
+parameters.alpha_O_[X_PAO_Stor] = (2*parameters.MW_O)/parameters.MW_[X_PAO_Stor] ;
+
+//Str
+parameters.alpha_H_[X_Str_NH4] = (16*parameters.MW_H)/parameters.MW_[X_Str_NH4] ;
+parameters.alpha_O_[X_Str_NH4] = (10*parameters.MW_O)/parameters.MW_[X_Str_NH4] ;
+parameters.alpha_N_[X_Str_NH4] = parameters.MW_N/parameters.MW_[X_Str_NH4] ;
+parameters.alpha_P_[X_Str_NH4] = parameters.MW_P/parameters.MW_[X_Str_NH4] ;
+parameters.alpha_Mg_[X_Str_NH4] = parameters.MW_Mg/parameters.MW_[X_Str_NH4] ;
+
+//ACP
+parameters.alpha_O_[X_ACP] = (8*parameters.MW_O)/parameters.MW_[X_ACP] ;
+parameters.alpha_P_[X_ACP] = (2*parameters.MW_P)/parameters.MW_[X_ACP] ;
+parameters.alpha_Ca_[X_ACP] = (3*parameters.MW_Ca)/parameters.MW_[X_ACP] ;
+
+//X_Str_K
+parameters.alpha_H_[X_Str_K] = (12*parameters.MW_H)/parameters.MW_[X_Str_K] ;
+parameters.alpha_O_[X_Str_K] = (10*parameters.MW_O)/parameters.MW_[X_Str_K] ;
+parameters.alpha_P_[X_Str_K] = parameters.MW_P/parameters.MW_[X_Str_K] ;
+parameters.alpha_Mg_[X_Str_K] = parameters.MW_Mg/parameters.MW_[X_Str_K] ;
+parameters.alpha_K_[X_Str_K] = parameters.MW_K/parameters.MW_[X_Str_K] ;
+
+//Cal
+parameters.alpha_C_[X_Cal] = parameters.MW_C/parameters.MW_[X_Cal] ;
+parameters.alpha_O_[X_Cal] = (3*parameters.MW_O)/parameters.MW_[X_Cal] ;
+parameters.alpha_Ca_[X_Cal] = parameters.MW_Ca/parameters.MW_[X_Cal] ;
+
+//Mag
+parameters.alpha_C_[X_Mag] = parameters.MW_C/parameters.MW_[X_Mag] ;	
+parameters.alpha_O_[X_Mag] = (3*parameters.MW_O)/parameters.MW_[X_Mag] ;
+parameters.alpha_Mg_[X_Mag] = parameters.MW_Mg/parameters.MW_[X_Mag] ;
+
+//Newb
+parameters.alpha_H_[X_Newb] = parameters.MW_H/parameters.MW_[X_Newb] ;
+parameters.alpha_O_[X_Newb] = (4*parameters.MW_O)/parameters.MW_[X_Newb] ;
+parameters.alpha_P_[X_Newb] = parameters.MW_P/parameters.MW_[X_Newb] ;
+parameters.alpha_Mg_[X_Newb] = parameters.MW_Mg/parameters.MW_[X_Newb] ;
+
+//Xoh
+parameters.alpha_C_[X_OHO] = parameters.MW_C/parameters.MW_[X_OHO] ;
+parameters.alpha_H_[X_OHO] = (parameters.i_H_Org_mol_perC*parameters.MW_H)/parameters.MW_[X_OHO] ;
+parameters.alpha_O_[X_OHO] = (parameters.i_O_Org_mol_perC*parameters.MW_O)/parameters.MW_[X_OHO] ;
+parameters.alpha_N_[X_OHO] = (parameters.i_N_Org_mol_perC*parameters.MW_N)/parameters.MW_[X_OHO] ;
+parameters.alpha_P_[X_OHO] = (parameters.i_P_Org_mol_perC*parameters.MW_P)/parameters.MW_[X_OHO] ;
+
+//X_PAO
+parameters.alpha_C_[X_PAO] = parameters.MW_C/parameters.MW_[X_PAO] ;
+parameters.alpha_H_[X_PAO] = (parameters.i_H_Org_mol_perC*parameters.MW_H)/parameters.MW_[X_PAO] ;
+parameters.alpha_O_[X_PAO] = (parameters.i_O_Org_mol_perC*parameters.MW_O)/parameters.MW_[X_PAO] ;
+parameters.alpha_N_[X_PAO] = (parameters.i_N_Org_mol_perC*parameters.MW_N)/parameters.MW_[X_PAO] ;
+parameters.alpha_P_[X_PAO] = (parameters.i_P_Org_mol_perC*parameters.MW_P)/parameters.MW_[X_PAO] ;
+
+//Xad
+parameters.alpha_C_[X_AD] = parameters.MW_C/parameters.MW_[X_AD] ;
+parameters.alpha_H_[X_AD] = (parameters.i_H_Org_mol_perC*parameters.MW_H)/parameters.MW_[X_AD] ;
+parameters.alpha_O_[X_AD] = (parameters.i_O_Org_mol_perC*parameters.MW_O)/parameters.MW_[X_AD] ;
+parameters.alpha_N_[X_AD] = (parameters.i_N_Org_mol_perC*parameters.MW_N)/parameters.MW_[X_AD] ;
+parameters.alpha_P_[X_AD] = (parameters.i_P_Org_mol_perC*parameters.MW_P)/parameters.MW_[X_AD] ;
+
+
+//Xac
+parameters.alpha_C_[X_AC] = parameters.MW_C/parameters.MW_[X_AC] ;
+parameters.alpha_H_[X_AC] = (parameters.i_H_Org_mol_perC*parameters.MW_H)/parameters.MW_[X_AC] ;
+parameters.alpha_O_[X_AC] = (parameters.i_O_Org_mol_perC*parameters.MW_O)/parameters.MW_[X_AC] ;
+parameters.alpha_N_[X_AC] = (parameters.i_N_Org_mol_perC*parameters.MW_N)/parameters.MW_[X_AC] ;
+parameters.alpha_P_[X_AC] = (parameters.i_P_Org_mol_perC*parameters.MW_P)/parameters.MW_[X_AC] ;
+
+
+//Xam
+parameters.alpha_C_[X_AM] = parameters.MW_C/parameters.MW_[X_AM] ;
+parameters.alpha_H_[X_AM] = (parameters.i_H_Org_mol_perC*parameters.MW_H)/parameters.MW_[X_AM] ;
+parameters.alpha_O_[X_AM] = (parameters.i_O_Org_mol_perC*parameters.MW_O)/parameters.MW_[X_AM] ;
+parameters.alpha_N_[X_AM] = (parameters.i_N_Org_mol_perC*parameters.MW_N)/parameters.MW_[X_AM] ;
+parameters.alpha_P_[X_AM] = (parameters.i_P_Org_mol_perC*parameters.MW_P)/parameters.MW_[X_AM] ;
+
+
+//Xhm
+parameters.alpha_C_[X_HM] = parameters.MW_C/parameters.MW_[X_HM] ;
+parameters.alpha_H_[X_HM] = (parameters.i_H_Org_mol_perC*parameters.MW_H)/parameters.MW_[X_HM] ;
+parameters.alpha_O_[X_HM] = (parameters.i_O_Org_mol_perC*parameters.MW_O)/parameters.MW_[X_HM] ;
+parameters.alpha_N_[X_HM] = (parameters.i_N_Org_mol_perC*parameters.MW_N)/parameters.MW_[X_HM] ;
+parameters.alpha_P_[X_HM] = (parameters.i_P_Org_mol_perC*parameters.MW_P)/parameters.MW_[X_HM] ;
+
+//ER
+parameters.alpha_C_[X_U_Org] = parameters.MW_C/parameters.MW_[X_U_Org] ;
+parameters.alpha_H_[X_U_Org] = (parameters.i_H_XUOrg_mol_perC*parameters.MW_H)/parameters.MW_[X_U_Org] ;
+parameters.alpha_O_[X_U_Org] = (parameters.i_O_XUOrg_mol_perC*parameters.MW_O)/parameters.MW_[X_U_Org] ;
+parameters.alpha_N_[X_U_Org] = (parameters.i_N_XUOrg_mol_perC*parameters.MW_N)/parameters.MW_[X_U_Org] ;
+parameters.alpha_P_[X_U_Org] = (parameters.i_P_XUOrg_mol_perC*parameters.MW_P)/parameters.MW_[X_U_Org] ;
+
+//BPO_PS
+parameters.alpha_C_[X_B_Inf] = parameters.MW_C/parameters.MW_[X_B_Inf] ;
+parameters.alpha_H_[X_B_Inf] = (parameters.i_H_XBInf_mol_perC*parameters.MW_H)/parameters.MW_[X_B_Inf] ;
+parameters.alpha_O_[X_B_Inf] = (parameters.i_O_XBInf_mol_perC*parameters.MW_O)/parameters.MW_[X_B_Inf] ;
+parameters.alpha_N_[X_B_Inf] = (parameters.i_N_XBInf_mol_perC*parameters.MW_N)/parameters.MW_[X_B_Inf] ;
+parameters.alpha_P_[X_B_Inf] = (parameters.i_P_XBInf_mol_perC*parameters.MW_P)/parameters.MW_[X_B_Inf] ;
+
+//ISS
+parameters.alpha_ISS_[X_ISS] = 1 ;
+
+//X_NO
+parameters.alpha_C_[X_ANO] = parameters.MW_C/parameters.MW_[X_ANO] ;
+parameters.alpha_H_[X_ANO] = (parameters.i_H_Org_mol_perC*parameters.MW_H)/parameters.MW_[X_ANO] ;
+parameters.alpha_O_[X_ANO] = (parameters.i_O_Org_mol_perC*parameters.MW_O)/parameters.MW_[X_ANO] ;
+parameters.alpha_N_[X_ANO] = (parameters.i_N_Org_mol_perC*parameters.MW_N)/parameters.MW_[X_ANO] ;
+parameters.alpha_P_[X_ANO] = (parameters.i_P_Org_mol_perC*parameters.MW_P)/parameters.MW_[X_ANO] ;
+
+//CO2
+parameters.alpha_C_[G_CO2] = parameters.MW_C/parameters.MW_[G_CO2] ;
+parameters.alpha_O_[G_CO2] = (2*parameters.MW_O)/parameters.MW_[G_CO2] ;
+
+//CH4
+parameters.alpha_C_[G_CH4] = parameters.MW_C/parameters.MW_[G_CH4] ;
+parameters.alpha_H_[G_CH4] = (4*parameters.MW_H)/parameters.MW_[G_CH4] ;
+
+#endif // PWM_SA

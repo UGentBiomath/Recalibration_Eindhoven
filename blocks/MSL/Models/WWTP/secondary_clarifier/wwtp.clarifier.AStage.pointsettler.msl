@@ -1,0 +1,181 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:58$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_CLARIFIER_ASTAGE_POINTSETTLER
+#define WWTP_CLARIFIER_ASTAGE_POINTSETTLER
+
+#ifdef ASM1Temp
+
+CLASS SecondaryPointSettler_AStage (* icon = "secondary_clarifier" *) "Point-settler model for secondary clarifier, in the scope of ASM1 A-stage"
+EXTENDS PointSettler_AStage WITH
+{:
+
+  comments <- "Point-settler model for secondary clarifier, in the scope of ASM1 A-stage";
+
+  parameters <-
+  {
+    OBJ f_ns "Non-settleable fraction of suspended solids" : Fraction := {: value <- 0.6 ; group <- "Settling" :};
+  };
+  
+  equations <-
+  {
+    state.f_ns_help = IF (state.Q_Under_Actual > 0) THEN parameters.f_ns
+      ELSE 1 ;
+  };
+
+:};
+
+CLASS PointSettler_AStage "Point-settler for A-stage state vector" EXTENDS BaseSettler_AStage WITH
+{:
+
+  comments <- "Point-settler for A-stage state vector";
+
+  state <-
+  {
+    OBJ Help_X_Out (* hidden = "1" *) "" : MassFlux;
+    OBJ Help_X_Under (* hidden = "1" *) "" : MassFlux;
+    OBJ f_Out (* hidden = "1" *) "Fraction of the influent flux going to the overflow" : Fraction ;
+    OBJ f_Under (* hidden = "1" *) "Fraction of the influent flux going to the underflow" : Fraction ;
+    OBJ X_Out (* is_favorite = "1" *) "Effluent suspended solids concentration" : Concentration := {: group <- "Concentration" :};
+    OBJ X_Under (* is_favorite = "1" *) "Underflow suspended solids concentration" : Concentration := {: group <- "Concentration" :};
+    // PUMPING ENERGY
+    OBJ f_ns_help (* hidden = "1" *) "Non-settleable fraction of suspended solids" : Fraction ;
+  };
+
+  equations <-
+  {
+    state.f_Out = IF (state.Q_In <= interface.Q_Under) THEN 0.0
+      ELSE (state.Q_In - interface.Q_Under) / state.Q_In ;
+    
+    state.f_Under = IF (state.Q_In <= interface.Q_Under) THEN 1.0
+      ELSE interface.Q_Under / state.Q_In ;
+
+    {FOREACH Comp_Index IN {1 .. ASM1_ABIndexOfLastSolubleComponent}:
+      interface.Outflow[Comp_Index] = - state.InFluxPerComponent[Comp_Index] * state.f_Out ; };
+    
+    {FOREACH Comp_Index IN {ASM1_ABIndexOfFirstSolubleComponent .. ASM1_ABIndexOfLastSolubleComponent}:
+      interface.Underflow[Comp_Index] = - state.InFluxPerComponent[Comp_Index] * state.f_Under ; };
+
+    {FOREACH Comp_Index IN {ASM1_ABIndexOfFirstParticulateComponent .. ASM1_ABIndexOfLastParticulateComponent}:
+      interface.Outflow[Comp_Index] = - state.InFluxPerComponent[Comp_Index] * state.f_Out * state.f_ns_help ; };   
+    
+    {FOREACH Comp_Index IN {ASM1_ABIndexOfFirstParticulateComponent .. ASM1_ABIndexOfLastParticulateComponent}:
+      interface.Underflow[Comp_Index] = IF (state.Q_In <= interface.Q_Under) THEN
+        IF (state.Q_In <= 0.0) THEN 0.0
+          ELSE - state.InFluxPerComponent[Comp_Index]
+        ELSE - (state.InFluxPerComponent[Comp_Index] + interface.Outflow[Comp_Index]) ; };
+
+    #ifdef CalculateTSSComponent
+      state.Help_X_Out = (SUMOVER Comp_Index IN {ASM1_ABIndexOfFirstTSSComponent .. ASM1_ABIndexOfLastTSSComponent}:
+      - interface.Outflow[Comp_Index] ) ;
+      
+      state.X_Out = IF (state.Q_In <= interface.Q_Under) THEN 0.0
+        ELSE state.Help_X_Out / (state.Q_In - interface.Q_Under) * parameters.F_TSS_COD ;
+      
+      state.Help_X_Under = (SUMOVER Comp_Index IN {ASM1_ABIndexOfFirstTSSComponent .. ASM1_ABIndexOfLastTSSComponent}:
+        - interface.Underflow[Comp_Index] ) ;
+      
+      state.X_Under = IF (state.Q_In <= interface.Q_Under) THEN
+        IF (state.Q_In <= 0.0) THEN 0.0
+          ELSE state.Help_X_Under / state.Q_In * parameters.F_TSS_COD
+        ELSE IF (interface.Q_Under <= 0.0) THEN 0.0
+          ELSE state.Help_X_Under / interface.Q_Under * parameters.F_TSS_COD ;
+    #endif // CalculateTSSComponent
+   };
+
+:};
+
+CLASS BaseSettler_AStage SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  { 
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : ASM1_ABInWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Overflow" : ASM1_ABOutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+    OBJ Underflow (* terminal = "out_2" *) "Underflow" : ASM1_ABOutWWTPTerminal := {: causality <- "COUT" ; group <- "Underflow" :};
+    OBJ Q_Under (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Underflow rate" : FlowRate := {: causality <- "CIN" ; value <- 10 ; group <- "Operational" :};  
+    OBJ PumpingEnergy (* terminal = "out_3" *)"Pumping energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ PumpingPower (* terminal = "out_3" *) "Pumping power" : Real := {: causality <- "COUT"; unit <- "kWh/d" ; group <- "Energy" :};
+  };
+  
+  parameters <- 
+  { 
+    OBJ F_TSS_COD "Fraction TSS/COD" : Fraction := {: value <- 0.75 ; group <- "Conversion factors" :};
+    // PUMPING ENERGY
+    OBJ F_Energy_FlowRate "Conversion factor Energy needed/Pump flow rate" : EnergyForPumping := {: value <- 0.04 ; group <- "Energy":};
+  };
+
+  state <-
+  {
+    OBJ InFluxPerComponent (* hidden = "1" *) "Vector containing incoming fluxes for all components" : ASM1_ABMassFluxVector ;
+    OBJ Q_In (* is_favorite = "1" *) "Influent flow rate" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Out (* is_favorite = "1" *) "Effluent flow rate" : FlowRate := {: group <- "Operational" :};
+    OBJ Q_Under_Actual (* is_favorite = "1" *) "Underflow rate" : FlowRate := {: group <- "Operational" :};
+    OBJ X_In (* is_favorite = "1" *) "Influent suspended solids concentration" : Concentration := {: group <- "Concentration" :};
+    OBJ SolidFlux_In (* hidden = "1" *) "Sum of massfluxes of particulates" : MassFlux ;
+    // PUMPING ENERGY
+    OBJ Integ_PE (* hidden = "1" *)"Integral Pumping energy" : ElectricalEnergy ;
+  };
+
+  independent <- 
+  { 
+    OBJ t "Time"  : Time := {: group <- "Time" :}; 
+  };
+
+  initial <-
+  {
+    state.Integ_PE = 0.0 ;
+  };
+  
+  equations <-
+  {
+    {FOREACH Comp_Index IN {1 .. ASM1_ABNrOfComponents}: state.InFluxPerComponent[Comp_Index] =
+      SUMOVER In_Terminal IN {SelectByType(interface,ASM1_ABInWWTPTerminal)}: (In_Terminal[Comp_Index]) ; };
+    
+    state.Q_In = 1E-06 * state.InFluxPerComponent[1] ;
+  
+    state.Q_Out = state.Q_In - state.Q_Under_Actual;
+  
+    state.Q_Under_Actual = IF (state.Q_In <= interface.Q_Under) THEN state.Q_In
+     ELSE interface.Q_Under ; 
+  
+//    #ifdef CalculateTSSComponent
+      {state.SolidFlux_In =
+        SUMOVER Comp_Index IN {ASM1_ABIndexOfFirstTSSComponent .. ASM1_ABIndexOfLastTSSComponent}:
+        state.InFluxPerComponent[Comp_Index] * parameters.F_TSS_COD ;
+      };
+//    #endif // CalculateTSSComponent
+    
+    state.X_In = IF (state.Q_In <= 0.0) THEN 0.0
+      ELSE state.SolidFlux_In / state.Q_In ;
+
+    interface.Underflow[1] = - state.Q_Under_Actual / 1E-06 ;
+
+    // PUMPING ENERGY
+    //(EURE 26/07/2019) [kWh/m3] * [m3/d] = [kWh/d]
+    interface.PumpingPower = parameters.F_Energy_FlowRate * state.Q_Under_Actual ;
+    DERIV(state.Integ_PE,[independent.t])=  state.Q_Under_Actual ;
+    interface.PumpingEnergy = parameters.F_Energy_FlowRate * state.Integ_PE ;
+  };
+  
+:};
+
+
+#endif // ASM1Temp
+
+
+#endif // WWTP_CLARIFIER_ASTAGE_POINTSETTLER

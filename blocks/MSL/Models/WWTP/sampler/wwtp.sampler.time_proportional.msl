@@ -1,0 +1,83 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. maj 2019 21:58:05$
+ *
+ ******************************************************************************/
+ 
+#ifndef WWTP_SAMPLER_TIMEPROPORTIONAL
+#define WWTP_SAMPLER_TIMEPROPORTIONAL
+
+
+CLASS Time_proportional (* icon = "sampler" *) "Time-proportional sampler" EXTENDS Sampler2 WITH
+{:
+
+  parameters <-
+  {
+    OBJ V_bottles "Volume of composite sample" : Volume := {: value <- 0.002 ; group <- "Sampling" :};
+    OBJ V_sample "Volume of each aliquot; must be <= V_bottles" : Volume := {: value <- 0.0001 ; group <- "Sampling" :};
+    //(EURE 25/04/2019) should be named 'n_aliquots_comp'
+    OBJ n_samples_bottle "Number of aliquots collected for each composite" : Integer := {: group <- "Sampling" :};
+  };
+  
+  state <-
+  {
+    OBJ C_comp_meas (* hidden = "1" *) "Measured concentration in the composite sample BEFORE full bottle" : Concentration ;
+  };
+  
+  initial <-
+  {
+    parameters.n_samples_bottle = floor(parameters.V_bottles / parameters.V_sample);
+    state.n_samples_bottle_temp = 0;
+    state.C_comp_meas = 0;
+    // frequency_samp -> Help_frequency
+    state.Help_frequency = parameters.frequency / parameters.n_samples_bottle + 0.0 ;
+    parameters.Help_dt = state.Help_frequency + 0.0 ;
+  };
+  
+  equations <-
+  {
+    state.n_samples = IF (state.flag_samp_per == True) THEN
+      IF (state.flag_samp_time == True) THEN previous(state.n_samples) + 1
+      ELSE previous(state.n_samples) 
+    ELSE 0 ;     
+    
+    state.n_comp_samples = floor(state.n_samples / parameters.n_samples_bottle);
+    
+    //(EURE 25/04/2019) this is the same as the corresponding var in flow-proportional (FP) because
+    // n_samples_bottle in FP is cumulated, here (in TP) it is fixed and represents the the no. of
+    // aliquots in each composite - so it is to be multiplied by the no. of composite to equate the
+    // n_samples_bottle of FP.
+    state.n_samples_bottle_temp = state.n_samples - state.n_comp_samples * parameters.n_samples_bottle ;
+    
+    state.C_comp_meas = IF (state.flag_samp_per == True) THEN
+      IF (state.n_comp_samples == previous(state.n_comp_samples)) THEN
+        IF (state.n_samples == previous(state.n_samples)) THEN previous(state.C_comp_meas)
+        ELSE (previous(state.C_comp_meas) * (state.n_samples_bottle_temp - 1) + interface.y_M) / (state.n_samples_bottle_temp)
+      ELSE 0
+    ELSE 0;
+    
+    //(EURE 29/03/2019) this is the purpose of the model, ie the output signal (in base class)
+    state.C_meas = IF (state.flag_samp_per == True) THEN
+      IF (state.n_comp_samples > previous(state.n_comp_samples)) THEN
+        IF (previous(state.C_comp_meas) < parameters.Detection_limit) THEN parameters.Detection_limit / 2
+        ELSE (previous(state.C_comp_meas) * (parameters.n_samples_bottle - 1) + interface.y_M) / (parameters.n_samples_bottle)
+      ELSE previous(state.C_meas)
+    ELSE 0 ;
+
+    state.L_meas = 0; // do we want to model load in this sampler?
+  };
+
+:};
+
+
+#endif // WWTP_SAMPLER_TIMEPROPORTIONAL

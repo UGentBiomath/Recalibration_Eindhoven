@@ -1,0 +1,86 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 5. februar 2019 16:30:19$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_DOSING_CHEMP_FECL
+#define WWTP_DOSING_CHEMP_FECL
+
+
+#if (defined ASM2dModTemp || defined ASM2dMod1 || defined ASMG2d || defined IUWS1 || defined IUWS2)
+
+
+CLASS FeCl3 (* icon = "dosing_unit_iron" *) "Dosing unit for iron (III) hydroxide, FeCl3"
+EXTENDS ChemDosing_Base WITH
+{:
+
+  comments <- "Dosing unit for iron (III) hydroxide, FeCl3";
+
+  interface <-
+  {
+    OBJ M_Chem (* terminal = "out_2" *) "Amount of chemical dosed" : Real := {: causality <- "COUT" ; unit <- "g/d" ; group <- "Measurement data" :};
+    OBJ Q_Chem (* terminal = "out_2" *) "Flow rate of chemical dosed" : FlowRate := {: causality <- "COUT" ; group <- "Measurement data" :};
+    OBJ C_Eq (* terminal = "out_2" *) ".." : Real := {: causality <- "COUT" ; group <- "Measurement data" :};
+  };
+
+  parameters <-
+  {
+    OBJ Strength "Solution strength (% w/w)" : Real := {: value <- 12.0 ; unit <- "%" ; group <- "Operational" :};
+    OBJ Rho "Specific weight of the solution" : Concentration := {: value <- 1.5E+06 ; group <- "Operational" :};
+    OBJ C_Dose (* fixed = "1" *) "Concentration of the solution" : Concentration := {: value <- 0.18E+06 ; group <- "Operational" :};
+
+    OBJ MW_FeCl3 (* hidden = "0" *) "Molecular weight of the FeCl3" : Real := {: value <- 162.2 ; group <- "System" :};
+    OBJ P_Equiv_FeCl3 (* hidden = "0" *) "Molar equivalence to phosphorous" : Real := {: value <- 1.5 ; group <- "Operational" :};
+
+    OBJ MW (* hidden = "1" *) "Molecular weight of the species used" : Real := {: value <- 55.845 ; group <- "System" :};
+    OBJ P_Equiv (* hidden = "1" *) "Molar equivalence to phosphorous" : Real := {: value <- 1.0 ; group <- "Operational" :};
+  };
+
+  initial <-
+  {
+//    parameters.MW_Ref := parameters.MW_FeOH3 ;
+    parameters.MW := parameters.MW_FeCl3 ;
+    parameters.P_Equiv := parameters.P_Equiv_FeCl3 ;
+    parameters.C_Dose := parameters.Strength * parameters.Rho / 100.0 ;
+  };
+
+  equations <-
+  {
+    interface.C_Eq = parameters.C_Dose * parameters.P_Equiv * (parameters.MW_Ref / parameters.MW) ;
+    
+    // Q = m3 product / d
+    // C = g product / m3 product
+    // Q * C = g product / d
+    // P_Equiv = 1.5 = mol Fe / mol P
+    // MW_Ref = g MeOH / mol MeOH
+    // MW = g FeCl3 / mol FeCl3
+    // MW_Ref / MW = g MeOH / g FeCl3 
+    
+    // (g product / d) * (-) * (g MeOH / g product) -> g MeOH / d
+    
+    interface.Outflow[X_MEOH] = - interface.Q_Dose * parameters.C_Dose * parameters.P_Equiv * (parameters.MW_Ref / parameters.MW) ;
+
+    interface.M_Chem = interface.Q_Dose * parameters.C_Dose ;
+
+    interface.Q_Chem = interface.Q_Dose ;
+  };
+
+:};
+
+
+#endif // ASM2dModTemp || defined ASMG2d || defined ASM2dM
+
+
+#endif // WWTP_DOSING_CHEMP_FECL

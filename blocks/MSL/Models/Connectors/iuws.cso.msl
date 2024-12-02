@@ -1,0 +1,73 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date $
+ *
+ ******************************************************************************/
+
+ 
+#ifndef IUWS_CONNECTORS_CSO
+#define IUWS_CONNECTORS_CSO
+
+
+#if (defined ASM2dModTemp || defined IUWS1)
+
+CLASS CSOToRiver_Simple_Base "A base class for a sewer (Kosim) to river (Duflow Simple) influent transformer for CSOs"
+EXTENDS SewerConnectors_Base WITH
+{:
+
+  interface <-
+  {
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutRiverTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+  };
+  
+  parameters <-
+  {
+    OBJ O2_CSO (* is_favorite = "1" *) "O2 concentration in CSO" : Concentration := {: value <- 1.0; group <- "Concentrations" :};
+    // consider TKN when possible in river model
+    OBJ fBOD1_BOD "Fraction of BODfast in BOD" : Fraction := {: value <- 0.85; group <- "Fractionation" :};
+    OBJ fBOD2_CODmBOD "Fraction of BODslow in (COD-BOD)" : Fraction := {: value <- 0.4; group <- "Fractionation" :};
+    OBJ fBOD1p_BODf "Fraction of BOD1p in BODfast" : Fraction := {: value <- 0.3; group <- "Fractionation" :};
+    OBJ fBOD2p_BODs "Fraction of BOD2p in BODslow" : Fraction := {: value <- 0.5; group <- "Fractionation" :};
+    OBJ f_s "Settling efficiency for BOD2" : Fraction := {: value <- 0.0; group <- "Fractionation" :};
+    OBJ f_CSO (* is_favorite = "1" *) "Fraction of flow to CSO: 0=no CSO, 1=all to CSO" : Fraction := {: value <- 1.0; group <- "Control" :};
+  };
+  
+  state <-
+  {
+    OBJ Help_BOD1 (* hidden = "1" *) "Total BOD1 (s+p)" : Concentration ;
+    OBJ Help_BOD2 (* hidden = "1" *) "BOD2 (s+p) from BOD" : Concentration ;
+    OBJ Help_CBOD2 (* hidden = "1" *) "BOD2 (s+p) from COD" : Concentration ;
+    OBJ Help_C_NH4 (* hidden = "1" *) "NH4 concentration" : Concentration ;
+  };
+  
+  equations <-
+  {
+    //WATER
+    interface.Outflow[H2O] = - parameters.f_CSO * interface.Inflow[H2O] ;
+    interface.Outflow[O2] = - (parameters.f_CSO * state.Q_In) * parameters.O2_CSO ;
+    interface.Outflow[NH4] = - (parameters.f_CSO * state.Q_In) * state.Help_C_NH4 ;
+    interface.Outflow[BOD1] = - (parameters.f_CSO * state.Q_In) * state.Help_BOD1 * (1 - parameters.fBOD1p_BODf) ; // * state.Help_C_BOD * (1 - parameters.fBOD1p_BODf) ;
+    interface.Outflow[BOD1p] = - (parameters.f_CSO * state.Q_In) * state.Help_BOD1 * parameters.fBOD1p_BODf * (1 - parameters.f_s); // * state.Help_C_BOD * parameters.fBOD1p_BODf * (1 - parameters.f_s);
+    interface.Outflow[BOD2] = - (parameters.f_CSO * state.Q_In) * (state.Help_BOD2 * (1 - parameters.fBOD2p_BODs) + state.Help_CBOD2) ;  
+    interface.Outflow[BOD2p] = - (parameters.f_CSO * state.Q_In) * (state.Help_BOD2 * parameters.fBOD2p_BODs + state.Help_CBOD2) * (1 - parameters.f_s) ; 
+  };
+
+:};
+
+
+#include "Connectors/iuws.cso.simple.fixconc.msl"
+#include "Connectors/iuws.cso.simple.sewconc.msl"
+
+#endif // ASM2dModTemp, IUWS1
+
+#endif // IUWS_CONNECTORS_CSO

@@ -1,0 +1,52 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+  interface <-
+  {
+    #include "Siegrist/wwtp.VolumeSiegristModel.interface.msl"
+  };
+
+  parameters <-
+  {
+    #include "Siegrist/wwtp.VolumeSiegristConversionModel.parameters.msl"
+  };
+
+  state <-
+  {
+    #include "Siegrist/wwtp.VolumeSiegristConversionModel.state.msl"
+  };
+
+  initial <-
+  {
+    // Params
+
+    parameters.TempCoef1 := exp(0.069 * (interface.Temp - 35.0));
+    parameters.TempCoef2 := exp(0.069 * (interface.Temp - 35.0));
+
+    // StateVars
+
+
+    // Extra
+
+
+    // Stoichiometry
+
+    #include "Siegrist/wwtp.VolumeSiegristConversionModel.stoichiometry.msl"
+  };
+
+  equations <-
+  {
+    // StateVars
+
+
+    // Extra
+
+
+    // Kinetics
+
+    #include "Siegrist/wwtp.VolumeSiegristConversionModel.kinetics.msl"
+
+    // InterfaceVars
+
+    #include "Siegrist/wwtp.VolumeSiegristModel.sensors.msl"
+  };
+

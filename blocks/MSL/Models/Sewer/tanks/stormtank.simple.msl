@@ -1,0 +1,67 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:30$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_TANKS_STORMTANK_SIMPLE
+#define SEWER_TANKS_STORMTANK_SIMPLE
+
+
+ CLASS StormTank_Simple (* icon = "Tank" *)
+ "A tank with lateral weir and overflow when full. The outflow is function of the water level inside the tank and can therefore be higher than the maximum outflow calculated for the downstream pipe"
+ EXTENDS StormTank_Base WITH
+ {:
+ 
+  comments <- "A tank with lateral weir and overflow when full. The outflow is function of the water level inside the tank and can therefore be higher than the maximum outflow calculated for the downstream pipe";
+
+  parameters <-
+  {
+   // consider moving to base class (26/02/2015)
+   OBJ f_Sed (* is_favorite = "1" *) "Sedimentation fraction" : Fraction:= {: value <- 0.25; group <- "Hydraulic":};
+  };
+
+  equations <-
+  {
+   state.Q_Out = state.Help_Q ;
+   // consider moving to base class? (26/02/2015)
+   state.Q_over = IF (state.V < parameters.Vmax) THEN 0
+      ELSE parameters.alpha * pow(((state.V - parameters.Vmax) / (parameters.W * parameters.L)), parameters.beta) ;
+
+   {FOREACH Comp_Index IN {Kosim1IndexOfFirstParticulateComponent .. Kosim1IndexOfLastParticulateComponent}:
+      state.C[Comp_Index] = IF (state.V == 0) THEN 0
+          ELSE state.SewM[Comp_Index] / state.V ; };
+          
+   {FOREACH Comp_Index IN {Kosim1IndexOfFirstParticulateComponent .. Kosim1IndexOfLastParticulateComponent}:
+      interface.Outflow1[Comp_Index] = IF (state.WaterLevel < parameters.H_Min) THEN 0 // Added by WDK20090609
+          ELSE IF (state.V > (parameters.Vmax / 8.0)) THEN - state.C[Comp_Index] * state.Q_Out * (1.0 - parameters.f_Sed)
+              ELSE - state.C[Comp_Index] * state.Q_Out ; };
+	  
+   {FOREACH Comp_Index IN {Kosim1IndexOfFirstSolubleComponent .. Kosim1IndexOfLastSolubleComponent}:
+      interface.Outflow1[Comp_Index] = IF (state.WaterLevel < parameters.H_Min) THEN 0 // Added by WDK20090609
+          ELSE - state.C[Comp_Index] * state.Q_Out ; };
+
+   {FOREACH Comp_Index IN {Kosim1IndexOfFirstParticulateComponent .. Kosim1IndexOfLastParticulateComponent}:
+      interface.Outflow2[Comp_Index] = IF (state.V > (parameters.Vmax / 8.0)) THEN - state.C[Comp_Index] * state.Q_over * (1.0 - parameters.f_Sed)
+          ELSE - state.C[Comp_Index] * state.Q_over ; };		
+		
+   {FOREACH Comp_Index IN {Kosim1IndexOfFirstSolubleComponent .. Kosim1IndexOfLastSolubleComponent}:
+      interface.Outflow2[Comp_Index] = - state.C[Comp_Index] * state.Q_over ; }; 	  		    
+  
+  };
+
+ :};
+
+
+#endif // SEWER_TANKS_STORMTANK_SIMPLE

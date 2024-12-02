@@ -1,0 +1,149 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 10. januar 2017 12:49:01$
+ *
+ ******************************************************************************/
+
+// EURE 11/03/2015 COMPLETELY RE-ARRANGED COMPARED TO W2014
+
+#ifndef WWTP_BASE_UCTAD
+#define WWTP_BASE_UCTAD
+
+#if (defined PWM_SA)
+
+CLASS UCTAD_LiquidPhaseDigester EXTENDS DigesterConversionModel WITH
+{:
+
+  //state.ConversionTermPerComponent[G_CO2] and [G_N2] are missing - expected to be implemented at headspace level
+  
+  #include "PWM_SA/wwtp.VolumePWM_SAUCTADConversionModel.body.msl"
+
+:};
+
+CLASS DigesterConversionModel EXTENDS BaseDigester WITH
+{:
+
+  parameters <- 
+  { 
+    OBJ Stoichiometry (* hidden = "1" *) "A matrix structure containing stoichiometry" : PhysicalQuantityType[UCTADNrOfReactions;][UCTADNrOfComponents,];
+  };
+
+  state <- 
+  { 
+    OBJ Kinetics (* hidden = "1" *) "A vector containing kinetics for all reactions" : PhysicalQuantityType[UCTADNrOfReactions;];
+    OBJ Temp_liq (* is_favorite = "1" *) "Actual temperature in reactor" : CelsiusTemperature  := {: group <- "Operational" :}; 
+  };
+
+  equations <- 
+  {  
+    //Conversions, excluding CO2 gas
+    {FOREACH Comp_Index IN {IndexOfSolvent .. G_CH4} :
+    state.ConversionTermPerComponent[Comp_Index] = SUMOVER Reaction_Index IN {1 .. UCTADNrOfReactions}:
+      (parameters.Stoichiometry[Reaction_Index][Comp_Index] * state.Kinetics[Reaction_Index]) * state.V ; };
+  };
+
+:};
+
+CLASS BaseDigester SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" :  InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Concentrate" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Concentrate" :};
+    OBJ Underflow (* terminal = "out_2" *) "Underflow" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Underflow" :};   
+  };
+  
+  parameters <-
+  {
+    OBJ V_liq (* is_favorite = "1";  *) "Volume of liquid in the reactor" : Volume := {: value <- 3400; group <- "Dimension"; :};
+    OBJ Q_Under (* is_favorite = "1" *) "Underflow rate" : FlowRate := {: value <- 0.0 ; group <- "Operational" :};
+    OBJ f_X_Retention "Fractional solids retention factor" : Fraction := {: value <- 0.0 ; group <- "Settling":};
+  };
+  
+  state <-
+  {
+    OBJ M "Vector containing masses for all the components" : MassVector :=  // ID 2, CJB (EURE)
+    [{: value <- 1000000000:}, {: value <- 77320.71  :}, {: value <- 106204.99 :}, {: value <- 55254.96 :}, 
+    {: value <- 6016.87 :}, {: value <- 2406.74 :}, {: value <- 793650.94 :}, {: value <- 26155.68 :}, 
+    {: value <- 15.20 :}, {: value <- 90.81 :}, {: value <- 3225485 :}, {: value <- 9626.99 :}, 
+    {: value <- 595290.67 :}, {: value <- 0.34274 :}, {: value <- 10028.62 :}, {: value <- 9.065 :}, 
+    {: value <- 643.34 :}, {: value <- 0.01 :}, {: value <- 0.01 :}, {: value <- 10462302.56 :}, 
+    {: value <- 14772.92 :}, {: value <- 0.01 :}, {: value <- 0.01 :}, {: value <- 3.2714E-06 :}, 
+    {: value <- 8.1785E-07 :}, {: value <- 8.178E-07 :}, {: value <- 8.178E-07 :}, {: value <- 8.178E-07 :}, 
+    {: value <- 8.178E-07 :}, {: value <- 99.06 :}, {: value <- 0.01 :}, {: value <- 796324.32 :}, 
+    {: value <- 354.04 :}, {: value <- 73165.14 :}, {: value <- 15043.68 :}, {: value <- 235234.96 :}, 
+    {: value <- 61044.94 :}, {: value <- 0.0005487 :}, {: value <- 4339036.66 :}, {: value <- 2165.00 :}, 
+    {: value <- 3322.58 :}, {: value <- 0.111 :}; ];
+
+//    OBJ InFluxPerComponent (* hidden = "1" *) "Vector containing incoming fluxes for all the components": UCTADMassFluxVector;
+    OBJ OutFluxPerComponent (* hidden = "1" *) "Vector containing outgoing fluxes for all the components": UCTADMassFluxVector;
+    OBJ ConversionTermPerComponent (* hidden = "1" *) "Vector containing conversion terms for all the components": UCTADMassFluxVector ;
+    //
+    OBJ C "Vector containing concentrations for all the components" : ConcentrationVector := {: group <- "Concentration" :};
+    OBJ V (* is_favorite = "1" *) "Reactor volume" : Volume := {: group <- "Operational"; :};
+    OBJ Q_Out (* is_favorite = "1" *) "Effluent flow rate" : FlowRate := {: group <- "Operational"; :};
+    OBJ Q_Over (* is_favorite = "1" *) "Overflow rate" : FlowRate := {: group <- "Operational" :};
+  };
+
+  independent <- 
+  { 
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+  };
+  
+  equations <-
+  {
+    // Fluxes IN, excluding gas components
+//    {FOREACH Comp_Index IN {IndexOfSolvent .. IndexOfLastParticulateComponent}:
+//    state.InFluxPerComponent[Comp_Index] = interface.Inflow[Comp_Index] ; };
+
+    // Fluxes OUY, excluding gas components: constant volume is assumed
+    state.Q_Out = (interface.Inflow[IndexOfSolvent] + state.ConversionTermPerComponent[IndexOfSolvent]) / 1000000 ;
+    {FOREACH Comp_Index IN {IndexOfSolvent .. IndexOfLastParticulateComponent}:
+      state.OutFluxPerComponent[Comp_Index] = state.C[Comp_Index] * state.Q_Out ;	};
+    
+    // Concentrations, excluding gas components
+	  state.C[IndexOfSolvent] = 1000000;
+    {FOREACH Comp_Index IN {IndexOfFirstSolubleComponent .. IndexOfLastParticulateComponent}:
+      state.C[Comp_Index] = state.M[Comp_Index] / state.V ; };
+    
+    // Masses excluding gas components
+    {FOREACH Comp_Index IN {IndexOfSolvent .. IndexOfLastParticulateComponent}:
+      DERIV(state.M[Comp_Index],[independent.t]) =
+//    state.InFluxPerComponent[Comp_Index] - state.OutFluxPerComponent[Comp_Index] + state.ConversionTermPerComponent[Comp_Index] ; };
+      interface.Inflow[Comp_Index] - state.OutFluxPerComponent[Comp_Index] + state.ConversionTermPerComponent[Comp_Index] ; };
+
+    state.Q_Over = state.Q_Out - parameters.Q_Under ;
+    
+    // OUTFLOW
+    {FOREACH Comp_Index IN {IndexOfSolvent .. IndexOfLastSolubleComponent}:
+      interface.Outflow[Comp_Index] = - state.Q_Over * state.C[Comp_Index] ; } ;
+    {FOREACH Comp_Index IN {IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent}:
+      interface.Outflow[Comp_Index] = - state.Q_Over * state.C[Comp_Index] * (1.0 - parameters.f_X_Retention) ; } ;
+    {FOREACH Comp_Index IN {IndexOfFirstGasComponent .. IndexOfLastGasComponent}:
+      interface.Outflow[Comp_Index] = 0.0 ; } ;
+
+    // UNDERFLOW
+    {FOREACH Comp_Index IN {IndexOfSolvent .. IndexOfLastParticulateComponent}:
+      interface.Underflow[Comp_Index] = - state.OutFluxPerComponent[Comp_Index] - interface.Outflow[Comp_Index] ; } ;
+    {FOREACH Comp_Index IN {IndexOfFirstGasComponent .. IndexOfLastGasComponent}:
+      interface.Outflow[Comp_Index] = 0.0 ; } ;
+  };
+
+:};
+
+#include "WWTP/anaerobic_digestion_unit/wwtp.digester.uct.msl"
+
+#endif // PWM_SA
+
+#endif // WWTP_BASE_UCTAD

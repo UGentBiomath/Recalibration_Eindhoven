@@ -1,0 +1,728 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Tornado>
+<Exp Name="" Version="1.0" Type="ObjEval">
+<Props>
+<Prop Name="TornadoVersion" Value="2023 "/>
+<Prop Name="Author" Value="DHI\eure"/>
+<Prop Name="Date" Value="Wed Oct 26 11:46:53 2022"/>
+<Prop Name="Desc" Value=""/>
+<Prop Name="FileName" Value="C:\DHI\Rel2023 main-pro release\SCM_Sync_Tornado_Tornado_Tornado\Data\WEST\data\samples\BSM1_OL_ASM1\BSM1_OL_ASM1.Steady State.ObjEval.Exp.xml|.Tornado"/>
+<Prop Name="DisplayName" Value=""/>
+<Prop Name="UnitSystem" Value="Model-based"/>
+</Props>
+<ObjEval>
+<Obj>
+<Exp Name="" Version="1.0" Type="Simul">
+<Props>
+<Prop Name="TornadoVersion" Value=""/>
+<Prop Name="Author" Value=""/>
+<Prop Name="Date" Value=""/>
+<Prop Name="Desc" Value=""/>
+<Prop Name="FileName" Value="C:\DHI\Rel2023 main-pro release\SCM_Sync_Tornado_Tornado_Tornado\Data\WEST\data\samples\BSM1_OL_ASM1\BSM1_OL_ASM1.Steady State.ObjEval.Exp.xml|.Tornado.Exp.ObjEval.Obj"/>
+<Prop Name="DisplayName" Value=""/>
+<Prop Name="UnitSystem" Value="Model-based"/>
+</Props>
+<Simul>
+<Model Name="_BSM1_OL_ASM1_" Cached="false" CheckBounds="true" StopWhenBoundsViolation="false" StopWhenSteadyState="false" SteadyStateTol="1e-06">
+<Quantities>
+<Quantity Name=".t" DisplayUnit="d"/>
+<Quantity Name=".ASU_1.WWTPSpecificVolume(H2O)" Value="1e-06"/>
+<Quantity Name=".ASU_1.Stoichiometry(AerGrowthHetero)(S_S)" Value="-1.49253731343284"/>
+<Quantity Name=".ASU_1.Stoichiometry(AnGrowthHetero)(S_S)" Value="-1.49253731343284"/>
+<Quantity Name=".ASU_1.Stoichiometry(HydrolOfEntrOrg)(S_S)" Value="1"/>
+<Quantity Name=".ASU_1.Stoichiometry(AerGrowthHetero)(S_O)" Value="-0.492537313432836"/>
+<Quantity Name=".ASU_1.Stoichiometry(AerGrowthAuto)(S_O)" Value="-18.0416666666667"/>
+<Quantity Name=".ASU_1.Stoichiometry(Aeration)(S_O)" Value="1"/>
+<Quantity Name=".ASU_1.Stoichiometry(AnGrowthHetero)(S_NO)" Value="-0.172215843857635"/>
+<Quantity Name=".ASU_1.Stoichiometry(AerGrowthAuto)(S_NO)" Value="4.16666666666667"/>
+<Quantity Name=".ASU_1.Stoichiometry(AmmonOfSolOrgN)(S_ND)" Value="-1"/>
+<Quantity Name=".ASU_1.Stoichiometry(HydrolOfEntrOrgN)(S_ND)" Value="1"/>
+<Quantity Name=".ASU_1.Stoichiometry(AerGrowthHetero)(S_NH)" Value="-0.086"/>
+<Quantity Name=".ASU_1.Stoichiometry(AnGrowthHetero)(S_NH)" Value="-0.086"/>
+<Quantity Name=".ASU_1.Stoichiometry(AerGrowthAuto)(S_NH)" Value="-4.25266666666667"/>
+<Quantity Name=".ASU_1.Stoichiometry(AmmonOfSolOrgN)(S_NH)" Value="1"/>
+<Quantity Name=".ASU_1.Stoichiometry(AerGrowthHetero)(S_ALK)" Value="-0.00614285714285714"/>
+<Quantity Name=".ASU_1.Stoichiometry(AnGrowthHetero)(S_ALK)" Value="0.00615827456125963"/>
+<Quantity Name=".ASU_1.Stoichiometry(AerGrowthAuto)(S_ALK)" Value="-0.601380952380952"/>
+<Quantity Name=".ASU_1.Stoichiometry(AmmonOfSolOrgN)(S_ALK)" Value="0.0714285714285714"/>
+<Quantity Name=".ASU_1.Stoichiometry(AerGrowthHetero)(X_BH)" Value="1"/>
+<Quantity Name=".ASU_1.Stoichiometry(AnGrowthHetero)(X_BH)" Value="1"/>
+<Quantity Name=".ASU_1.Stoichiometry(DecayOfHetero)(X_BH)" Value="-1"/>
+<Quantity Name=".ASU_1.Stoichiometry(AerGrowthAuto)(X_BA)" Value="1"/>
+<Quantity Name=".ASU_1.Stoichiometry(DecayOfAuto)(X_BA)" Value="-1"/>
+<Quantity Name=".ASU_1.Stoichiometry(DecayOfHetero)(X_P)" Value="0.08"/>
+<Quantity Name=".ASU_1.Stoichiometry(DecayOfAuto)(X_P)" Value="0.08"/>
+<Quantity Name=".ASU_1.Stoichiometry(DecayOfHetero)(X_S)" Value="0.92"/>
+<Quantity Name=".ASU_1.Stoichiometry(DecayOfAuto)(X_S)" Value="0.92"/>
+<Quantity Name=".ASU_1.Stoichiometry(HydrolOfEntrOrg)(X_S)" Value="-1"/>
+<Quantity Name=".ASU_1.Stoichiometry(DecayOfHetero)(X_ND)" Value="0.0812"/>
+<Quantity Name=".ASU_1.Stoichiometry(DecayOfAuto)(X_ND)" Value="0.0812"/>
+<Quantity Name=".ASU_1.Stoichiometry(HydrolOfEntrOrgN)(X_ND)" Value="-1"/>
+<Quantity Name=".ASU_1.Inflow(H2O)" Value="95261000000"/>
+<Quantity Name=".ASU_1.Inflow(S_I)" Value="2857830.00000001"/>
+<Quantity Name=".ASU_1.Inflow(S_S)" Value="1521655.91286362"/>
+<Quantity Name=".ASU_1.Inflow(S_O)" Value="18216.6120004083"/>
+<Quantity Name=".ASU_1.Inflow(S_NO)" Value="532780.613422583"/>
+<Quantity Name=".ASU_1.Inflow(S_ND)" Value="201518.174226583"/>
+<Quantity Name=".ASU_1.Inflow(S_NH)" Value="1295667.04992297"/>
+<Quantity Name=".ASU_1.Inflow(S_ALK)" Value="2691161.14306877"/>
+<Quantity Name=".ASU_1.Inflow(X_I)" Value="102506460.397089"/>
+<Quantity Name=".ASU_1.Inflow(X_BH)" Value="148175707.928147"/>
+<Quantity Name=".ASU_1.Inflow(X_BA)" Value="7393416.29526177"/>
+<Quantity Name=".ASU_1.Inflow(X_P)" Value="56901807.2858102"/>
+<Quantity Name=".ASU_1.Inflow(X_S)" Value="7551714.34677464"/>
+<Quantity Name=".ASU_1.Inflow(X_ND)" Value="469549.857872659"/>
+<Quantity Name=".ASU_1.Temp" Value="20"/>
+<Quantity Name=".ASU_1.M(H2O)" Value="1000000000.00001"/>
+<Quantity Name=".ASU_1.Integ_ME" Value="500.000000000004"/>
+<Quantity Name=".ASU_2.WWTPSpecificVolume(H2O)" Value="1e-06"/>
+<Quantity Name=".ASU_2.Stoichiometry(AerGrowthHetero)(S_S)" Value="-1.49253731343284"/>
+<Quantity Name=".ASU_2.Stoichiometry(AnGrowthHetero)(S_S)" Value="-1.49253731343284"/>
+<Quantity Name=".ASU_2.Stoichiometry(HydrolOfEntrOrg)(S_S)" Value="1"/>
+<Quantity Name=".ASU_2.Stoichiometry(AerGrowthHetero)(S_O)" Value="-0.492537313432836"/>
+<Quantity Name=".ASU_2.Stoichiometry(AerGrowthAuto)(S_O)" Value="-18.0416666666667"/>
+<Quantity Name=".ASU_2.Stoichiometry(Aeration)(S_O)" Value="1"/>
+<Quantity Name=".ASU_2.Stoichiometry(AnGrowthHetero)(S_NO)" Value="-0.172215843857635"/>
+<Quantity Name=".ASU_2.Stoichiometry(AerGrowthAuto)(S_NO)" Value="4.16666666666667"/>
+<Quantity Name=".ASU_2.Stoichiometry(AmmonOfSolOrgN)(S_ND)" Value="-1"/>
+<Quantity Name=".ASU_2.Stoichiometry(HydrolOfEntrOrgN)(S_ND)" Value="1"/>
+<Quantity Name=".ASU_2.Stoichiometry(AerGrowthHetero)(S_NH)" Value="-0.086"/>
+<Quantity Name=".ASU_2.Stoichiometry(AnGrowthHetero)(S_NH)" Value="-0.086"/>
+<Quantity Name=".ASU_2.Stoichiometry(AerGrowthAuto)(S_NH)" Value="-4.25266666666667"/>
+<Quantity Name=".ASU_2.Stoichiometry(AmmonOfSolOrgN)(S_NH)" Value="1"/>
+<Quantity Name=".ASU_2.Stoichiometry(AerGrowthHetero)(S_ALK)" Value="-0.00614285714285714"/>
+<Quantity Name=".ASU_2.Stoichiometry(AnGrowthHetero)(S_ALK)" Value="0.00615827456125963"/>
+<Quantity Name=".ASU_2.Stoichiometry(AerGrowthAuto)(S_ALK)" Value="-0.601380952380952"/>
+<Quantity Name=".ASU_2.Stoichiometry(AmmonOfSolOrgN)(S_ALK)" Value="0.0714285714285714"/>
+<Quantity Name=".ASU_2.Stoichiometry(AerGrowthHetero)(X_BH)" Value="1"/>
+<Quantity Name=".ASU_2.Stoichiometry(AnGrowthHetero)(X_BH)" Value="1"/>
+<Quantity Name=".ASU_2.Stoichiometry(DecayOfHetero)(X_BH)" Value="-1"/>
+<Quantity Name=".ASU_2.Stoichiometry(AerGrowthAuto)(X_BA)" Value="1"/>
+<Quantity Name=".ASU_2.Stoichiometry(DecayOfAuto)(X_BA)" Value="-1"/>
+<Quantity Name=".ASU_2.Stoichiometry(DecayOfHetero)(X_P)" Value="0.08"/>
+<Quantity Name=".ASU_2.Stoichiometry(DecayOfAuto)(X_P)" Value="0.08"/>
+<Quantity Name=".ASU_2.Stoichiometry(DecayOfHetero)(X_S)" Value="0.92"/>
+<Quantity Name=".ASU_2.Stoichiometry(DecayOfAuto)(X_S)" Value="0.92"/>
+<Quantity Name=".ASU_2.Stoichiometry(HydrolOfEntrOrg)(X_S)" Value="-1"/>
+<Quantity Name=".ASU_2.Stoichiometry(DecayOfHetero)(X_ND)" Value="0.0812"/>
+<Quantity Name=".ASU_2.Stoichiometry(DecayOfAuto)(X_ND)" Value="0.0812"/>
+<Quantity Name=".ASU_2.Stoichiometry(HydrolOfEntrOrgN)(X_ND)" Value="-1"/>
+<Quantity Name=".ASU_2.Inflow(H2O)" Value="95261000000"/>
+<Quantity Name=".ASU_2.Inflow(S_I)" Value="2857830"/>
+<Quantity Name=".ASU_2.Inflow(S_S)" Value="482991.610219373"/>
+<Quantity Name=".ASU_2.Inflow(S_O)" Value="234.1897305299"/>
+<Quantity Name=".ASU_2.Inflow(S_NO)" Value="322018.557271777"/>
+<Quantity Name=".ASU_2.Inflow(S_ND)" Value="112286.600409618"/>
+<Quantity Name=".ASU_2.Inflow(S_NH)" Value="1278156.01933829"/>
+<Quantity Name=".ASU_2.Inflow(S_ALK)" Value="2705832.15501986"/>
+<Quantity Name=".ASU_2.Inflow(X_I)" Value="104411586.921018"/>
+<Quantity Name=".ASU_2.Inflow(X_BH)" Value="151514696.103738"/>
+<Quantity Name=".ASU_2.Inflow(X_BA)" Value="7537575.27281312"/>
+<Quantity Name=".ASU_2.Inflow(X_P)" Value="58199680.8298603"/>
+<Quantity Name=".ASU_2.Inflow(X_S)" Value="6865494.84176254"/>
+<Quantity Name=".ASU_2.Inflow(X_ND)" Value="450390.059063658"/>
+<Quantity Name=".ASU_2.Temp" Value="20"/>
+<Quantity Name=".ASU_2.Integ_ME" Value="500.000000000003"/>
+<Quantity Name=".ASU_3.WWTPSpecificVolume(H2O)" Value="1e-06"/>
+<Quantity Name=".ASU_3.Vol" Value="1333"/>
+<Quantity Name=".ASU_3.Stoichiometry(AerGrowthHetero)(S_S)" Value="-1.49253731343284"/>
+<Quantity Name=".ASU_3.Stoichiometry(AnGrowthHetero)(S_S)" Value="-1.49253731343284"/>
+<Quantity Name=".ASU_3.Stoichiometry(HydrolOfEntrOrg)(S_S)" Value="1"/>
+<Quantity Name=".ASU_3.Stoichiometry(AerGrowthHetero)(S_O)" Value="-0.492537313432836"/>
+<Quantity Name=".ASU_3.Stoichiometry(AerGrowthAuto)(S_O)" Value="-18.0416666666667"/>
+<Quantity Name=".ASU_3.Stoichiometry(Aeration)(S_O)" Value="1"/>
+<Quantity Name=".ASU_3.Stoichiometry(AnGrowthHetero)(S_NO)" Value="-0.172215843857635"/>
+<Quantity Name=".ASU_3.Stoichiometry(AerGrowthAuto)(S_NO)" Value="4.16666666666667"/>
+<Quantity Name=".ASU_3.Stoichiometry(AmmonOfSolOrgN)(S_ND)" Value="-1"/>
+<Quantity Name=".ASU_3.Stoichiometry(HydrolOfEntrOrgN)(S_ND)" Value="1"/>
+<Quantity Name=".ASU_3.Stoichiometry(AerGrowthHetero)(S_NH)" Value="-0.086"/>
+<Quantity Name=".ASU_3.Stoichiometry(AnGrowthHetero)(S_NH)" Value="-0.086"/>
+<Quantity Name=".ASU_3.Stoichiometry(AerGrowthAuto)(S_NH)" Value="-4.25266666666667"/>
+<Quantity Name=".ASU_3.Stoichiometry(AmmonOfSolOrgN)(S_NH)" Value="1"/>
+<Quantity Name=".ASU_3.Stoichiometry(AerGrowthHetero)(S_ALK)" Value="-0.00614285714285714"/>
+<Quantity Name=".ASU_3.Stoichiometry(AnGrowthHetero)(S_ALK)" Value="0.00615827456125963"/>
+<Quantity Name=".ASU_3.Stoichiometry(AerGrowthAuto)(S_ALK)" Value="-0.601380952380952"/>
+<Quantity Name=".ASU_3.Stoichiometry(AmmonOfSolOrgN)(S_ALK)" Value="0.0714285714285714"/>
+<Quantity Name=".ASU_3.Stoichiometry(AerGrowthHetero)(X_BH)" Value="1"/>
+<Quantity Name=".ASU_3.Stoichiometry(AnGrowthHetero)(X_BH)" Value="1"/>
+<Quantity Name=".ASU_3.Stoichiometry(DecayOfHetero)(X_BH)" Value="-1"/>
+<Quantity Name=".ASU_3.Stoichiometry(AerGrowthAuto)(X_BA)" Value="1"/>
+<Quantity Name=".ASU_3.Stoichiometry(DecayOfAuto)(X_BA)" Value="-1"/>
+<Quantity Name=".ASU_3.Stoichiometry(DecayOfHetero)(X_P)" Value="0.08"/>
+<Quantity Name=".ASU_3.Stoichiometry(DecayOfAuto)(X_P)" Value="0.08"/>
+<Quantity Name=".ASU_3.Stoichiometry(DecayOfHetero)(X_S)" Value="0.92"/>
+<Quantity Name=".ASU_3.Stoichiometry(DecayOfAuto)(X_S)" Value="0.92"/>
+<Quantity Name=".ASU_3.Stoichiometry(HydrolOfEntrOrg)(X_S)" Value="-1"/>
+<Quantity Name=".ASU_3.Stoichiometry(DecayOfHetero)(X_ND)" Value="0.0812"/>
+<Quantity Name=".ASU_3.Stoichiometry(DecayOfAuto)(X_ND)" Value="0.0812"/>
+<Quantity Name=".ASU_3.Stoichiometry(HydrolOfEntrOrgN)(X_ND)" Value="-1"/>
+<Quantity Name=".ASU_3.Inflow(H2O)" Value="95113783109.5557"/>
+<Quantity Name=".ASU_3.Inflow(S_I)" Value="2853413.49328667"/>
+<Quantity Name=".ASU_3.Inflow(S_S)" Value="263637.655743636"/>
+<Quantity Name=".ASU_3.Inflow(S_O)" Value="3.95966643455491"/>
+<Quantity Name=".ASU_3.Inflow(S_NO)" Value="196407.580031319"/>
+<Quantity Name=".ASU_3.Inflow(S_ND)" Value="73685.7429449697"/>
+<Quantity Name=".ASU_3.Inflow(S_NH)" Value="1295962.8705579"/>
+<Quantity Name=".ASU_3.Inflow(S_ALK)" Value="2712084.78092623"/>
+<Quantity Name=".ASU_3.Inflow(X_I)" Value="104853906.308603"/>
+<Quantity Name=".ASU_3.Inflow(X_BH)" Value="151976881.912578"/>
+<Quantity Name=".ASU_3.Inflow(X_BA)" Value="7562525.31457632"/>
+<Quantity Name=".ASU_3.Inflow(X_P)" Value="58583342.6853141"/>
+<Quantity Name=".ASU_3.Inflow(X_S)" Value="6616962.00464448"/>
+<Quantity Name=".ASU_3.Inflow(X_ND)" Value="454455.559036729"/>
+<Quantity Name=".ASU_3.Kla" Value="240"/>
+<Quantity Name=".ASU_3.Temp" Value="20"/>
+<Quantity Name=".ASU_3.M(H2O)" Value="1000000000.00001"/>
+<Quantity Name=".ASU_3.Integ_AE" Value="288683011.200004"/>
+<Quantity Name=".ASU_4.WWTPSpecificVolume(H2O)" Value="1e-06"/>
+<Quantity Name=".ASU_4.Vol" Value="1333"/>
+<Quantity Name=".ASU_4.Stoichiometry(AerGrowthHetero)(S_S)" Value="-1.49253731343284"/>
+<Quantity Name=".ASU_4.Stoichiometry(AnGrowthHetero)(S_S)" Value="-1.49253731343284"/>
+<Quantity Name=".ASU_4.Stoichiometry(HydrolOfEntrOrg)(S_S)" Value="1"/>
+<Quantity Name=".ASU_4.Stoichiometry(AerGrowthHetero)(S_O)" Value="-0.492537313432836"/>
+<Quantity Name=".ASU_4.Stoichiometry(AerGrowthAuto)(S_O)" Value="-18.0416666666667"/>
+<Quantity Name=".ASU_4.Stoichiometry(Aeration)(S_O)" Value="1"/>
+<Quantity Name=".ASU_4.Stoichiometry(AnGrowthHetero)(S_NO)" Value="-0.172215843857635"/>
+<Quantity Name=".ASU_4.Stoichiometry(AerGrowthAuto)(S_NO)" Value="4.16666666666667"/>
+<Quantity Name=".ASU_4.Stoichiometry(AmmonOfSolOrgN)(S_ND)" Value="-1"/>
+<Quantity Name=".ASU_4.Stoichiometry(HydrolOfEntrOrgN)(S_ND)" Value="1"/>
+<Quantity Name=".ASU_4.Stoichiometry(AerGrowthHetero)(S_NH)" Value="-0.086"/>
+<Quantity Name=".ASU_4.Stoichiometry(AnGrowthHetero)(S_NH)" Value="-0.086"/>
+<Quantity Name=".ASU_4.Stoichiometry(AerGrowthAuto)(S_NH)" Value="-4.25266666666667"/>
+<Quantity Name=".ASU_4.Stoichiometry(AmmonOfSolOrgN)(S_NH)" Value="1"/>
+<Quantity Name=".ASU_4.Stoichiometry(AerGrowthHetero)(S_ALK)" Value="-0.00614285714285714"/>
+<Quantity Name=".ASU_4.Stoichiometry(AnGrowthHetero)(S_ALK)" Value="0.00615827456125963"/>
+<Quantity Name=".ASU_4.Stoichiometry(AerGrowthAuto)(S_ALK)" Value="-0.601380952380952"/>
+<Quantity Name=".ASU_4.Stoichiometry(AmmonOfSolOrgN)(S_ALK)" Value="0.0714285714285714"/>
+<Quantity Name=".ASU_4.Stoichiometry(AerGrowthHetero)(X_BH)" Value="1"/>
+<Quantity Name=".ASU_4.Stoichiometry(AnGrowthHetero)(X_BH)" Value="1"/>
+<Quantity Name=".ASU_4.Stoichiometry(DecayOfHetero)(X_BH)" Value="-1"/>
+<Quantity Name=".ASU_4.Stoichiometry(AerGrowthAuto)(X_BA)" Value="1"/>
+<Quantity Name=".ASU_4.Stoichiometry(DecayOfAuto)(X_BA)" Value="-1"/>
+<Quantity Name=".ASU_4.Stoichiometry(DecayOfHetero)(X_P)" Value="0.08"/>
+<Quantity Name=".ASU_4.Stoichiometry(DecayOfAuto)(X_P)" Value="0.08"/>
+<Quantity Name=".ASU_4.Stoichiometry(DecayOfHetero)(X_S)" Value="0.92"/>
+<Quantity Name=".ASU_4.Stoichiometry(DecayOfAuto)(X_S)" Value="0.92"/>
+<Quantity Name=".ASU_4.Stoichiometry(HydrolOfEntrOrg)(X_S)" Value="-1"/>
+<Quantity Name=".ASU_4.Stoichiometry(DecayOfHetero)(X_ND)" Value="0.0812"/>
+<Quantity Name=".ASU_4.Stoichiometry(DecayOfAuto)(X_ND)" Value="0.0812"/>
+<Quantity Name=".ASU_4.Stoichiometry(HydrolOfEntrOrgN)(X_ND)" Value="-1"/>
+<Quantity Name=".ASU_4.Inflow(H2O)" Value="95113783109.5557"/>
+<Quantity Name=".ASU_4.Inflow(S_I)" Value="2853413.49328668"/>
+<Quantity Name=".ASU_4.Inflow(S_S)" Value="353914.298667709"/>
+<Quantity Name=".ASU_4.Inflow(S_O)" Value="104678.5735521"/>
+<Quantity Name=".ASU_4.Inflow(S_NO)" Value="403809.996058502"/>
+<Quantity Name=".ASU_4.Inflow(S_ND)" Value="102226.268367137"/>
+<Quantity Name=".ASU_4.Inflow(S_NH)" Value="1057368.76387892"/>
+<Quantity Name=".ASU_4.Inflow(S_ALK)" Value="2680634.16134722"/>
+<Quantity Name=".ASU_4.Inflow(X_I)" Value="104729752.762398"/>
+<Quantity Name=".ASU_4.Inflow(X_BH)" Value="152379323.564734"/>
+<Quantity Name=".ASU_4.Inflow(X_BA)" Value="7594031.36091162"/>
+<Quantity Name=".ASU_4.Inflow(X_P)" Value="58630336.5643225"/>
+<Quantity Name=".ASU_4.Inflow(X_S)" Value="4777255.73565267"/>
+<Quantity Name=".ASU_4.Inflow(X_ND)" Value="343581.78618927"/>
+<Quantity Name=".ASU_4.Kla" Value="240"/>
+<Quantity Name=".ASU_4.Temp" Value="20"/>
+<Quantity Name=".ASU_4.Integ_AE" Value="288683011.200003"/>
+<Quantity Name=".ASU_5.WWTPSpecificVolume(H2O)" Value="1e-06"/>
+<Quantity Name=".ASU_5.Vol" Value="1333"/>
+<Quantity Name=".ASU_5.Stoichiometry(AerGrowthHetero)(S_S)" Value="-1.49253731343284"/>
+<Quantity Name=".ASU_5.Stoichiometry(AnGrowthHetero)(S_S)" Value="-1.49253731343284"/>
+<Quantity Name=".ASU_5.Stoichiometry(HydrolOfEntrOrg)(S_S)" Value="1"/>
+<Quantity Name=".ASU_5.Stoichiometry(AerGrowthHetero)(S_O)" Value="-0.492537313432836"/>
+<Quantity Name=".ASU_5.Stoichiometry(AerGrowthAuto)(S_O)" Value="-18.0416666666667"/>
+<Quantity Name=".ASU_5.Stoichiometry(Aeration)(S_O)" Value="1"/>
+<Quantity Name=".ASU_5.Stoichiometry(AnGrowthHetero)(S_NO)" Value="-0.172215843857635"/>
+<Quantity Name=".ASU_5.Stoichiometry(AerGrowthAuto)(S_NO)" Value="4.16666666666667"/>
+<Quantity Name=".ASU_5.Stoichiometry(AmmonOfSolOrgN)(S_ND)" Value="-1"/>
+<Quantity Name=".ASU_5.Stoichiometry(HydrolOfEntrOrgN)(S_ND)" Value="1"/>
+<Quantity Name=".ASU_5.Stoichiometry(AerGrowthHetero)(S_NH)" Value="-0.086"/>
+<Quantity Name=".ASU_5.Stoichiometry(AnGrowthHetero)(S_NH)" Value="-0.086"/>
+<Quantity Name=".ASU_5.Stoichiometry(AerGrowthAuto)(S_NH)" Value="-4.25266666666667"/>
+<Quantity Name=".ASU_5.Stoichiometry(AmmonOfSolOrgN)(S_NH)" Value="1"/>
+<Quantity Name=".ASU_5.Stoichiometry(AerGrowthHetero)(S_ALK)" Value="-0.00614285714285714"/>
+<Quantity Name=".ASU_5.Stoichiometry(AnGrowthHetero)(S_ALK)" Value="0.00615827456125963"/>
+<Quantity Name=".ASU_5.Stoichiometry(AerGrowthAuto)(S_ALK)" Value="-0.601380952380952"/>
+<Quantity Name=".ASU_5.Stoichiometry(AmmonOfSolOrgN)(S_ALK)" Value="0.0714285714285714"/>
+<Quantity Name=".ASU_5.Stoichiometry(AerGrowthHetero)(X_BH)" Value="1"/>
+<Quantity Name=".ASU_5.Stoichiometry(AnGrowthHetero)(X_BH)" Value="1"/>
+<Quantity Name=".ASU_5.Stoichiometry(DecayOfHetero)(X_BH)" Value="-1"/>
+<Quantity Name=".ASU_5.Stoichiometry(AerGrowthAuto)(X_BA)" Value="1"/>
+<Quantity Name=".ASU_5.Stoichiometry(DecayOfAuto)(X_BA)" Value="-1"/>
+<Quantity Name=".ASU_5.Stoichiometry(DecayOfHetero)(X_P)" Value="0.08"/>
+<Quantity Name=".ASU_5.Stoichiometry(DecayOfAuto)(X_P)" Value="0.08"/>
+<Quantity Name=".ASU_5.Stoichiometry(DecayOfHetero)(X_S)" Value="0.92"/>
+<Quantity Name=".ASU_5.Stoichiometry(DecayOfAuto)(X_S)" Value="0.92"/>
+<Quantity Name=".ASU_5.Stoichiometry(HydrolOfEntrOrg)(X_S)" Value="-1"/>
+<Quantity Name=".ASU_5.Stoichiometry(DecayOfHetero)(X_ND)" Value="0.0812"/>
+<Quantity Name=".ASU_5.Stoichiometry(DecayOfAuto)(X_ND)" Value="0.0812"/>
+<Quantity Name=".ASU_5.Stoichiometry(HydrolOfEntrOrgN)(X_ND)" Value="-1"/>
+<Quantity Name=".ASU_5.Inflow(H2O)" Value="95113783109.5557"/>
+<Quantity Name=".ASU_5.Inflow(S_I)" Value="2853413.49328668"/>
+<Quantity Name=".ASU_5.Inflow(S_S)" Value="307789.79331943"/>
+<Quantity Name=".ASU_5.Inflow(S_O)" Value="134371.661191884"/>
+<Quantity Name=".ASU_5.Inflow(S_NO)" Value="635464.387834042"/>
+<Quantity Name=".ASU_5.Inflow(S_ND)" Value="104447.181237058"/>
+<Quantity Name=".ASU_5.Inflow(S_NH)" Value="816527.144401396"/>
+<Quantity Name=".ASU_5.Inflow(S_ALK)" Value="2648097.80968006"/>
+<Quantity Name=".ASU_5.Inflow(X_I)" Value="104604177.397428"/>
+<Quantity Name=".ASU_5.Inflow(X_BH)" Value="152548437.397546"/>
+<Quantity Name=".ASU_5.Inflow(X_BA)" Value="7627198.7121564"/>
+<Quantity Name=".ASU_5.Inflow(X_P)" Value="58671760.9210799"/>
+<Quantity Name=".ASU_5.Inflow(X_S)" Value="3408233.18998382"/>
+<Quantity Name=".ASU_5.Inflow(X_ND)" Value="256979.633257445"/>
+<Quantity Name=".ASU_5.Kla" Value="84"/>
+<Quantity Name=".ASU_5.Temp" Value="20"/>
+<Quantity Name=".ASU_5.Integ_AE" Value="101039053.92"/>
+<Quantity Name=".out_1.WWTPSpecificVolume(H2O)" Value="1e-06"/>
+<Quantity Name=".out_1.Effluent_Load(H2O)" Value="20944783109.5557"/>
+<Quantity Name=".out_1.Effluent_Load(S_I)" Value="628343.493286674"/>
+<Quantity Name=".out_1.Effluent_Load(S_S)" Value="51120.1080313662"/>
+<Quantity Name=".out_1.Effluent_Load(S_O)" Value="5164.98368525205"/>
+<Quantity Name=".out_1.Effluent_Load(S_NO)" Value="151232.307302467"/>
+<Quantity Name=".out_1.Effluent_Load(S_ND)" Value="19121.5344904968"/>
+<Quantity Name=".out_1.Effluent_Load(S_NH)" Value="156369.720529233"/>
+<Quantity Name=".out_1.Effluent_Load(S_ALK)" Value="581031.839546806"/>
+<Quantity Name=".out_1.Effluent_Load(X_I)" Value="97784.5039695028"/>
+<Quantity Name=".out_1.Effluent_Load(X_BH)" Value="142451.461822566"/>
+<Quantity Name=".out_1.Effluent_Load(X_BA)" Value="7140.29990497909"/>
+<Quantity Name=".out_1.Effluent_Load(X_P)" Value="54953.8913842708"/>
+<Quantity Name=".out_1.Effluent_Load(X_S)" Value="2639.73833582054"/>
+<Quantity Name=".out_1.Effluent_Load(X_ND)" Value="208.432486542033"/>
+<Quantity Name=".Municipality_1.WWTPSpecificVolume(H2O)" Value="1e-06"/>
+<Quantity Name=".Municipality_1.H2O" Value="21477"/>
+<Quantity Name=".Municipality_1.S_ALK" Value="30"/>
+<Quantity Name=".Municipality_1.S_I" Value="30"/>
+<Quantity Name=".Municipality_1.S_ND" Value="6.246547"/>
+<Quantity Name=".Municipality_1.S_NH" Value="34.67942"/>
+<Quantity Name=".Municipality_1.S_NO" Value="0.001"/>
+<Quantity Name=".Municipality_1.S_O" Value="0.001"/>
+<Quantity Name=".Municipality_1.S_S" Value="62.46546"/>
+<Quantity Name=".Municipality_1.X_BA" Value="0.001"/>
+<Quantity Name=".Municipality_1.X_BH" Value="31.425"/>
+<Quantity Name=".Municipality_1.X_I" Value="58.476"/>
+<Quantity Name=".Municipality_1.X_ND" Value="11.814"/>
+<Quantity Name=".Municipality_1.X_P" Value="0.001"/>
+<Quantity Name=".Municipality_1.X_S" Value="224.352"/>
+<Quantity Name=".Clarifier.WWTPSpecificVolume(H2O)" Value="1e-06"/>
+<Quantity Name=".Clarifier.Inflow(H2O)" Value="39775783109.5557"/>
+<Quantity Name=".Clarifier.Inflow(S_I)" Value="1193273.49328668"/>
+<Quantity Name=".Clarifier.Inflow(S_S)" Value="97081.0878755293"/>
+<Quantity Name=".Clarifier.Inflow(S_O)" Value="9808.708438487"/>
+<Quantity Name=".Clarifier.Inflow(S_NO)" Value="287201.993114752"/>
+<Quantity Name=".Clarifier.Inflow(S_ND)" Value="36313.2912209002"/>
+<Quantity Name=".Clarifier.Inflow(S_NH)" Value="296958.343093798"/>
+<Quantity Name=".Clarifier.Inflow(S_ALK)" Value="1103424.95831413"/>
+<Quantity Name=".Clarifier.Inflow(X_I)" Value="43755586.5848705"/>
+<Quantity Name=".Clarifier.Inflow(X_BH)" Value="63742689.4742199"/>
+<Quantity Name=".Clarifier.Inflow(X_BA)" Value="3195066.68287335"/>
+<Quantity Name=".Clarifier.Inflow(X_P)" Value="24590192.259808"/>
+<Quantity Name=".Clarifier.Inflow(X_S)" Value="1181202.48736365"/>
+<Quantity Name=".Clarifier.Inflow(X_ND)" Value="93267.1879670643"/>
+<Quantity Name=".Clarifier.Q_Under" Value="18831"/>
+<Quantity Name=".Clarifier.Integ_PE" Value="1883076.26296824"/>
+<Quantity Name=".Well_1.WWTPSpecificVolume(H2O)" Value="1e-06"/>
+<Quantity Name=".Well_1.Inflow1(H2O)" Value="55338000000"/>
+<Quantity Name=".Well_1.Inflow1(S_I)" Value="1660140"/>
+<Quantity Name=".Well_1.Inflow1(S_S)" Value="135063.921332712"/>
+<Quantity Name=".Well_1.Inflow1(S_O)" Value="13646.3512503062"/>
+<Quantity Name=".Well_1.Inflow1(S_NO)" Value="399569.352316937"/>
+<Quantity Name=".Well_1.Inflow1(S_ND)" Value="50520.8132306869"/>
+<Quantity Name=".Well_1.Inflow1(S_NH)" Value="413142.859937224"/>
+<Quantity Name=".Well_1.Inflow1(S_ALK)" Value="1535138.35730158"/>
+<Quantity Name=".Well_1.Inflow1(X_I)" Value="60874895.756656"/>
+<Quantity Name=".Well_1.Inflow1(X_BH)" Value="88681923.3805848"/>
+<Quantity Name=".Well_1.Inflow1(X_BA)" Value="4445131.84340974"/>
+<Quantity Name=".Well_1.Inflow1(X_P)" Value="34211068.9694087"/>
+<Quantity Name=".Well_1.Inflow1(X_S)" Value="1643346.23068744"/>
+<Quantity Name=".Well_1.Inflow1(X_ND)" Value="129757.838670472"/>
+<Quantity Name=".Well_1.Inflow2(H2O)" Value="21477000000"/>
+<Quantity Name=".Well_1.Inflow2(S_I)" Value="644310"/>
+<Quantity Name=".Well_1.Inflow2(S_S)" Value="1341570.68442"/>
+<Quantity Name=".Well_1.Inflow2(S_O)" Value="21.477"/>
+<Quantity Name=".Well_1.Inflow2(S_NO)" Value="21.477"/>
+<Quantity Name=".Well_1.Inflow2(S_ND)" Value="134157.089919"/>
+<Quantity Name=".Well_1.Inflow2(S_NH)" Value="744809.90334"/>
+<Quantity Name=".Well_1.Inflow2(S_ALK)" Value="644310"/>
+<Quantity Name=".Well_1.Inflow2(X_I)" Value="1255889.052"/>
+<Quantity Name=".Well_1.Inflow2(X_BH)" Value="674914.725"/>
+<Quantity Name=".Well_1.Inflow2(X_BA)" Value="21.477"/>
+<Quantity Name=".Well_1.Inflow2(X_P)" Value="21.477"/>
+<Quantity Name=".Well_1.Inflow2(X_S)" Value="4818407.904"/>
+<Quantity Name=".Well_1.Inflow2(X_ND)" Value="253729.278"/>
+<Quantity Name=".Well_1.Inflow3(H2O)" Value="18446000000"/>
+<Quantity Name=".Well_1.Inflow3(S_I)" Value="553380.000000002"/>
+<Quantity Name=".Well_1.Inflow3(S_S)" Value="45021.3071109039"/>
+<Quantity Name=".Well_1.Inflow3(S_O)" Value="4548.78375010206"/>
+<Quantity Name=".Well_1.Inflow3(S_NO)" Value="133189.784105646"/>
+<Quantity Name=".Well_1.Inflow3(S_ND)" Value="16840.2710768956"/>
+<Quantity Name=".Well_1.Inflow3(S_NH)" Value="137714.286645741"/>
+<Quantity Name=".Well_1.Inflow3(S_ALK)" Value="511712.785767192"/>
+<Quantity Name=".Well_1.Inflow3(X_I)" Value="40375675.5884333"/>
+<Quantity Name=".Well_1.Inflow3(X_BH)" Value="58818869.8225622"/>
+<Quantity Name=".Well_1.Inflow3(X_BA)" Value="2948262.97485203"/>
+<Quantity Name=".Well_1.Inflow3(X_P)" Value="22690716.8394015"/>
+<Quantity Name=".Well_1.Inflow3(X_S)" Value="1089960.2120872"/>
+<Quantity Name=".Well_1.Inflow3(X_ND)" Value="86062.7412021875"/>
+<Quantity Name=".FS_1.WWTPSpecificVolume(H2O)" Value="1e-06"/>
+<Quantity Name=".FS_1.Inflow(H2O)" Value="95113783109.5557"/>
+<Quantity Name=".FS_1.Inflow(S_I)" Value="2853413.49328668"/>
+<Quantity Name=".FS_1.Inflow(S_S)" Value="232145.009208241"/>
+<Quantity Name=".FS_1.Inflow(S_O)" Value="23455.0596887932"/>
+<Quantity Name=".FS_1.Inflow(S_NO)" Value="686771.345431689"/>
+<Quantity Name=".FS_1.Inflow(S_ND)" Value="86834.1044515871"/>
+<Quantity Name=".FS_1.Inflow(S_NH)" Value="710101.203031022"/>
+<Quantity Name=".FS_1.Inflow(S_ALK)" Value="2638563.3156157"/>
+<Quantity Name=".FS_1.Inflow(X_I)" Value="104630482.341526"/>
+<Quantity Name=".FS_1.Inflow(X_BH)" Value="152424612.854805"/>
+<Quantity Name=".FS_1.Inflow(X_BA)" Value="7640198.52628308"/>
+<Quantity Name=".FS_1.Inflow(X_P)" Value="58801261.2292167"/>
+<Quantity Name=".FS_1.Inflow(X_S)" Value="2824548.71805109"/>
+<Quantity Name=".FS_1.Inflow(X_ND)" Value="223025.026637536"/>
+<Quantity Name=".FS_1.Q_Out2" Value="55338"/>
+<Quantity Name=".FS_1.Integ_PE" Value="5533781.55427431"/>
+<Quantity Name=".FS_2.WWTPSpecificVolume(H2O)" Value="1e-06"/>
+<Quantity Name=".FS_2.Inflow(H2O)" Value="18831000000"/>
+<Quantity Name=".FS_2.Inflow(S_I)" Value="564930.000000002"/>
+<Quantity Name=".FS_2.Inflow(S_S)" Value="45960.979844163"/>
+<Quantity Name=".FS_2.Inflow(S_O)" Value="4643.72475323495"/>
+<Quantity Name=".FS_2.Inflow(S_NO)" Value="135969.685812285"/>
+<Quantity Name=".FS_2.Inflow(S_ND)" Value="17191.7567304034"/>
+<Quantity Name=".FS_2.Inflow(S_NH)" Value="140588.622564564"/>
+<Quantity Name=".FS_2.Inflow(S_ALK)" Value="522393.11876732"/>
+<Quantity Name=".FS_2.Inflow(X_I)" Value="41218385.9376443"/>
+<Quantity Name=".FS_2.Inflow(X_BH)" Value="60046521.6105751"/>
+<Quantity Name=".FS_2.Inflow(X_BA)" Value="3009798.33456786"/>
+<Quantity Name=".FS_2.Inflow(X_P)" Value="23164311.4389444"/>
+<Quantity Name=".FS_2.Inflow(X_S)" Value="1112709.57138751"/>
+<Quantity Name=".FS_2.Inflow(X_ND)" Value="87859.0198188439"/>
+<Quantity Name=".FS_2.Q_Out2" Value="385"/>
+<Quantity Name=".FS_2.Integ_PE" Value="38499.6133944188"/>
+<Quantity Name=".Waste_1.WWTPSpecificVolume(H2O)" Value="1e-06"/>
+<Quantity Name=".Waste_1.Effluent_Load(H2O)" Value="385000000"/>
+<Quantity Name=".Waste_1.Effluent_Load(S_I)" Value="11550"/>
+<Quantity Name=".Waste_1.Effluent_Load(S_S)" Value="939.672733259135"/>
+<Quantity Name=".Waste_1.Effluent_Load(S_O)" Value="94.9410031328903"/>
+<Quantity Name=".Waste_1.Effluent_Load(S_NO)" Value="2779.90170663957"/>
+<Quantity Name=".Waste_1.Effluent_Load(S_ND)" Value="351.485653507797"/>
+<Quantity Name=".Waste_1.Effluent_Load(S_NH)" Value="2874.33591882307"/>
+<Quantity Name=".Waste_1.Effluent_Load(S_ALK)" Value="10680.3330001284"/>
+<Quantity Name=".Waste_1.Effluent_Load(X_I)" Value="842710.349211039"/>
+<Quantity Name=".Waste_1.Effluent_Load(X_BH)" Value="1227651.78801293"/>
+<Quantity Name=".Waste_1.Effluent_Load(X_BA)" Value="61535.3597158209"/>
+<Quantity Name=".Waste_1.Effluent_Load(X_P)" Value="473594.599542967"/>
+<Quantity Name=".Waste_1.Effluent_Load(X_S)" Value="22749.3593003129"/>
+<Quantity Name=".Waste_1.Effluent_Load(X_ND)" Value="1796.27861665631"/>
+</Quantities>
+</Model>
+<Inputs Enabled="true">
+<Input Name="*Calc*">
+<CalcVars Enabled="true">
+</CalcVars>
+</Input>
+<Input Name="Influent_Municipality_1.Steady State.in">
+<File Name="Influent_Municipality_1.Steady State.in.txt" Enabled="true">
+<Props>
+<Prop Name="Interpolated" Value="true"/>
+<Prop Name="Extrapolated" Value="true"/>
+<Prop Name="InterpolationType" Value="Linear"/>
+<Prop Name="NoPoints" Value="1"/>
+<Prop Name="EnableRepetition" Value="false"/>
+<Prop Name="RepetitionIntervalStartTime" Value="0"/>
+<Prop Name="RepetitionIntervalStopTime" Value="0"/>
+<Prop Name="RepetitionStartTime" Value="0"/>
+<Prop Name="ColSep" Value="&#9;"/>
+<Prop Name="DecSep" Value="."/>
+<Prop Name="ThousandSep" Value=","/>
+</Props>
+<Quantities>
+<Quantity Name=".Municipality_1.H2O">
+<Props>
+<Prop Name="Name" Value="H2O"/>
+</Props>
+</Quantity>
+<Quantity Name=".Municipality_1.S_ALK">
+<Props>
+<Prop Name="Name" Value="S_ALK"/>
+</Props>
+</Quantity>
+<Quantity Name=".Municipality_1.S_I">
+<Props>
+<Prop Name="Name" Value="S_I"/>
+</Props>
+</Quantity>
+<Quantity Name=".Municipality_1.S_ND">
+<Props>
+<Prop Name="Name" Value="S_ND"/>
+</Props>
+</Quantity>
+<Quantity Name=".Municipality_1.S_NH">
+<Props>
+<Prop Name="Name" Value="S_NH"/>
+</Props>
+</Quantity>
+<Quantity Name=".Municipality_1.S_NO">
+<Props>
+<Prop Name="Name" Value="S_NO"/>
+</Props>
+</Quantity>
+<Quantity Name=".Municipality_1.S_O">
+<Props>
+<Prop Name="Name" Value="S_O"/>
+</Props>
+</Quantity>
+<Quantity Name=".Municipality_1.S_S">
+<Props>
+<Prop Name="Name" Value="S_S"/>
+</Props>
+</Quantity>
+<Quantity Name=".Municipality_1.X_BA">
+<Props>
+<Prop Name="Name" Value="X_BA"/>
+</Props>
+</Quantity>
+<Quantity Name=".Municipality_1.X_BH">
+<Props>
+<Prop Name="Name" Value="X_BH"/>
+</Props>
+</Quantity>
+<Quantity Name=".Municipality_1.X_I">
+<Props>
+<Prop Name="Name" Value="X_I"/>
+</Props>
+</Quantity>
+<Quantity Name=".Municipality_1.X_ND">
+<Props>
+<Prop Name="Name" Value="X_ND"/>
+</Props>
+</Quantity>
+<Quantity Name=".Municipality_1.X_P">
+<Props>
+<Prop Name="Name" Value="X_P"/>
+</Props>
+</Quantity>
+<Quantity Name=".Municipality_1.X_S">
+<Props>
+<Prop Name="Name" Value="X_S"/>
+</Props>
+</Quantity>
+</Quantities>
+</File>
+</Input>
+</Inputs>
+<Outputs Enabled="true">
+<Output Name="*Calc*">
+<CalcVars Enabled="true">
+</CalcVars>
+</Output>
+<Output Name="*Field*">
+<Ext Name="*Field*" Enabled="true">
+<Props>
+<Prop Name="EnableCommInt" Value="true"/>
+<Prop Name="CommNoValues" Value="100"/>
+<Prop Name="CommInt" Value="0.1"/>
+<Prop Name="CommIntType" Value="Linear"/>
+<Prop Name="Times" Value=""/>
+<Prop Name="Interpolated" Value="true"/>
+<Prop Name="UseDisplayUnits" Value="true"/>
+<Prop Name="StartTime" Value="-INF"/>
+<Prop Name="StopTime" Value="+INF"/>
+</Props>
+<Quantities>
+</Quantities>
+</Ext>
+</Output>
+<Output Name="*Plot*">
+<Ext Name="*Plot*" Enabled="true">
+<Props>
+<Prop Name="EnableCommInt" Value="true"/>
+<Prop Name="CommNoValues" Value="100"/>
+<Prop Name="CommInt" Value="0.5"/>
+<Prop Name="CommIntType" Value="Linear"/>
+<Prop Name="Times" Value=""/>
+<Prop Name="Interpolated" Value="true"/>
+<Prop Name="UseDisplayUnits" Value="true"/>
+<Prop Name="StartTime" Value="-INF"/>
+<Prop Name="StopTime" Value="+INF"/>
+</Props>
+<Quantities>
+<Quantity Name=".ASU_1.C(S_NH)">
+<Props/></Quantity>
+<Quantity Name=".ASU_1.C(S_NO)">
+<Props/></Quantity>
+<Quantity Name=".ASU_1.C(S_O)">
+<Props/></Quantity>
+<Quantity Name=".ASU_1.C(S_S)">
+<Props/></Quantity>
+<Quantity Name=".ASU_1.C(X_BA)">
+<Props/></Quantity>
+<Quantity Name=".ASU_1.C(X_BH)">
+<Props/></Quantity>
+<Quantity Name=".ASU_1.C(X_I)">
+<Props/></Quantity>
+<Quantity Name=".ASU_1.C(X_P)">
+<Props/></Quantity>
+<Quantity Name=".ASU_1.C(X_S)">
+<Props/></Quantity>
+<Quantity Name=".ASU_2.C(S_NH)">
+<Props/></Quantity>
+<Quantity Name=".ASU_2.C(S_NO)">
+<Props/></Quantity>
+<Quantity Name=".ASU_2.C(S_O)">
+<Props/></Quantity>
+<Quantity Name=".ASU_2.C(S_S)">
+<Props/></Quantity>
+<Quantity Name=".ASU_2.C(X_S)">
+<Props/></Quantity>
+<Quantity Name=".ASU_3.C(S_NH)">
+<Props/></Quantity>
+<Quantity Name=".ASU_3.C(S_NO)">
+<Props/></Quantity>
+<Quantity Name=".ASU_3.C(S_O)">
+<Props/></Quantity>
+<Quantity Name=".ASU_3.C(S_S)">
+<Props/></Quantity>
+<Quantity Name=".ASU_3.C(X_S)">
+<Props/></Quantity>
+<Quantity Name=".ASU_4.C(S_NH)">
+<Props/></Quantity>
+<Quantity Name=".ASU_4.C(S_NO)">
+<Props/></Quantity>
+<Quantity Name=".ASU_4.C(S_O)">
+<Props/></Quantity>
+<Quantity Name=".ASU_4.C(S_S)">
+<Props/></Quantity>
+<Quantity Name=".ASU_4.C(X_S)">
+<Props/></Quantity>
+<Quantity Name=".ASU_5.C(S_NH)">
+<Props/></Quantity>
+<Quantity Name=".ASU_5.C(S_NO)">
+<Props/></Quantity>
+<Quantity Name=".ASU_5.C(S_O)">
+<Props/></Quantity>
+<Quantity Name=".ASU_5.C(S_S)">
+<Props/></Quantity>
+<Quantity Name=".ASU_5.C(X_S)">
+<Props/></Quantity>
+<Quantity Name=".t">
+<Props/></Quantity>
+</Quantities>
+</Ext>
+</Output>
+<Output Name="*Table*">
+<Ext Name="*Table*" Enabled="true">
+<Props>
+<Prop Name="EnableCommInt" Value="true"/>
+<Prop Name="CommNoValues" Value="100"/>
+<Prop Name="CommInt" Value="1"/>
+<Prop Name="CommIntType" Value="Linear"/>
+<Prop Name="Times" Value=""/>
+<Prop Name="Interpolated" Value="true"/>
+<Prop Name="UseDisplayUnits" Value="true"/>
+<Prop Name="StartTime" Value="-INF"/>
+<Prop Name="StopTime" Value="+INF"/>
+</Props>
+<Quantities>
+</Quantities>
+</Ext>
+</Output>
+<Output Name="File">
+<File Name="BSM1_OL_ASM1.Steady State.Simul.out.txt" Enabled="false">
+<Props>
+<Prop Name="EnableCommInt" Value="true"/>
+<Prop Name="CommNoValues" Value="100"/>
+<Prop Name="CommInt" Value="0"/>
+<Prop Name="CommIntType" Value="Linear"/>
+<Prop Name="Times" Value=""/>
+<Prop Name="Interpolated" Value="false"/>
+<Prop Name="UseDisplayUnits" Value="true"/>
+<Prop Name="StartTime" Value="-INF"/>
+<Prop Name="StopTime" Value="+INF"/>
+<Prop Name="ColSep" Value="&#9;"/>
+<Prop Name="DecSep" Value="."/>
+<Prop Name="Precision" Value="8"/>
+</Props>
+<Quantities>
+</Quantities>
+</File>
+</Output>
+</Outputs>
+<Time>
+<Props>
+<Prop Name="StartTime" Value="0"/>
+<Prop Name="StopTime" Value="0"/>
+<Prop Name="Times" Value=""/>
+<Prop Name="EnableRealTime" Value="false"/>
+<Prop Name="Factor" Value="1"/>
+<Prop Name="RefTime" Value="0"/>
+<Prop Name="EnableRefTime" Value="false"/>
+<Prop Name="EnableRefTimeNow" Value="false"/>
+</Props>
+</Time>
+<Solve>
+<Integ Method="CVODE">
+<Props>
+<Prop Name="MaxNoSteps" Value="0"/>
+<Prop Name="AbsoluteTolerance" Value="1e-05"/>
+<Prop Name="RelativeTolerance" Value="1e-05"/>
+<Prop Name="LinearMultistepMethod" Value="Adams"/>
+<Prop Name="IterationMethod" Value="Newton"/>
+<Prop Name="LinearSolver" Value="SPGMR"/>
+<Prop Name="CVBandUpperBandwidth" Value="0"/>
+<Prop Name="CVBandLowerBandwidth" Value="0"/>
+<Prop Name="CVSPGMRGSType" Value="ModifiedGS"/>
+</Props>
+</Integ>
+<Root Method="Hybrid">
+<Props>
+<Prop Name="Tolerance" Value="1e-06"/>
+</Props>
+</Root>
+</Solve>
+</Simul>
+</Exp>
+<Props>
+<Prop Name="InputFileName" Value=""/>
+<Prop Name="OutputFileName" Value="BSM1_OL_ASM1.ObjEval.Simul.out.txt.{}"/>
+<Prop Name="EnableRetrieval" Value="false"/>
+<Prop Name="EnableStorage" Value="false"/>
+<Prop Name="EnableCommInt" Value="true"/>
+<Prop Name="CommNoValues" Value="100"/>
+<Prop Name="CommInt" Value="0"/>
+<Prop Name="Interpolated" Value="true"/>
+<Prop Name="ColSep" Value="&#9;"/>
+<Prop Name="DecSep" Value="."/>
+<Prop Name="ThousandSep" Value=","/>
+<Prop Name="Precision" Value="8"/>
+<Prop Name="EnableNoComputeInitials" Value="false"/>
+<Prop Name="EnableNoComputeStates" Value="false"/>
+<Prop Name="EnableNoComputeOutputs" Value="false"/>
+<Prop Name="EnableNoComputeFinals" Value="false"/>
+<Prop Name="EnableExceptions" Value="true"/>
+<Prop Name="EnableErrorWhenSimulationIncomplete" Value="true"/>
+<Prop Name="EnableInterval" Value="false"/>
+<Prop Name="StartTime" Value="-INF"/>
+<Prop Name="StopTime" Value="+INF"/>
+<Prop Name="EnableSteadyStateExp" Value="false"/>
+<Prop Name="SteadyStateExpFileName" Value=""/>
+<Prop Name="EnableSteadyStateCopyParams" Value="true"/>
+</Props>
+<Quantities>
+</Quantities>
+</Obj>
+<Inputs Enabled="true">
+</Inputs>
+<Outputs Enabled="true">
+<Output Name="*File*">
+<File Name="BSM1_OL_ASM1.Steady State.ObjEval.out.txt" Enabled="true">
+<Props>
+<Prop Name="ColSep" Value="&#9;"/>
+<Prop Name="DecSep" Value="."/>
+<Prop Name="Precision" Value="8"/>
+</Props>
+</File>
+</Output>
+</Outputs>
+</ObjEval>
+</Exp>
+</Tornado>

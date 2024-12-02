@@ -1,0 +1,17 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    state.Kinetics[AerGrowthANO] = state.mu_ANO_T * (state.C[S_NHx] / (parameters.K_NHx_ANO + state.C[S_NHx])) * (state.C[S_O] / (parameters.K_O_ANO + state.C[S_O])) * state.C[X_ANO];
+    state.Kinetics[AerGrowthOHOfast] = state.mu_OHO_T * (state.C[S_Bf] / (parameters.K_Bf + state.C[S_Bf])) * (state.C[S_O] / (parameters.K_O_OHO + state.C[S_O])) * (state.C[S_NHx] / (parameters.K_NHx_OHO + state.C[S_NHx])) * state.C[X_OHO];
+    state.Kinetics[AerGrowthOHOslow] = parameters.f_dia * state.r_dia + (1 - parameters.f_dia) * state.r_dual;
+    state.Kinetics[Aerat] = state.Kla_Actual * (state.S_O_Saturation - state.C[S_O]);
+    state.Kinetics[AmmonifSolOrgN] = state.k_a_T * state.C[S_NB] * state.C[X_OHO];
+    state.Kinetics[AnGrowthOHO] = state.mu_OHO_T * (state.C[S_Bf] / (parameters.K_Bf + state.C[S_Bf])) * (parameters.K_O_OHO / (parameters.K_O_OHO + state.C[S_O])) * (state.C[S_NOx] / (parameters.K_NOx_OHO + state.C[S_NOx])) * (state.C[S_NHx] / (parameters.K_NHx_OHO + state.C[S_NHx])) * parameters.n_g * state.C[X_OHO];
+    state.Kinetics[DecayANO] = state.b_ANO_T * state.C[X_ANO];
+    state.Kinetics[DecayOHO] = state.b_OHO_T * state.C[X_OHO];
+    state.Kinetics[FlocculatCB] = parameters.q_ads * state.C[C_B] * state.r_ads_B;
+    state.Kinetics[FlocculatCU] = parameters.q_ads * state.C[C_U] * state.r_ads_U;
+    state.Kinetics[HydrolEntrapOrg] = state.r_hydr_org;
+    state.Kinetics[HydrolEntrapOrgN] = state.r_hydr_org * (state.C[X_NB] / state.C[X_B]);
+    state.Kinetics[HydrolXEPS] = parameters.k_EPS_hyd * state.C[X_EPS];
+    state.Kinetics[HydrolXSTO] = parameters.q_STO_hyd * ((state.C[X_STO] / state.C[X_OHO]) / (parameters.K_STO_hyd + (state.C[X_STO] / state.C[X_OHO]))) * (parameters.K_Bf / (parameters.K_Bf + state.C[S_Bf])) * (parameters.K_Bs / (parameters.K_Bs + state.C[S_Bs])) * (state.C[S_O] / (parameters.K_O_OHO + state.C[S_O])) * state.C[X_OHO];
+

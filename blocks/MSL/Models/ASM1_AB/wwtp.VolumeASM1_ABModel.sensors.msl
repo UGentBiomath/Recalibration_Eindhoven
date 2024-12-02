@@ -1,0 +1,17 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    interface.AUR = IF (state.V == 0) THEN 0 ELSE - (state.ConversionTermPerComponent[S_NHx] / state.V);
+    interface.DO = state.C[S_O];
+    interface.Kla_ASU = state.Kla_Actual;
+    interface.NH4 = state.C[S_NHx];
+    interface.NO3 = state.C[S_NOx];
+    interface.NPR = IF (state.V == 0) THEN 0 ELSE state.Stoichiometry[AerGrowthANO][S_NOx] * state.Kinetics[AerGrowthANO];
+    interface.NUR = IF (state.V == 0) THEN 0 ELSE - (state.ConversionTermPerComponent[S_NOx] / state.V) + state.Stoichiometry[AerGrowthANO][S_NOx] * state.Kinetics[AerGrowthANO];
+    interface.OUR_ASU = IF (state.V == 0) THEN 0 ELSE - (state.ConversionTermPerComponent[S_O] / state.V) + state.Stoichiometry[Aeration][S_O] * state.Kinetics[Aeration];
+    interface.OfflineBOD = parameters.F_BOD_COD * (state.C[S_Bf] + state.C[S_Bs] + state.C[X_B] + (1 - parameters.f_U) * (state.C[X_OHO] + state.C[X_ANO]));
+    interface.OfflineTKN = (state.C[S_NHx] + state.C[S_ND] + state.C[X_ND] + parameters.i_X_B * (state.C[X_OHO] + state.C[X_ANO]) + parameters.i_X_U * (state.C[X_P] + state.C[X_U]));
+    interface.OnlineCOD = (state.C[S_Bf] + state.C[S_Bs] + state.C[S_U] + state.C[X_OHO] + state.C[X_ANO] + state.C[X_B] + state.C[X_U] + state.C[X_P]);
+    interface.OnlineTN = (state.C[S_NOx] + state.C[S_NHx] + state.C[S_ND] + state.C[X_ND] + parameters.i_X_B * (state.C[X_OHO] + state.C[X_ANO]) + parameters.i_X_U * (state.C[X_P] + state.C[X_U]));
+    interface.TSS = state.X_TSS;
+    interface.V_ASU = state.V;
+

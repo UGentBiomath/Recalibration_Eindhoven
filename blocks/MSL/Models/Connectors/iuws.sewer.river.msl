@@ -1,0 +1,108 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 15:21:58$
+ *
+ ******************************************************************************/
+
+
+#ifndef CONNECTORS_SEWER_RIVER
+#define CONNECTORS_SEWER_RIVER
+
+
+CLASS SewerToRM2 (* icon = "Connector" *) "Transforms a NH4-COD influent to an influent type for RM2"
+EXTENDS SewerConnectors_Base WITH 
+{:
+
+  comments <- "Transforms a NH4-COD influent to an influent type for RM2";
+  
+  interface <-
+  {
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : RM2OutTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+		OBJ S_O_In (* terminal = "in_2"; manip = "1"; is_favorite = "1" *)
+		  "Concentration of dissolved oxygen in the influent": Concentration := {: value <- 0.0; causality <- "CIN"; group <- "Influent characterization" :};
+  };
+
+  parameters <-
+  {
+    OBJ S_ALK_In "Concentration of alkalinity in the influent": Concentration := {: value <- 30 ; group <- "Influent characterization" :};
+    OBJ S_NO2_In "Concentration of nitrite in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+    OBJ S_NO3_In "Concentration of nitrate in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+    OBJ X_H_In "Constant concentration of autotrophs in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+    OBJ X_N1_In "Constant concentration of first step nitrifiers in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+    OBJ X_N2_In "Constant concentration of second step nitrifiers in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+    OBJ X_ALG_In "Constant concentration of algae in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+    OBJ X_II_In "Constant concentration of inerts in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+    OBJ X_ND_In "Constant concentration of inert nitrogen in the influent": Concentration := {: value <- 0 ; group <- "Influent characterization" :};
+    // fractions to calculate all remaining Outflows
+    OBJ f_S_S "Fraction of fermentable readily biodegradable products (S_S) in the soluble COD": Fraction := {: value <- 0.375 ; group <- "Conversion factors" :};
+    OBJ f_X_S "Fraction slowly biodegradable substrate (X_S) in the particulate COD" : Fraction := {: value <- 0.68 ; group <- "Conversion factors" :};    
+    // Phosphorus fractions
+    OBJ i_P_S_I "Phosphorus content of inert soluble COD S_I" : PhosphorusConversionFactor := {:value <- 0.00 ; group <- "Composition parameters" :};
+    OBJ i_P_S_S "Phosphorus content of soluble substrate S_S" : PhosphorusConversionFactor := {:value <- 0.01 ; group <- "Composition parameters" :};
+    OBJ i_P_X_I "Phosphorus content of inert particulate COD X_I" : PhosphorusConversionFactor := {:value <- 0.01 ; group <- "Composition parameters" :};
+    OBJ i_P_X_S "Phosphorus content of particulate substrate X_S" : PhosphorusConversionFactor := {:value <- 0.01 ; group <- "Composition parameters" :};
+    OBJ i_P_BM "Phosphorus content of biomass" : PhosphorusConversionFactor := {:value <- 0.02 ; group <- "Composition parameters" :};
+  };
+  
+  state <-
+  {
+    // Q_in -> Q_In
+    OBJ X_COD (* hidden = "1" *) "Particulate COD" : MassFlux := {: group <- "Influent characterization" :};
+    OBJ S_COD (* hidden = "1" *) "Soluble COD" : MassFlux := {: group <- "Influent characterization" :};
+    OBJ Help_X_I (* hidden = "1" *) "Inert particulate" : MassFlux := {: group <- "Influent characterization" :};
+  };
+
+  equations <-
+  {
+    //WATER
+    interface.Outflow[H2O] = - interface.Inflow[H2O] ;
+    
+    // Oxygen and Alkalinity
+    interface.Outflow[rS_O2] = - interface.S_O_In * state.Q_In;
+    interface.Outflow[rS_ALK] = - parameters.S_ALK_In * state.Q_In;
+
+    // Nitrogen
+    interface.Outflow[rS_NO2] = - parameters.S_NO2_In * state.Q_In;
+    interface.Outflow[rS_NO3] = - parameters.S_NO3_In * state.Q_In;
+    interface.Outflow[rS_NH] = - interface.Inflow[NH4] ;
+
+    // Phosphorous
+    interface.Outflow[rS_PO] = - interface.Inflow[PO4] ;
+    interface.Outflow[rX_P] = - interface.Inflow[PO4] + parameters.i_P_S_I * interface.Outflow[rS_I] +
+      parameters.i_P_S_S * interface.Outflow[rS_S] + parameters.i_P_X_I * interface.Outflow[rX_I] +
+      parameters.i_P_X_S * interface.Outflow[rX_S] + parameters.i_P_BM * (interface.Outflow[rX_N1] + interface.Outflow[rX_N2] + interface.Outflow[rX_H]) ;
+
+    // COD
+    state.X_COD = interface.Inflow[XCOD] ;
+    state.S_COD = interface.Inflow[SCOD] ;
+    state.Help_X_I = - (state.X_COD + interface.Outflow[rX_S] + interface.Outflow[rX_H] +
+      interface.Outflow[rX_N1] + interface.Outflow[rX_N2]) ;
+
+    interface.Outflow[rS_S] = - state.S_COD * parameters.f_S_S ;
+    interface.Outflow[rS_I] = - state.S_COD * (1 - parameters.f_S_S) ;
+    interface.Outflow[rX_S] = - state.X_COD * parameters.f_X_S ;
+    interface.Outflow[rX_H] = - parameters.X_H_In * state.Q_In ;
+    interface.Outflow[rX_N1] = - parameters.X_N1_In * state.Q_In ;
+    interface.Outflow[rX_N2] = - parameters.X_N2_In * state.Q_In ;
+    interface.Outflow[rX_I] = IF (state.Help_X_I > 0) THEN 0.0
+      ELSE state.Help_X_I ;
+  
+    interface.Outflow[rX_ALG] = - parameters.X_ALG_In * state.Q_In ;
+    interface.Outflow[rX_II] = - parameters.X_II_In * state.Q_In ;
+    interface.Outflow[rX_ND] = - parameters.X_ND_In * state.Q_In ;
+  };
+
+:};
+
+ 
+#endif // CONNECTORS_SEWER_RIVER

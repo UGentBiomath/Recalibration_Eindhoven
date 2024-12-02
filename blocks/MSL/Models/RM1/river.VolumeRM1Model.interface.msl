@@ -1,0 +1,5 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ BOD (*is_favorite = "1"; terminal = "out_2"; *) "BOD concentration" : Concentration := {: causality <- "COUT"; group <- "Measurements"; :};
+    OBJ DO (*is_favorite = "1"; terminal = "out_2"; *) "Dissolved oxygen concentration" : Concentration := {: causality <- "COUT"; group <- "Measurements"; :};
+

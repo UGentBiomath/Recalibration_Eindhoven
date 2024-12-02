@@ -1,0 +1,255 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:49$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_ASM1_FRACTIONATOR
+#define WWTP_ASM1_FRACTIONATOR
+
+
+CLASS InfluentFractionator (* icon = "fractionator"; is_default = "true" *)
+"Influent fractionator for ASM1Temp" SPECIALISES PhysicalDAEModelType :=
+{:
+  comments <- "Probabilistic interpretation of measurements as compositions in terms of ASM1 components";
+
+  interface <-
+  {
+    OBJ COD (* terminal = "in_1"; manip = "1" *) "COD in the influent" : Concentration := {: causality <- "CIN"; group <- "Measurements" :};
+    OBJ COD_us (* terminal = "in_1"; manip = "1" *) "Unbiodegradable soluble COD in the influent" : Concentration := {: causality <- "CIN"; group <- "Measurements" :};
+    OBJ COD_up (* terminal = "in_1"; manip = "1" *) "Unbiodegradable particulate COD in the influent" : Concentration := {: causality <- "CIN"; group <- "Measurements" :};
+    OBJ COD_oho (* terminal = "in_1"; manip = "1" *) "Ordinary heterotrophic organism COD in the influent" : Concentration := {: causality <- "CIN"; group <- "Measurements" :};
+    OBJ TKN (* terminal = "in_1"; manip = "1" *) "TKN in the influent" : Concentration := {: causality <- "CIN"; group <- "Measurements" :};
+    OBJ TSS (* terminal = "in_1"; manip = "1" *) "TSS in the influent" : Concentration := {: causality <- "CIN"; group <- "Measurements" :};
+    OBJ FSA (* terminal = "in_1"; manip = "1" *) "FSA in the influent" : Concentration := {: causality <- "CIN"; group <- "Measurements" :};
+    OBJ COD_filtered (* terminal = "in_1"; manip = "1" *) "Filtered COD in the influent" : Concentration := {: causality <- "CIN"; group <- "Measurements" :};
+    OBJ TKN_filtered (* terminal = "in_1"; manip = "1" *) "Filtered TKN in the influent" : Concentration := {: causality <- "CIN"; group <- "Measurements" :};
+    // Alkalinity_in -> Alkalinity_In, InFlow -> Q_In
+    OBJ Alkalinity_In  (* terminal = "in_1"; manip = "1" *) "Alkalinity (mg CaCO3/L) in the influent" : Concentration := {: causality <- "CIN"; group <- "Measurements" :};
+    OBJ Q_In (* terminal = "in_1"; manip = "1" *) "Water" : FlowRate := {: causality <- "CIN"; group <- "Measurements" :};
+    OBJ Influent_Load (* terminal = "out_1" *) "Influent load" : OutWWTPTerminal := {: causality <- "COUT"; group <- "Influent" :};	
+  };
+  
+  parameters <-
+  {
+    OBJ Measurement_weight "Weights in least squares regression" : MeasurementVector :=
+      [{: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :},
+      {: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :},{: value <- 1 :},{: value <- 1 :}] ;
+    
+    OBJ Estimate_weight "Weights in least squares regression" : MeasurementVector :=
+      [{: value <- 0.2 :}, {: value <- 0.2:}, {: value <- 0.2:}, {: value <- 0.2:}, {: value <- 0.2:},
+      {: value <- 0.2:},{: value <- 0.2:}, {: value <- 0.2:}, {: value <- 0.2:}, {: value <- 0.2:}] ;
+      
+    OBJ LowerLimit "Lower limits for fractionation components" : FractionationVector :=
+      [{: value <- 20.0 :}, {: value <- 100.0 :}, {: value <- 5.0 :}, // s_I, s_S, s_ND
+      {: value <- 10.0 :}, {: value <- 40.0 :}, {: value <- 80.0 :},   // s_NH, x_I, x_S
+      {: value <- 1.0  :}, {: value <- 2.0:}] ;  // x_BH, x_ND
+    
+    OBJ UpperLimit "Upper limits for fractionation components" : FractionationVector :=
+      [{: value <- 80.0 :}, {: value <- 500.0 :}, {: value <- 45.0 :}, // s_I, s_S, s_ND
+      {: value <- 60.0 :}, {: value <- 400.0 :}, {: value <- 900.0 :},   // s_NH, x_I, x_S
+      {: value <- 20.0  :}, {: value <- 20.0:}] ;  // x_BH, x_ND	
+    
+    OBJ Measurement_factor (*  hidden = "1" ; fixed = "1" *) "Matrix coefficients" : FractionationCoefficients ;
+    OBJ Time_const "Relaxation time constant for fitting" : Time := {: value <- 0.5 ; group <- "Fractionation" :} ;
+    OBJ f_tss "Ratio of TSS to total COD" : Ratio  := {: value <- 1.05 ; group <- "Fractionation" :};
+    OBJ f_oho "OHO fraction of total COD" : Ratio := {: value <- 0.1 ; group <- "Fractionation" :} ;
+    OBJ f_codus "Unbiodegradable soluble fraction of total COD" : Ratio := {: value <- 0.095 ; group <- "Fractionation" :} ;
+    OBJ f_codup "Unbiodegradable particulate COD" : Ratio := {: value <- 0.13 ; group <- "Fractionation" :} ;
+    OBJ f_tkn "TKN ratio to total COD" : Ratio := {: value <- 0.1 ; group <- "Fractionation" :} ;
+    OBJ f_fsa "FSA ratio to TKN" : Ratio := {: value <- 0.75 ; group <- "Fractionation" :} ;
+    OBJ f_codf "Soluble fraction of total COD" : Ratio := {: value <- 0.2 ; group <- "Fractionation" :} ;
+    OBJ f_tknf "Filtered TKN ratio to total COD" : Ratio := {: value <- 0.05 ; group <- "Fractionation" :} ;
+    OBJ Temperature	"pH/Conductivity measurement temperature" : CelsiusTemperature	:= {: value <- 25 ; group <- "Kinetics" :}; 
+    
+    OBJ i_X_B "Mass Of Nitrogen Per Mass Of COD In Biomass" : MassOfNitrogenPerMassOfCODInBiomass := {: value <- 0.086 ; group <- "Composition parameters" :}; 
+  }; 
+  
+  independent <-
+  {
+    OBJ t "Time" : Time := {: group <- "Time" :};
+  };
+
+  state <-
+  {  
+    OBJ Objective "Least squares objective function value" : Real := {: group <- "Objective" :} ;
+    OBJ DerivativesDone (* hidden = "1" *) : Real ;
+    OBJ Deriv_Fitted (* hidden = "1" *) "Derivatives" : FractionationVector := {: group <- "Fractionation" :} ;
+    OBJ Matched (* hidden = "1" *) "Matched" : MeasurementVector := {: group <- "Fractionation" :} ;
+    
+    OBJ Measured "Input measurements" : MeasurementVector := {: group <- "Measurements" :} ;
+    OBJ weight "Effective weight" : MeasurementVector := {: group <- "Measurements" :} ;
+    OBJ OHO "OHO concentration" : Concentration := {: group <- "Measurements" :} ;
+    OBJ Fitted_Flow "Flow measurement" : FlowRate := {: value <- 1000 ; group <- "Measurements" :} ;
+    OBJ Fitted_Alkalinity "Alkalinity measurement (mg CaCO3/L)" : Concentration := {:  value <- 330.0 ; group <- "Measurements" :} ;
+    
+    OBJ Temp_Actual "Temperature" : CelsiusTemperature := {: group <- "Kinetics":};
+    OBJ COD_predicted "COD value used for fractionation" : Concentration := {: group <- "Input" :};  
+    OBJ TKN_predicted "TKN value used for fractionation" : Concentration := {: group <- "Input" :};  
+    OBJ TSS_predicted "TSS value used for fractionation" : Concentration := {: group <- "Input" :};  
+    
+    //  s_I, s_S, s_ND, s_NH, x_I, x_S, x_BH, x_ND
+    OBJ Fitted "Components with concentrations fitted to measurements" : FractionationVector
+      := [{: value <- 30.0 :}, {: value <- 270.0 :}, {: value <- 15.0 :}, // s_I, s_S, s_ND
+      {: value <- 45.0 :}, {: value <- 150.0 :}, {: value <- 300.0 :},   // s_NH, x_I, x_S
+      {: value <- 10.0  :}, {: value <- 10.0:}] ;  // x_BH, x_ND
+  };
+
+  initial <-
+  {  
+    // COD
+    parameters.Measurement_factor[_COD][s_I] = 1.0 ;
+    parameters.Measurement_factor[_COD][s_S] = 1.0 ;
+    parameters.Measurement_factor[_COD][x_I] = 1.0 ;
+    parameters.Measurement_factor[_COD][x_S] = 1.0 ;
+    parameters.Measurement_factor[_COD][x_BH] = 1.0 ;
+    
+    // TSS
+    parameters.Measurement_factor[_TSS][x_I] = parameters.f_tss ;
+    parameters.Measurement_factor[_TSS][x_S] = parameters.f_tss ;
+    parameters.Measurement_factor[_TSS][x_BH] = parameters.f_tss ;
+    
+    // TKN
+    parameters.Measurement_factor[_TKN][s_NH] = 1.0 ;
+    parameters.Measurement_factor[_TKN][s_ND] = 1.0 ;
+    parameters.Measurement_factor[_TKN][x_ND] = 1.0 ;
+    parameters.Measurement_factor[_TKN][x_BH] = parameters.i_X_B ;
+    
+    // FSA
+    parameters.Measurement_factor[_FSA][s_NH] = 1.0 ;
+    
+    // COD filtered
+    parameters.Measurement_factor[_COD_filtered][s_I] = 1.0 ;
+    parameters.Measurement_factor[_COD_filtered][s_S] = 1.0 ;
+    
+    // TKN filtered
+    parameters.Measurement_factor[_TKN_filtered][s_NH] = 1.0 ;
+    parameters.Measurement_factor[_TKN_filtered][s_ND] = 1.0 ;
+    
+    // COD_us  Un-biodegradable soluble
+    parameters.Measurement_factor[_COD_us][s_I] = 1.0 ;
+    
+    // COD_up  Un-biodegradable particulate
+    parameters.Measurement_factor[_COD_up][x_I] = 1.0 ;
+    
+    // COD_up  Un-biodegradable particulate
+    parameters.Measurement_factor[_COD_oho][x_BH] = 1.0 ;
+  };
+
+  equations <-
+  {
+    state.Temp_Actual = parameters.Temperature ;
+    
+    // Get measurement inputs, and estimate missing measurements
+    state.Measured[_COD] = IF (interface.COD > 0.0 ) THEN interface.COD 
+      ELSE IF (interface.TSS > 0.0) THEN interface.TSS / parameters.f_tss 
+        ELSE 0.0 ; 
+    state.weight[_COD] = IF (interface.COD > 0.0) THEN parameters.Measurement_weight[_COD]
+      ELSE parameters.Estimate_weight[_COD] ;
+
+    state.Measured[_TSS] = IF (interface.TSS > 0.0) THEN interface.TSS
+      ELSE state.Measured[_COD] * parameters.f_tss ;
+    state.weight[_TSS] = IF (interface.TSS > 0.0) THEN parameters.Measurement_weight[_TSS]
+      ELSE parameters.Estimate_weight[_TSS] ;
+        
+    state.Measured[_TKN] = IF (interface.TKN > 0.0) THEN interface.TKN 
+      ELSE IF (interface.FSA > 0.0) THEN interface.FSA / parameters.f_fsa 
+        ELSE parameters.f_tkn * state.Measured[_COD] ;
+    state.weight[_TKN] = IF (interface.TKN > 0.0) THEN parameters.Measurement_weight[_TKN]
+      ELSE parameters.Estimate_weight[_TKN] ;   
+
+    state.Measured[_COD_oho] = IF (interface.COD_oho > 0.0) THEN interface.COD_oho 
+      ELSE state.Measured[_COD] * parameters.f_oho ;
+    // state.weight[_COD_us] -> state.weight[_COD_oho] 
+    state.weight[_COD_oho] = IF (interface.COD_oho > 0.0) THEN parameters.Measurement_weight[_COD_oho]
+      ELSE parameters.Estimate_weight[_COD_oho] ;
+
+    state.Measured[_COD_us] = IF (interface.COD_us > 0.0) THEN interface.COD_us
+      ELSE IF (interface.COD_filtered > 0.0) THEN interface.COD_filtered * parameters.f_codus / parameters.f_codf 
+        ELSE state.Measured[_COD]* parameters.f_codus;
+    state.weight[_COD_us] = IF (interface.COD_us > 0.0) THEN parameters.Measurement_weight[_COD_us]
+      ELSE parameters.Estimate_weight[_COD_us] ;
+    
+    state.Measured[_COD_up] = IF (interface.COD_up > 0.0) THEN interface.COD_up
+      ELSE IF ((interface.COD_filtered > 0.0) && (interface.COD > 0.0)) THEN (interface.COD - interface.COD_filtered) * parameters.f_codup / (1.0 - parameters.f_codf)  
+        ELSE state.Measured[_COD]* parameters.f_codup;
+    state.weight[_COD_up] = IF (interface.COD_up > 0.0) THEN parameters.Measurement_weight[_COD_up]
+      ELSE parameters.Estimate_weight[_COD_up]  ;
+    
+    state.Measured[_FSA] = IF (interface.FSA > 0.0) THEN interface.FSA
+      ELSE state.Measured[_TKN] * parameters.f_fsa ;
+    state.weight[_FSA] = IF (interface.FSA > 0.0) THEN parameters.Measurement_weight[_FSA]
+      ELSE parameters.Estimate_weight[_FSA]  ;
+    
+    state.Measured[_COD_filtered] = IF (interface.COD_filtered > 0.0) THEN interface.COD_filtered
+      ELSE state.Measured[_COD]* parameters.f_codf;
+    state.weight[_COD_filtered] = IF (interface.COD_filtered > 0.0) THEN parameters.Measurement_weight[_COD_filtered]
+      ELSE parameters.Estimate_weight[_COD_filtered] ;
+    
+    state.Measured[_TKN_filtered] = IF(interface.TKN_filtered > 0.0) THEN interface.TKN_filtered
+      ELSE state.Measured[_COD]* parameters.f_tknf ;
+    state.weight[_TKN_filtered] = IF (interface.TKN_filtered > 0.0) THEN parameters.Measurement_weight[_TKN_filtered]
+      ELSE parameters.Estimate_weight[_TKN_filtered] ;
+    
+    DERIV(state.Fitted_Flow,[independent.t]) = IF (interface.Q_In > 0.0)
+      THEN (interface.Q_In - state.Fitted_Flow) / parameters.Time_const
+      ELSE 0.0 ;
+    
+    DERIV(state.Fitted_Alkalinity,[independent.t]) = IF (interface.Alkalinity_In > 0.0) 
+      THEN (interface.Alkalinity_In - state.Fitted_Alkalinity) / parameters.Time_const 
+      ELSE 0.0 ; 
+    
+    // Derivatives of the least squares objective function
+    state.DerivativesDone = MSLU_FractionationDerivatives(
+      ref(parameters.Measurement_factor[1][1]), ref(state.Measured[1]), ref(state.weight[1]),
+      ref(state.Fitted[1]), ref(parameters.LowerLimit[1]), ref(parameters.UpperLimit[1]),
+      parameters.Time_const, NrMeasurements, NrFractionationComponents, ref(state.Objective),
+      ref(state.Matched[1]),ref(state.Deriv_Fitted[1])) ;
+    
+    {FOREACH Comp_Index IN {1 .. NrFractionationComponents}:
+      DERIV(state.Fitted[Comp_Index],[independent.t]) = state.Deriv_Fitted[Comp_Index] + state.DerivativesDone ; } ;
+
+    interface.Influent_Load[H2O] = -1.0E06 * state.Fitted_Flow ;
+    interface.Influent_Load[S_I] = -state.Fitted[s_I] * state.Fitted_Flow + state.DerivativesDone;
+    interface.Influent_Load[S_S] = -state.Fitted[s_S] * state.Fitted_Flow + state.DerivativesDone;
+    interface.Influent_Load[S_ND] = -state.Fitted[s_ND] * state.Fitted_Flow + state.DerivativesDone ;
+    interface.Influent_Load[S_NH] = -state.Fitted[s_NH] * state.Fitted_Flow + state.DerivativesDone ;
+    interface.Influent_Load[X_I] = -state.Fitted[x_I] * state.Fitted_Flow + state.DerivativesDone ;
+    interface.Influent_Load[X_S] = -state.Fitted[x_S] * state.Fitted_Flow + state.DerivativesDone;
+    interface.Influent_Load[X_BH] = -state.Fitted[x_BH] * state.Fitted_Flow + state.DerivativesDone ;
+    interface.Influent_Load[X_ND] = -state.Fitted[x_ND] * state.Fitted_Flow + state.DerivativesDone ;
+    interface.Influent_Load[S_ALK] = -state.Fitted_Alkalinity * state.Fitted_Flow + state.DerivativesDone ;
+  } ;
+
+:};
+
+
+TYPE Measurements "The influent measurements considered in the ASM1 model"
+= ENUM { _COD, _TKN, _TSS, _FSA, _COD_filtered, _TKN_filtered, _COD_us, _COD_up, _COD_oho, } ;
+
+TYPE FractionationComponents "The model components used in fractionating measurements"
+= ENUM { s_I, s_S, s_ND, s_NH, x_I, x_S, x_BH, x_ND, };
+
+OBJ NrMeasurements : Integer := Cardinality(Measurements);
+OBJ NrFractionationComponents : Integer := Cardinality(FractionationComponents);
+
+TYPE MeasurementVector = Real[NrMeasurements;];
+TYPE FractionationVector
+"The variables containing fractionated component concentrations"
+= Real[NrFractionationComponents;];
+
+TYPE FractionationCoefficients
+"The matrix of coefficients used in the fractionation"
+= Real[NrMeasurements;][NrFractionationComponents,];
+
+#endif // WWTP_ASM1_FRACTIONATOR

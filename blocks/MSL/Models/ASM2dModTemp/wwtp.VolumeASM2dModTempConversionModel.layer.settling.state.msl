@@ -1,0 +1,27 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 15. september 2017 13:16:01$
+ *
+ ******************************************************************************/
+
+    OBJ S_O_MonodTerm_Settling (* hidden = "1"; *) "Monod terms for oxygen" : MonodTerm[NrOfLayers;] ;
+    OBJ S_NO_MonodTerm_Settling (* hidden = "1"; *) "Monod terms for S_NO" : MonodTerm[NrOfLayers;] ;
+    OBJ S_NH_MonodTerm_Settling (* hidden = "1"; *) "Monod terms for ammonium" : MonodTerm[NrOfLayers;] ;
+    OBJ S_PO_MonodTerm_Settling (* hidden = "1"; *) "Monod terms for S_PO" : MonodTerm[NrOfLayers;] ;
+    OBJ S_ALK_MonodTerm_Settling (* hidden = "1"; *) "Monod terms for alkalinity" : MonodTerm[NrOfLayers;] ;
+    OBJ S_A_MonodTerm_Settling (* hidden = "1"; *) "Monod terms for S_A" : MonodTerm[NrOfLayers;] ;
+    OBJ S_F_MonodTerm_Settling (* hidden = "1"; *) "Monod terms for S_F" : MonodTerm[NrOfLayers;] ;
+    OBJ X_PHA_MonodTerm_Settling (* hidden = "1"; *) "Monod terms for X_PHA" : MonodTerm[NrOfLayers;] ;
+    OBJ X_S_MonodTerm_Settling (* hidden = "1"; *) "Monod terms for X_S" : MonodTerm[NrOfLayers;] ;
+    OBJ S_NO_InhibitionTerm_Settling (* hidden = "1"; *) "The inhibition term for S_NO" : InhibitionTerm[NrOfLayers;] ;
+    OBJ S_O_InhibitionTerm_Settling (* hidden = "1"; *) "The inhibition term for oxygen" : InhibitionTerm[NrOfLayers;] ;

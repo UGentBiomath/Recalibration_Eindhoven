@@ -1,0 +1,23 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    interface.AUR = IF (state.V == 0) THEN 0 ELSE - (state.ConversionTermPerComponent[S_NHx] / state.V);
+    interface.BOD20 = state.X_BOD20 + state.S_BOD20;
+    interface.BOD5 = parameters.F_BOD5_BOD20 * (state.X_BOD20 + state.S_BOD20);
+    interface.COD = state.S_COD + state.X_COD;
+    interface.DO = state.C[S_O];
+    interface.ISS = state.X_ISS;
+    interface.Kla_ASU = state.Kla_Actual;
+    interface.NH4 = state.C[S_NHx];
+    interface.NO3 = state.C[S_NOx];
+    interface.NPR = IF (state.V == 0) THEN 0 ELSE parameters.Stoichiometry[GrowthOfAuto][S_NOx] * state.Kinetics[GrowthOfAuto];
+    interface.NUR = IF (state.V == 0) THEN 0 ELSE - (state.ConversionTermPerComponent[S_NOx] / state.V) + parameters.Stoichiometry[GrowthOfAuto][S_NOx] * state.Kinetics[GrowthOfAuto];
+    interface.OUR_ASU = IF (state.V == 0) THEN 0 ELSE - (state.ConversionTermPerComponent[S_O] / state.V) + parameters.Stoichiometry[Aeration][S_O] * state.Kinetics[Aeration];
+    interface.PO4 = state.C[S_PO];
+    interface.PUR = IF (state.V == 0) THEN 0 ELSE - (state.ConversionTermPerComponent[S_PO] / state.V);
+    interface.TKN = state.C[S_NHx] + state.Org_N;
+    interface.TN = (state.C[S_NOx] + state.C[S_NHx] + parameters.i_N_S_U * state.C[S_U] + parameters.i_N_S_F * state.C[S_F] + parameters.i_N_X_U * state.C[X_U] + parameters.i_N_XC_B * state.C[XC_B] + parameters.i_N_X_BM * (state.C[X_OHO] + state.C[X_ANO] + state.C[X_PAO]));
+    interface.TP = state.C[S_PO] + state.C[X_PAO_PP] + 0.205 * state.C[X_MEP] + state.Org_P;
+    interface.TSS = state.X_TSS;
+    interface.VSS = state.X_VSS;
+    interface.V_ASU = state.V;
+

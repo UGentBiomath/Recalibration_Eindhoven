@@ -1,0 +1,127 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_TANKS_STORMTANK_CONSTANT
+#define SEWER_TANKS_STORMTANK_CONSTANT
+
+
+CLASS StormTank_Constant (* icon = "Tank" *)
+"A tank with lateral weir and overflow when full. The outflow is function of the water level inside the tank and can therefore be higher than the maximum outflow calculated for the downstream pipe"
+EXTENDS StormTank_Base WITH
+{:
+
+  comments <- "A tank with lateral weir and overflow when full. The outflow is function of the water level inside the tank and can therefore be higher than the maximum outflow calculated for the downstream pipe";
+  
+  interface <-
+  {
+    // VolumeWaterInBasin -> V_Tank
+    OBJ V_Tank (* terminal = "out_3"; is_favorite = "1"*) : Volume := {: causality <- "COUT" ; group <- "Measurement data" :};
+    // Only to be used in UWREM exercise, Qmax_tank is available
+    OBJ Q_Max (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) : FlowRate := {: causality <- "CIN" ; group <- "Hydraulic" :};  
+  };
+
+  parameters <-
+  {
+    OBJ f_Sed "Sedimentation fraction" : Fraction := {: value <- 0 ; group <- "Kinetic" :};
+    OBJ f_S_CSO_Treat "Fraction of soluble pollutant removed by CSO treatment" : Fraction := {: value <- 0 ; group <- "Kinetic":};
+    OBJ f_X_CSO_Treat "Fraction of particulate pollutant removed by CSO treatment" : Fraction := {: value <- 0 ; group <- "Kinetic":};
+    OBJ Q_MaxCSO_Treat "Maximum flow that can be treated by CSO treatment" : FlowRate := {: value <- 4320000 ; group <- "Kinetic" :};
+  };
+
+  state <-
+  {
+    OBJ f_Treat (* hidden = "1" *) "Fraction of overflow that is actually treated" : Real ;
+    OBJ f_Settle (* hidden = "1" *) "Fraction of overflow that is actually settled" : Real ;
+  };
+
+  equations <-
+  {
+    // (EURE 10/05/2016) this implementation by-passes state.Help_Q which is implemented in a lower class
+    // and as such would not be applicable in this particular case - not ideal solution, but works
+    state.Q_Out = IF (state.WaterLevel > parameters.PipeDiameter) THEN interface.Q_Max
+      ELSE IF (state.WaterLevel < parameters.H_Min) THEN 0.0
+        ELSE interface.Q_Max * (state.WaterLevel / parameters.PipeDiameter) ; // Added by WDK20090609
+
+    // consider moving to base class? (26/02/2015)
+    state.Q_over = IF (state.V < parameters.Vmax) THEN 0
+      ELSE parameters.alpha * pow(((state.V - parameters.Vmax) / (parameters.W * parameters.L)), parameters.beta) ;
+
+    // added by LUVE 20141111
+    state.f_Treat = IF (state.Q_In < parameters.Q_MaxCSO_Treat) THEN 1.0
+      ELSE parameters.Q_MaxCSO_Treat / state.Q_In ;
+    
+    // added by LUVE 20141111
+    state.f_Settle = IF (state.WaterLevel > parameters.PipeDiameter) THEN parameters.f_Sed
+      ELSE 0.0 ;	
+	
+    {FOREACH Comp_Index IN {2 .. Kosim1NrOfComponents}:
+    interface.Outflow1[Comp_Index] = - state.C[Comp_Index] * state.Q_Out ; };
+    
+    // OUTFLOW 
+    {FOREACH Comp_Index IN {Kosim1IndexOfFirstParticulateComponent .. Kosim1IndexOfLastParticulateComponent}:
+      interface.Outflow1[Comp_Index] = IF (state.WaterLevel < parameters.H_Min) THEN 0 // Added by WDK20090609
+        ELSE - state.C[Comp_Index] * state.Q_Out * (1.0 - state.f_Settle) ; };
+    
+    {FOREACH Comp_Index IN {Kosim1IndexOfFirstSolubleComponent .. Kosim1IndexOfLastSolubleComponent}:
+      interface.Outflow1[Comp_Index] = IF (state.WaterLevel < parameters.H_Min) THEN 0 // Added by WDK20090609
+        ELSE - state.C[Comp_Index] * state.Q_Out ; };
+    
+    // OVERFLOW
+    {FOREACH Comp_Index IN {Kosim1IndexOfFirstParticulateComponent .. Kosim1IndexOfLastParticulateComponent}:
+      interface.Outflow2[Comp_Index] = - state.C[Comp_Index] * state.Q_over * (1.0 - state.f_Settle) * (1.0 - parameters.f_X_CSO_Treat * state.f_Treat) ; };		
+    
+    {FOREACH Comp_Index IN {Kosim1IndexOfFirstSolubleComponent .. Kosim1IndexOfLastSolubleComponent}:
+      interface.Outflow2[Comp_Index] = - state.C[Comp_Index] * state.Q_over * (1.0 - parameters.f_S_CSO_Treat * state.f_Treat) ; }; 	  		    
+
+/*
+ORIG MIUWS
+AWAITING FOR REPLY BY LUV / LB TO EMAIL EURE 10/05/2016
+
+// CORRECTED MASS BALANCE 
+// Overflow - CSO treatment added by LUVE on 20141013
+// pollutant removed by CSO treatment "disappear" from the tank (so students do not need to add
+// a new unit)
+
+	    {FOREACH s_comp_index IN {IndexOfFirstParticulateSewComponent .. 
+	  IndexOfLastParticulateSewComponent}:
+      DERIV(state.SewM[s_comp_index],[independent.t]) = 
+	      state.FluxPerSewComponent[s_comp_index]
+      + state.conversionTermPerSewComponent[s_comp_index]
+      - state.SewC[s_comp_index] * state.Q_Out  * state.settlFrac 
+	    - state.SewC[s_comp_index] * state.Q_over * (1-(1.0-state.settlFrac) 
+											* (1.0-parameters.X_CSOtreatEff * state.treatFrac ));};
+
+
+	// soluble
+
+	    {FOREACH s_comp_index IN {IndexOfFirstSolubleSewComponent .. 
+	  IndexOfLastSolubleSewComponent}:
+      DERIV(state.SewM[s_comp_index],[independent.t]) = 
+      state.FluxPerSewComponent[s_comp_index]
+      + state.conversionTermPerSewComponent[s_comp_index]
+	    - state.SewC[s_comp_index] * state.Q_over * parameters.S_CSOtreatEff * state.treatFrac ;};
+
+END ORIG MIUWS
+*/
+
+    interface.V_Tank = state.V ;		
+  };
+
+:};
+
+
+#endif // SEWER_TANKS_STORMTANK_CONSTANT

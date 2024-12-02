@@ -1,0 +1,52 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:25$
+ *
+ ******************************************************************************/
+
+#ifndef RIVER_RIVERSTRETCH_VARVOLUME_DUFLOW
+#define RIVER_RIVERSTRETCH_VARVOLUME_DUFLOW
+
+
+#if (defined ASM2dModTemp || defined IUWS1)
+
+// W2014: RivVarVolumeRIVER
+CLASS RivVarVolume_Duflow (* icon = "River" *) EXTENDS RivVarVolumeConversionModel WITH
+{:
+
+  comments <- "Model for a bulk water unit with a variable volume";
+
+  interface <-
+  { 
+    OBJ Temp (* terminal = "in_3"; manip = "1"; is_favorite = "1" *) "Air temperature" : CelsiusTemperature := {: causality <- "CIN"; value <- 20.0; group <- "Input" :};
+    OBJ I0 (* terminal = "in_3"; manip = "1" *) "Radiation at water surface" : Real := {: causality <- "CIN" ; unit <- "W/m2"; interval <- {: lowerBound <- 0; upperBound <- PLUS_INF; :}; group <- "Input" :};     
+  };
+
+  equations <-
+  {
+    state.Temp_Actual = interface.Temp;
+    state.I0_Actual = interface.I0;
+
+    state.Q_Out = 86400 * state.A_man * pow(state.R, (2.0/3.0)) * pow(parameters.S, 0.5) / parameters.n ;
+    
+    {FOREACH Comp_Index IN {1 .. BOD2p}: interface.Outflow[Comp_Index] = - state.C[Comp_Index] * state.Q_Out ; };	
+    
+    interface.Outflow[BODs] = 0;
+    
+  };
+
+:};
+
+#endif // ASM2dModTemp, IUWS1
+
+#endif //RIVER_RIVERSTRETCH_VARVOLUME_DUFLOW

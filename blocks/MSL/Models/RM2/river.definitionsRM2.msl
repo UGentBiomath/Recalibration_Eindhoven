@@ -1,0 +1,37 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE RWQMComponents "The components considered" = 
+ENUM
+{
+  H2O,
+  rS_I,
+  rS_S,
+  rS_O2,
+  rS_NO2,
+  rS_NO3,
+  rS_PO,
+  rS_NH,
+  rS_ALK,
+  rX_I,
+  rX_S,
+  rX_H,
+  rX_N1,
+  rX_N2,
+  rX_ALG,
+  rX_II,
+  rX_ND,
+  rX_P
+};
+
+#define RWQMStandardCategoryModels
+OBJ RWQMIndexOfSolvent "Index of the solvent in the component vector" : Integer := 1;
+#define RWQMSolublesPresent
+OBJ RWQMIndexOfFirstSolubleComponent "Index of the first soluble component in the component vector" : Integer := 2;
+OBJ RWQMIndexOfLastSolubleComponent "Index of the last soluble component in the component vector" : Integer := 9;
+#define RWQMParticulatesPresent
+OBJ RWQMIndexOfFirstParticulateComponent "Index of the first particulate component in the component vector" : Integer := 10;
+OBJ RWQMIndexOfLastParticulateComponent "Index of the last particulate component in the component vector" : Integer := 18;
+#define RWQMCalculateTSSComponent
+OBJ RWQMIndexOfFirstTSSComponent "Index of the first TSS component in the component vector" : Integer := 10;
+OBJ RWQMIndexOfLastTSSComponent "Index of the last TSS component in the component vector" : Integer := 18;
+

@@ -1,0 +1,109 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:54$
+ *
+ ******************************************************************************/
+ 
+
+#ifndef WWTP_BASE_SAMPLERS														
+#define WWTP_BASE_SAMPLERS
+
+
+CLASS Sampler2 "Basic model for sampling devices" EXTENDS Sampler WITH
+{:
+      
+  state <-
+  {
+    OBJ flag_samp_time "Beginning (time) of each aliquot" : Boolean := {: group <- "Sampling" :};
+    OBJ t_fmod (* hidden = "1" *) "Fraction of aliquot volume collected over time (that is insufficient to make a full aliquot)" : Real := {: group <- "Sampling" :};
+    OBJ Help_frequency (* hidden = "1" *) "Sampling frequency for each aliquot" : Time ;
+  };
+  
+  initial <-
+  {
+    state.n_samples = 0;
+  };
+
+  equations <-
+  {
+    state.flag_samp_time = IF (state.flag_samp_per == True) THEN
+      IF ((state.t_fmod < previous(state.t_fmod)) || previous(state.flag_samp_per) == False) THEN True ELSE False
+    ELSE IF (previous(state.flag_samp_per) == True) THEN True ELSE False ;
+
+    state.t_fmod = IF (independent.t >= parameters.t_start) THEN
+      fmod(((independent.t - parameters.t_start) / state.Help_frequency), 1)
+      ELSE 0;
+  };
+  
+:};
+
+
+CLASS Sampler "Basic model for sampling devices" SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  {
+    OBJ y_M (* terminal = "in_1" *) "Quantity to be measured with the sampler" : Concentration := {: causality <- "CIN"; group <- "Measurement data" :};
+    OBJ Q (* terminal = "in_1" *) "Flow rate" : FlowRate := {: causality <- "CIN"; group <- "Measurement data" :};
+    OBJ u (* terminal = "out_1" *) "Measured quantity" : Real := {: causality <- "COUT" :};
+  };
+  
+  independent <- 
+  {
+    OBJ t "Time": Time ;
+  };
+  
+  parameters <- 
+  {
+    OBJ t_start "Start time for sampling" : Time := {: value <- 0 ; group <- "Sampling" :};
+    OBJ t_stop "Stop time for sampling" : Time := {: value <- 1 ; group <- "Sampling" :};
+    OBJ Help_dt (* hidden = "1" *) "delta-t that compensates for 1st sampling period in which measurement is zero" : Time := {: value <- 0.0 :};
+    OBJ unit_cost "Cost of analysis per sample" : Euro := {: value <- 50 ; group <- "Cost" :};
+    OBJ frequency "Sampling frequency" : Time := {: value <- 1 ; group <- "Sampling" :};
+	  OBJ Detection_limit "Detection limit" : Concentration := {: value <- 0.1 ; group <- "Sampling" :};
+  };
+  
+  state <-
+  {
+    OBJ flag_samp_per (* hidden = "1" *) "True if time is in the sampling period" : Boolean := {: group <- "Sampling" :};
+    OBJ Q_in "Influent flow rate" : FlowRate := {: group <- "Sampling" :};
+    OBJ C_meas "Measured concentration" : Concentration := {: group <- "Sampling" :};
+    OBJ L_meas "Measured load" : MassFlux := {: group <- "Sampling" :};
+    OBJ Cost "Total sampling cost" : Euro := {: group <- "Cost" :};
+    OBJ n_samples "Cumulated number of aliquots collected over sampling period" : Integer := {: group <- "Sampling" :};
+    OBJ n_comp_samples "Cumulated number of composite samples over sampling period" : Integer := {: group <- "Sampling" :};
+    //(EURE 25/04/2019) should be named 'n_aliquots_comp'
+    OBJ n_samples_bottle_temp "Cumulated number of aliquots collected in each composite sample" : Integer := {: group <- "Sampling" :};
+  };
+  
+  
+  equations <-
+  {
+    state.flag_samp_per = IF ((independent.t >= parameters.t_start) && (independent.t <= parameters.t_stop + parameters.Help_dt)) THEN True ELSE False ;
+
+    state.Q_in = interface.Q ;
+    //2017	  interface.u = state.L_meas ;
+    interface.u = state.C_meas ;
+
+    state.Cost = parameters.unit_cost * state.n_comp_samples ;
+  };
+
+:};
+ 
+
+#include "WWTP/sampler/wwtp.sampler.flow_proportional.msl"
+#include "WWTP/sampler/wwtp.sampler.grab.msl"
+#include "WWTP/sampler/wwtp.sampler.time_proportional.msl"
+
+
+#endif // WWTP_BASE_SAMPLERS

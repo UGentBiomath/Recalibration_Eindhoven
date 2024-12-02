@@ -1,0 +1,63 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date $
+ *
+ ******************************************************************************/
+
+ 
+#ifndef IUWS_CONNECTORS_CSO_SIMPLE_SEWCONC
+#define IUWS_CONNECTORS_CSO_SIMPLE_SEWCONC
+
+ CLASS CSOToRiver_Simple_SewConc
+ (* icon = "CSO" *)
+ "A sewer (Kosim) to river (Duflow Simple) influent transformer for CSOs with multiple influent streams"
+ EXTENDS CSOToRiver_Simple_Base WITH
+ {:
+ 
+  comments <- "A sewer (Kosim) to river (Duflow Simple) influent transformer for CSOs with multiple influent streams";
+
+  parameters <-
+  {
+   OBJ fBOD_CODs "Fraction of BOD in CODsol" : Fraction := {: value <- 0.7; group <- "Fractionation" :};
+  };
+
+  state <-
+  {
+   OBJ C_NH4 (* is_favorite = "1" *) "NH4 concentration" : Concentration := {: group <- "Concentration" :};
+   OBJ C_BOD (* is_favorite = "1" *) "BOD concentration" : Concentration := {: group <- "Concentration" :};
+   OBJ C_COD (* is_favorite = "1" *) "COD concentration" : Concentration := {: group <- "Concentration" :};
+  };
+
+  equations <-
+  {
+   state.Help_C_NH4 = state.C_NH4 ;
+   state.Help_BOD1 = state.C_BOD ;
+   state.Help_BOD2 = (1 - parameters.fBOD1_BOD) * state.C_BOD ;
+   state.Help_CBOD2 = parameters.fBOD2_CODmBOD * (state.C_COD - state.C_BOD) ;
+   
+   state.C_NH4 = IF (state.Q_In > 0)
+   		THEN (interface.Inflow[NH4]) / state.Q_In
+   		ELSE 0.0 ;
+
+   state.C_BOD = IF (state.Q_In > 0)
+   		THEN (interface.Inflow[SCOD] * parameters.fBOD_CODs) / state.Q_In
+   		ELSE 0.0 ;
+
+   state.C_COD = IF (state.Q_In > 0)
+   		THEN (interface.Inflow[SCOD]) / state.Q_In
+   		ELSE 0.0 ;
+  };
+
+:};
+ 
+#endif // IUWS_CONNECTORS_CSO_SIMPLE_SEWCONC

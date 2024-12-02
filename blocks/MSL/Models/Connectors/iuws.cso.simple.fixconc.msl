@@ -1,0 +1,46 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date $
+ *
+ ******************************************************************************/
+
+ 
+#ifndef IUWS_CONNECTORS_CSO_SIMPLE_FIXCONC
+#define IUWS_CONNECTORS_CSO_SIMPLE_FIXCONC
+
+ CLASS CSOToRiver_Simple_FixConc
+ (* icon = "CSO"; is_default = "true" *)
+ "A sewer (Kosim) to river (Duflow Simple) influent transformer for CSOs with fixed concentration"
+ EXTENDS CSOToRiver_Simple_Base WITH
+ {:
+ 
+  comments <- "A sewer (Kosim) to river (Duflow Simple) influent transformer for CSOs with fixed concentration";
+
+  parameters <-
+  {
+   OBJ BOD_CSO (* is_favorite = "1" *) "BOD concentration in CSO" : Concentration := {: value <- 45.0; group <- "Concentrations" :};
+   OBJ COD_CSO (* is_favorite = "1" *) "COD concentration in CSO" : Concentration := {: value <- 160.0; group <- "Concentrations" :};
+   OBJ NH4_CSO (* is_favorite = "1" *) "NH4 concentration in CSO" : Concentration := {: value <- 3.5; group <- "Concentrations" :};
+  };
+
+  initial <-
+  {
+   state.Help_BOD1 = parameters.fBOD1_BOD * parameters.BOD_CSO ;
+   state.Help_BOD2 = (1 - parameters.fBOD1_BOD) * parameters.BOD_CSO ;
+   state.Help_CBOD2 = parameters.fBOD2_CODmBOD * (parameters.COD_CSO - parameters.BOD_CSO) ;
+   state.Help_C_NH4 = parameters.NH4_CSO ;
+  };
+
+:};
+ 
+#endif // IUWS_CONNECTORS_CSO_SIMPLE_FIXCONC

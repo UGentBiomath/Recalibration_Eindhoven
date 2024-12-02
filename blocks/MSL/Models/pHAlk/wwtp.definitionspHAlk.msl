@@ -1,0 +1,61 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE pHAlkComponents "The components considered" = 
+ENUM
+{
+  H2O,
+  S_H,
+  S_Na,
+  S_K,
+  S_Ca,
+  S_Mg,
+  S_NH,
+  S_Cl,
+  S_VFA,
+  S_Pr,
+  S_CO3,
+  S_SO4,
+  S_PO4,
+  S_H2,
+  S_U,
+  S_F,
+  S_Glu,
+  S_NOx,
+  S_O,
+  X_U_Inf,
+  X_B_Org,
+  X_PAO_PP,
+  X_PAO_Stor,
+  X_Str_NH4,
+  X_ACP,
+  X_Str_K,
+  X_Cal,
+  X_Mag,
+  X_Newb,
+  X_OHO,
+  X_PAO,
+  X_AD,
+  X_AC,
+  X_AM,
+  X_HM,
+  X_U_Org,
+  X_B_Inf,
+  X_ANO,
+  X_ISS,
+  pH_m,
+  Alkalinity_m,
+  Conductivity_m
+};
+
+#define pHAlkStandardCategoryModels
+OBJ pHAlkIndexOfSolvent "Index of the solvent in the component vector" : Integer := 1;
+#define pHAlkSolublesPresent
+OBJ pHAlkIndexOfFirstSolubleComponent "Index of the first soluble component in the component vector" : Integer := 2;
+OBJ pHAlkIndexOfLastSolubleComponent "Index of the last soluble component in the component vector" : Integer := 19;
+#define pHAlkParticulatesPresent
+OBJ pHAlkIndexOfFirstParticulateComponent "Index of the first particulate component in the component vector" : Integer := 20;
+OBJ pHAlkIndexOfLastParticulateComponent "Index of the last particulate component in the component vector" : Integer := 39;
+#define pHAlkCalculateTSSComponent
+OBJ pHAlkIndexOfFirstTSSComponent "Index of the first TSS component in the component vector" : Integer := 20;
+OBJ pHAlkIndexOfLastTSSComponent "Index of the last TSS component in the component vector" : Integer := 39;
+

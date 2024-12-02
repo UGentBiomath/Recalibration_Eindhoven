@@ -1,0 +1,75 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+  interface <-
+  {
+    #include "ASM1_AB/wwtp.VolumeASM1_ABModel.interface.msl"
+  };
+
+  parameters <-
+  {
+    #include "ASM1_AB/wwtp.VolumeASM1_ABConversionModel.parameters.msl"
+  };
+
+  state <-
+  {
+    #include "ASM1_AB/wwtp.VolumeASM1_ABConversionModel.state.msl"
+  };
+
+  initial <-
+  {
+    // Params
+
+
+    // StateVars
+
+
+    // Extra
+
+
+    // Stoichiometry
+
+    #include "ASM1_AB/wwtp.VolumeASM1_ABConversionModel.stoichiometry.msl"
+  };
+
+  equations <-
+  {
+    // StateVars
+
+    state.K_X_T = parameters.K_B_hyd * pow(parameters.theta_K_X, state.Temp_Actual - parameters.Temp_Ref);
+    state.X_TSS = (state.C[X_OHO] + state.C[X_ANO] + state.C[X_U] + state.C[X_B] + state.C[X_E]) * parameters.F_TSS_COD;
+    state.b_ANO_T = parameters.b_ANO * pow(parameters.theta_b_ANO, state.Temp_Actual - parameters.Temp_Ref);
+    state.b_OHO_T = parameters.b_OHO * pow(parameters.theta_b_OHO, state.Temp_Actual - parameters.Temp_Ref);
+    state.f_STO = parameters.f_Shunt_max * state.C[S_O] / (parameters.K_O_STO + state.C[S_O]);
+    state.k_EPS_PC = state.k_EPS_SC * parameters.Y_OHO * (1 - state.k_STO_PC) / (1 + (state.k_EPS_SC * parameters.Y_OHO));
+    state.k_EPS_SC = (parameters.k_EPS_max / parameters.i_CB) * (state.C[S_O] / (parameters.K_O_EPS + state.C[S_O]));
+    state.k_STO_PC = state.f_STO * parameters.Y_OHO / (1 + state.f_STO * parameters.Y_OHO);
+    state.k_a_T = parameters.k_a * pow(parameters.theta_k_a, state.Temp_Actual - parameters.Temp_Ref);
+    state.k_h_T = parameters.q_XB_hyd * pow(parameters.theta_k_h, state.Temp_Actual - parameters.Temp_Ref);
+    state.mu_ANO_T = parameters.mu_ANO * pow(parameters.theta_mu_ANO, state.Temp_Actual - parameters.Temp_Ref);
+    state.mu_OHO_T = parameters.mu_OHO * pow(parameters.theta_mu_OHO, state.Temp_Actual - parameters.Temp_Ref);
+    state.mu_OHOs_T = parameters.mu_OHOs * pow(parameters.theta_mu_OHO, state.Temp_Actual - parameters.Temp_Ref);
+    state.r_ads_B = (state.C[X_OHO] + state.C[X_ANO]) * (parameters.K_SL / (state.C[C_B] / (state.C[X_OHO] + state.C[X_ANO]) + parameters.K_SL)) * (state.C[X_EPS] / (parameters.K_EPS + state.C[X_EPS]));
+    state.r_ads_U = (state.C[X_OHO] + state.C[X_ANO]) * (parameters.K_SL / (state.C[C_U] / (state.C[X_OHO] + state.C[X_ANO]) + parameters.K_SL)) * (state.C[X_EPS] / (parameters.K_EPS + state.C[X_EPS]));
+    state.r_dia = state.mu_OHOs_T * (state.C[S_Bs] / (parameters.K_Bs + state.C[S_Bs])) * (parameters.K_Bf / (parameters.K_Bf + state.C[S_Bf])) * (state.C[S_O] / (parameters.K_O_OHO + state.C[S_O])) * (state.C[S_NHx] / (parameters.K_NHx_OHO + state.C[S_NHx])) * state.C[X_OHO];
+    state.r_dual = state.mu_OHO_T * (state.C[S_Bs] / (parameters.K_Bs + state.C[S_Bs])) * (state.C[S_O] / (parameters.K_O_OHO + state.C[S_O])) * (state.C[S_NHx] / (parameters.K_NHx_OHO + state.C[S_NHx])) * state.C[X_OHO];
+    state.r_hydr_org = state.k_h_T * (state.C[X_B] / state.C[X_OHO]) / (state.K_X_T + (state.C[X_B] / state.C[X_OHO])) * ((state.C[S_O] / (parameters.K_O_OHO + state.C[S_O])) + parameters.n_hyd * (parameters.K_O_OHO / (parameters.K_O_OHO + state.C[S_O])) * (state.C[S_NOx] / (parameters.K_NOx_OHO + state.C[S_NOx]))) * state.C[X_OHO];
+
+    // Extra
+
+      // TT 3768 Obsolete
+      // state.S_O_Saturation = 14.65 - 0.41 * state.Temp_Actual + 0.00799 * state.Temp_Actual * state.Temp_Actual - 7.78e-005 * state.Temp_Actual * state.Temp_Actual * state.Temp_Actual ;
+      state.S_O_Saturation = 290326 * exp(- 66.7354 + 87.4755 / ((state.Temp_Actual + 273.15) / 100.0) + 24.4526 * log((state.Temp_Actual + 273.15) / 100.0)) ;
+
+    // Stoichiometry
+
+    #include "ASM1_AB/wwtp.VolumeASM1_ABConversionModel.stoichiometry2.msl"
+
+    // Kinetics
+
+    #include "ASM1_AB/wwtp.VolumeASM1_ABConversionModel.kinetics.msl"
+
+    // InterfaceVars
+
+    #include "ASM1_AB/wwtp.VolumeASM1_ABModel.sensors.msl"
+  };
+

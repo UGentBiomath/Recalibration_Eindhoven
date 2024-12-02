@@ -1,0 +1,25 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    state.Kinetics[decay_aa] = parameters.kdec_xaa * state.C[X_aa];
+    state.Kinetics[decay_ac] = parameters.kdec_xac * state.C[X_ac];
+    state.Kinetics[decay_c4] = parameters.kdec_xc4 * state.C[X_c4];
+    state.Kinetics[decay_fa] = parameters.kdec_xfa * state.C[X_fa];
+    state.Kinetics[decay_h2] = parameters.kdec_xh2 * state.C[X_h2];
+    state.Kinetics[decay_pro] = parameters.kdec_xpro * state.C[X_pro];
+    state.Kinetics[decay_su] = parameters.kdec_xsu * state.C[X_su];
+    state.Kinetics[dis] = parameters.kdis * state.C[X_c];
+    state.Kinetics[hyd_ch] = parameters.khyd_ch * state.C[X_ch];
+    state.Kinetics[hyd_li] = parameters.khyd_li * state.C[X_li];
+    state.Kinetics[hyd_pr] = parameters.khyd_pr * state.C[X_pr];
+    state.Kinetics[transfer_ch4] = parameters.kla * (state.C[S_ch4] - state.KH_ch4 * state.C[G_CH4] * parameters.R * state.help_T_op);
+    state.Kinetics[transfer_co2] = parameters.kla * (state.S_co2 - state.KH_co2 * state.C[G_CO2] * parameters.R * state.help_T_op);
+    state.Kinetics[transfer_h2] = parameters.kla * (state.C_h2 - state.KH_h2 * state.C[G_H2] * parameters.R * state.help_T_op);
+    state.Kinetics[uptake_aa] = parameters.km_aa * state.C[X_aa] * state.C[S_aa] /(parameters.Ks_aa + state.C[S_aa]) * state.I_pH_bac * state.I_NH_limit;
+    state.Kinetics[uptake_ac] = parameters.km_ac * state.C[X_ac] * state.C[S_ac] / (parameters.Ks_ac + state.C[S_ac]) * state.I_pH_ac * state.I_nh3_ac * state.I_NH_limit;
+    state.Kinetics[uptake_bu] = parameters.km_c4 * state.C[X_c4] * state.C[S_bu] / (parameters.Ks_c4 + state.C[S_bu]) * state.C[S_bu] / (state.C[S_bu] + state.C[S_va] + 0.000001) * state.I_pH_bac * state.I_h2_c4 * state.I_NH_limit;
+    state.Kinetics[uptake_fa] = parameters.km_fa * state.C[X_fa] * state.C[S_fa] / (parameters.Ks_fa + state.C[S_fa]) * state.I_pH_bac * state.I_h2_fa * state.I_NH_limit;
+    state.Kinetics[uptake_h2] = parameters.km_h2 * state.C[X_h2] * state.C_h2 / (parameters.Ks_h2 + state.C_h2) * state.I_pH_h2 * state.I_NH_limit;
+    state.Kinetics[uptake_pro] = parameters.km_pro * state.C[X_pro] * state.C[S_pro] / (parameters.Ks_pro + state.C[S_pro]) * state.I_pH_bac * state.I_h2_pro * state.I_NH_limit;
+    state.Kinetics[uptake_su] = parameters.km_su * state.C[X_su] * state.C[S_su] / (parameters.Ks_su + state.C[S_su]) * state.I_pH_bac * state.I_NH_limit;
+    state.Kinetics[uptake_va] = parameters.km_c4 * state.C[X_c4] * state.C[S_va] / (parameters.Ks_c4 + state.C[S_va]) * state.C[S_va] / (state.C[S_va] + state.C[S_bu] + 0.000001) * state.I_pH_bac * state.I_h2_c4 * state.I_NH_limit;
+

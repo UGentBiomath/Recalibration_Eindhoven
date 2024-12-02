@@ -1,0 +1,43 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 15:21:58$
+ *
+ ******************************************************************************/
+
+#ifndef IUWS_CONTROLLERS_ONOFFIDEAL_NEG
+#define IUWS_CONTROLLERS_ONOFFIDEAL_NEG
+
+CLASS OnOffIdeal_neg
+  (* icon = "Controller" *)
+  "Ideal On-off controller with negative y_M"
+  EXTENDS SewerControllers_Base WITH 
+  {:
+
+  comments <- "A model for an on-off controller";
+
+  parameters <-
+  {
+   OBJ y_S "Setpoint value for controlled variable" : Real := {: value <- 2.0; group <- "Operational" :};
+   OBJ u_Off "Output when off" : Real := {: value <- 10.0 ; group <- "Operational" :};
+   OBJ u_On	"Output when on" : Real := {: value <- 20.0 ; group <- "Operational" :};
+  };
+
+  equations <-
+  {
+   interface.u = IF (- interface.y_M > parameters.y_S) THEN parameters.u_Off
+   		ELSE parameters.u_On ;
+  };
+
+ :};
+
+#endif // IUWS_CONTROLLERS_ONOFFIDEAL_NEG

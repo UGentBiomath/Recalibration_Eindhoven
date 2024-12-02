@@ -1,0 +1,55 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE ADM1Components "The components considered" = 
+ENUM
+{
+  H2O,
+  S_INN,
+  S_IC,
+  S_ch4,
+  S_h2,
+  S_IC_liq,
+  S_ch4_liq,
+  S_h2_liq,
+  S_aa,
+  S_ac,
+  S_bu,
+  S_fa,
+  S_Inert,
+  S_pro,
+  S_su,
+  S_va,
+  X_aa,
+  X_ac,
+  X_c,
+  X_c4,
+  X_ch,
+  X_fa,
+  X_h2,
+  X_Inert,
+  X_li,
+  X_pr,
+  X_pro,
+  X_su,
+  S_an,
+  S_cat,
+  G_CO2,
+  G_H2,
+  G_CH4
+};
+
+#define ADM1StandardCategoryModels
+OBJ ADM1IndexOfSolvent "Index of the solvent in the component vector" : Integer := 1;
+#define ADM1SolublesPresent
+OBJ ADM1IndexOfFirstSolubleComponent "Index of the first soluble component in the component vector" : Integer := 2;
+OBJ ADM1IndexOfLastSolubleComponent "Index of the last soluble component in the component vector" : Integer := 16;
+#define ADM1ParticulatesPresent
+OBJ ADM1IndexOfFirstParticulateComponent "Index of the first particulate component in the component vector" : Integer := 17;
+OBJ ADM1IndexOfLastParticulateComponent "Index of the last particulate component in the component vector" : Integer := 28;
+#define ADM1GasesPresent
+OBJ ADM1IndexOfFirstGasComponent "Index of the first gas component in the component vector" : Integer := 31;
+OBJ ADM1IndexOfLastGasComponent "Index of the last gas component in the component vector" : Integer := 33;
+#define ADM1CalculateTSSComponent
+OBJ ADM1IndexOfFirstTSSComponent "Index of the first TSS component in the component vector" : Integer := 17;
+OBJ ADM1IndexOfLastTSSComponent "Index of the last TSS component in the component vector" : Integer := 28;
+

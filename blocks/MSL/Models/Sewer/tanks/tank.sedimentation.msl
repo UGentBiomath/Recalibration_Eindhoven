@@ -1,0 +1,65 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:30$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_TANKS_TANK_WITHSEDIMENTATION
+#define SEWER_TANKS_TANK_WITHSEDIMENTATION
+
+CLASS Tank_wSedimentation (* icon = "Tank" *)
+"Retention volume of the system: buffertank with linear outflow equation"
+ //One tank pipe, containing the FullPipe variable to display an error 
+ //message during simulation to tell the user that the pipe is carrying more than
+ //it can take and that backwater effects are happening.
+EXTENDS Tank_Runoff WITH
+{:
+ 
+  comments <- "Retention volume of the system: buffertank with linear outflow equation";
+
+  parameters <-
+  {
+   // favorite and group: missing
+   OBJ Qdwf_max "Maximum dry weather flow": FlowRate := {:value <- 0.15:};
+   OBJ CODmean "Mean particulate COD in the sewer": Mass:= {:value <- 5000000.0:};
+   OBJ kstar "Deposition rate" : Time := {:value <- 10.0:};
+   OBJ kextra "Flow-mass recession constant(resuspension)" : Time := {:value <- 15.0:};
+   OBJ b1 "Flow influence on sedimentation" : Concentration := {:value <- 1000.0:};
+   OBJ bmax "Flow-mass influence on resuspension constant" : Concentration := {:value <- 30.0:};
+  };
+
+  state <-
+  {
+   OBJ Deposit "COD for sedimentation" : Mass ;
+   OBJ DepositChange (* hidden = "0" *) "MassDifferential" : Real ;
+  };
+
+  equations <-
+  {
+   state.ConversionTermPerSewComponent[XCOD]= - state.DepositChange ;
+   
+   DERIV(state.Deposit,[independent.t]) = state.DepositChange ;
+   
+   state.DepositChange = IF (state.Q_In <= parameters.Qdwf_max) THEN // DW conditions
+   	IF (state.InFluxPerComponent[XCOD] > previous(state.DepositChange))
+   		THEN MSLUGetMin2(- 1.0/parameters.kstar * (state.Deposit - parameters.CODmean) - parameters.b1 *
+   		(state.Q_In - parameters.Qdwf_max), state.InFluxPerComponent[XCOD])
+   		ELSE state.InFluxPerComponent[XCOD]
+   	ELSE -1.0/parameters.kstar * (state.Deposit - parameters.CODmean)  //Rain
+   	- parameters.bmax * (1.0 - exp(-state.Deposit/ parameters.kextra)) * (state.Q_In - parameters.Qdwf_max) ;
+  };
+
+:};
+
+#endif // SEWER_TANKS_TANK_WITHSEDIMENTATION

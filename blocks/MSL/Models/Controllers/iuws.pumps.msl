@@ -1,0 +1,287 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 15:21:58$
+ *
+ ******************************************************************************/
+
+#ifndef IUWS_CONTROLLERS_PUMPS
+#define IUWS_CONTROLLERS_PUMPS
+
+// Remark: not derived from controller base class
+
+CLASS SewerPumps_Base
+"Base class for sewer pumps"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  {
+   OBJ Q_pipe (* terminal = "out_1"; is_favorite = "1" *) "Flow from pipe" : FlowRate := {: causality <- "COUT" ; group <- "Control action" :};
+
+   OBJ IsActive (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Active = 1, not active = 0" : Integer := {: causality <- "CIN"; value <- 1; interval  <- {: lowerBound <- 0; upperBound <- 1 :}; group <- "Control" :};
+   OBJ Q_Lim (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Limited flow from pipe" : FlowRate := {: causality <- "CIN"; value <- 0.0 ; group <- "Operational" :};
+   OBJ Q_Def (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Default flow from pipe" : FlowRate := {: causality <- "CIN"; value <- 0.0 ; group <- "Operational" :};
+  };
+  
+  independent <-
+  {
+   OBJ t "Time": Time ;
+  };
+
+:};
+
+
+
+CLASS Pipe_pump_limiter
+  (* icon = "Controller" *)
+  "Controller to limit the pumping from pipe"
+  EXTENDS SewerPumps_Base WITH 
+  {:
+
+  comments <- "Controller to limit the pumping from pipe";
+
+  interface <-
+  {
+   OBJ FD (* terminal = "in_1"; is_favorite = "1" *) "Filling degree pipe" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+   OBJ FD_th_pipe (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Filling degree threshold at pipe for deactivation" : Real := {: causality <- "CIN"; value <- 0.8 ; group <- "Operational" :};
+  };
+
+  equations <-
+  {
+   interface.Q_pipe = IF ((interface.IsActive == 0) || (interface.FD > interface.FD_th_pipe))
+   		THEN interface.Q_Def
+		ELSE interface.Q_Lim ; 
+  };
+
+ :};
+
+
+
+CLASS Pipe_pump_limiter_offset
+  (* icon = "Controller" *)
+  "Controller to limit the pumping from pipe, for backwater effect"
+  EXTENDS SewerPumps_Base WITH 
+  {:
+
+  comments <- "Controller to limit the pumping from pipe, for backwater effect";
+
+  interface <-
+  {
+   // Q_max -> Q_pump
+   OBJ FD_us (* terminal = "in_1"; is_favorite = "1" *) "Filling degree pipe upstream" : Real := {: causality <- "CIN"; group <- "Measurement data" :};
+   OBJ FD_ds (* terminal = "in_1"; is_favorite = "1" *) "Filling degree pipe downstream" : Real := {: causality <- "CIN"; group <- "Measurement data" :};
+   OBJ FD_th_up (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Filling degree thredshold at upstream pipe for activation" : Real := {: causality <- "CIN"; value <- 0.4 ; group <- "Operational" :};
+   OBJ FD_offset (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Filling degree offset DS-US" : Real := {: causality <- "CIN"; value <- 0.2 ; group <- "Operational" :};
+  };
+
+  equations <-
+  {
+   interface.Q_pipe = IF ((interface.IsActive == 0) || (interface.FD_ds < interface.FD_th_up) || ((interface.FD_ds - interface.FD_us) < interface.FD_offset))
+   		THEN interface.Q_Def
+		ELSE interface.Q_Lim ; 
+  };
+
+ :};
+
+
+
+CLASS Pipe_retention
+  (* icon = "Controller" *)
+  "Controller to increase pipe retention and delay WWTP load"
+  EXTENDS SewerPumps_Base WITH 
+  {:
+
+  comments <- "Controller to increase pipe retention and delay WWTP load";
+
+  interface <-
+  {
+   // Q_pipe -> Q_pump
+   OBJ Q_WWTP (* terminal = "in_1"; is_favorite = "1" *) "Flow to WWTP" : FlowRate := {: causality <- "CIN" ; group <- "Measurement data" :};
+   OBJ FD (* terminal = "in_1"; is_favorite = "1" *) "Filling degree pipe" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+   OBJ FD_RBT (* terminal = "in_1"; is_favorite = "1" *) "Filling degree at RBT" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+   OBJ bp2RBT (* terminal = "out_1"; is_favorite = "1" *) "Bypass to RBT (1 yes, 0 no)" : Fraction := {: causality <- "COUT" ; group <- "Control action" :};
+   OBJ Q_th_WWTP (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Threshold Q at WWTP" : FlowRate := {: causality <- "CIN"; value <- 360000 ; group <- "Operational" :};
+   OBJ FD_th_pipe (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Filling degree threshold at pipe for deactivation" : Real := {: causality <- "CIN"; value <- 0.8 ; group <- "Operational" :};
+   OBJ FD_th_RBT (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Filling degree threshold at RBT for deactivation" : Real := {: causality <- "CIN"; value <- 0.8 ; group <- "Operational" :};
+  };
+
+  parameters <-
+  {
+   OBJ dQ_pipe (* is_favorite = "1" *) "Rate of change of flow rate for pipe" : FlowRateRate := {: value <- 3732480000 ; group <- "Operational" :};
+   OBJ dQ_bp "Rate of change of flow rate for bypass" : Real := {: value <- 3000 ; group <- "Operational" :};
+  };
+  
+  state <-
+  {
+   OBJ help_u (* hidden = "1" *) "Previous u help variable" : FlowRate := {: group <- "Operational" :};
+   OBJ help_u_h (* hidden = "1" *) "Previous u help variable" : FlowRate := {: group <- "Operational" :};
+   OBJ help_u1 (* hidden = "1" *) "Previous u help variable" : Real := {: group <- "Operational" :};
+   OBJ help_u1_h (* hidden = "1" *) "Previous u help variable" : Real := {: group <- "Operational" :};
+   OBJ TS (* hidden = "1" *) "Time step" : Time := {: group <- "Operational" :};
+  };
+
+  initial <-
+  {
+   interface.Q_pipe = interface.Q_Def ;
+  };
+
+  equations <-
+  {
+   state.TS = independent.t - previous(independent.t) ;
+   state.help_u = interface.Q_pipe ;
+   
+   state.help_u_h = IF ((interface.IsActive == 0) || (interface.Q_WWTP < interface.Q_th_WWTP))
+		THEN previous(state.help_u) + parameters.dQ_pipe * state.TS
+		ELSE IF (interface.FD < interface.FD_th_pipe)
+			 THEN previous(state.help_u) - parameters.dQ_pipe * state.TS
+			 ELSE previous(state.help_u) + parameters.dQ_pipe * state.TS ;
+
+   interface.Q_pipe = IF (state.help_u_h > interface.Q_Def) THEN interface.Q_Def
+   		ELSE IF (state.help_u_h < interface.Q_Lim) THEN interface.Q_Lim
+			 ELSE state.help_u_h ;
+							 
+   state.help_u1 = interface.bp2RBT ;
+   
+   state.help_u1_h = IF ((interface.IsActive == 0) || (interface.FD < interface.FD_th_pipe))
+   		THEN previous(state.help_u1) - parameters.dQ_bp * state.TS
+		ELSE IF ((previous(interface.Q_pipe) < interface.Q_pipe) && (interface.FD_RBT < interface.FD_th_RBT))
+			 THEN previous(state.help_u1) + parameters.dQ_bp * state.TS
+			 ELSE IF ((previous(state.help_u1) >= state.help_u1) && (interface.FD_RBT < interface.FD_th_RBT))
+			 	  THEN previous(state.help_u1) + parameters.dQ_bp * state.TS
+				  ELSE previous(state.help_u1) - parameters.dQ_bp * state.TS ;
+
+   interface.bp2RBT = IF (previous(state.help_u1_h) > 1) THEN 1
+   		ELSE IF (previous(state.help_u1_h) < 0) THEN 0
+		ELSE previous(state.help_u1_h) ;
+  };
+
+ :};
+
+
+
+CLASS RBT_Spill_Min
+  (* icon = "Controller" *)
+  "Controller to minimize RBT spilling"
+  SPECIALISES PhysicalDAEModelType :=
+{:
+
+  comments <- "Controller to minimize RBT spilling";
+  
+  interface <-
+  {
+   OBJ FD_RBT (* terminal = "in_1"; is_favorite = "1" *) "Filling degree at RBT" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+   OBJ FD_1 (* terminal = "in_1"; is_favorite = "1" *) "Filling degree at pipe No.1" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+   OBJ FD_2 (* terminal = "in_1"; is_favorite = "1" *) "Filling degree at pipe No.1" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+   OBJ FD_3 (* terminal = "in_1"; is_favorite = "1" *) "Filling degree at pipe No.1" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+   OBJ FD_4 (* terminal = "in_1"; is_favorite = "1" *) "Filling degree at pipe No.1" : Real := {: causality <- "CIN" ; group <- "Measurement data" :};
+   OBJ IsActive (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Active = 1, not active = 0" : Integer := {: causality <- "CIN"; value <- 1; interval  <- {: lowerBound <- 0; upperBound <- 1 :}; group <- "Control" :};
+   OBJ Q_Def1 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Default flow at pipe No.1" : FlowRate := {: causality <- "CIN"; value <- 0.0 ; group <- "Operational" :};
+   OBJ Q_Def2 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Default flow at pipe No.2" : FlowRate := {: causality <- "CIN"; value <- 0.0 ; group <- "Operational" :};
+   OBJ Q_Def3 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Default flow at pipe No.3" : FlowRate := {: causality <- "CIN"; value <- 0.0 ; group <- "Operational" :};
+   OBJ Q_Def4 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Default flow at pipe No.4" : FlowRate := {: causality <- "CIN"; value <- 0.0 ; group <- "Operational" :};
+   OBJ Q_Lim1 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Limited flow from pipe No.1" : FlowRate := {: causality <- "CIN"; value <- 0.0 ; group <- "Operational" :};
+   OBJ Q_Lim2 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Limited flow from pipe No.1" : FlowRate := {: causality <- "CIN"; value <- 0.0 ; group <- "Operational" :};
+   OBJ Q_Lim3 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Limited flow from pipe No.1" : FlowRate := {: causality <- "CIN"; value <- 0.0 ; group <- "Operational" :};
+   OBJ Q_Lim4 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Limited flow from pipe No.1" : FlowRate := {: causality <- "CIN"; value <- 0.0 ; group <- "Operational" :};
+   OBJ FD_th_pipe (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Filling degree thredshold at pipe for deactivation" : Real := {: causality <- "CIN"; value <- 0.8 ; group <- "Operational" :};
+   OBJ FD_th_RBT (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Filling degree thredshold at RBT for deactivation" : Real := {: causality <- "CIN"; value <- 0.9 ; group <- "Operational" :};
+
+   OBJ Q_1 (* terminal = "out_1"; is_favorite = "1" *) "Flow rate at pipe no.1" : Fraction := {: causality <- "COUT" ; group <- "Control action" :};
+   OBJ Q_2 (* terminal = "out_1"; is_favorite = "1" *) "Flow rate at pipe no.2" : Fraction := {: causality <- "COUT" ; group <- "Control action" :};
+   OBJ Q_3 (* terminal = "out_1"; is_favorite = "1" *) "Flow rate at pipe no.3" : Fraction := {: causality <- "COUT" ; group <- "Control action" :};
+   OBJ Q_4 (* terminal = "out_1"; is_favorite = "1" *) "Flow rate at pipe no.4" : Fraction := {: causality <- "COUT" ; group <- "Control action" :};
+  };
+  
+  parameters <-
+  {
+   OBJ dQ_pipe (* is_favorite = "1" *) "Rate of change of flow rate for pipe" : FlowRateRate := {: value <- 34560000 ; group <- "Operational" :};
+  };
+
+  state <-
+  {
+   OBJ help_u1 (* hidden = "1" *) "Previous u help variable" : Real := {: group <- "Operational" :};
+   OBJ help_u1_h (* hidden = "1" *) "Previous u help variable" : Real := {: group <- "Operational" :};
+   OBJ TS (* hidden = "1" *) "Time step" : Time := {: group <- "Operational" :};
+
+   OBJ help_u2 (* hidden = "1" *) "Previous u help variable" : Real := {: group <- "Operational" :};
+   OBJ help_u2_h (* hidden = "1" *) "Previous u help variable" : Real := {: group <- "Operational" :};
+   OBJ help_u3 (* hidden = "1" *) "Previous u help variable" : Real := {: group <- "Operational" :};
+   OBJ help_u3_h (* hidden = "1" *) "Previous u help variable" : Real := {: group <- "Operational" :};
+   OBJ help_u4 (* hidden = "1" *) "Previous u help variable" : Real := {: group <- "Operational" :};
+   OBJ help_u4_h (* hidden = "1" *) "Previous u help variable" : Real := {: group <- "Operational" :};
+  };
+
+  independent <-
+  {
+   OBJ t "Time": Time ;
+  };
+
+  equations <-
+  {
+   state.TS = independent.t - previous(independent.t) ;
+
+   state.help_u1 = interface.Q_1 ;
+   
+   state.help_u1_h = IF ((interface.IsActive == 0) || (interface.FD_1 < interface.FD_th_pipe))
+   		THEN previous(state.help_u1) + parameters.dQ_pipe * state.TS
+		ELSE IF (interface.FD_RBT > interface.FD_th_RBT)
+			 THEN previous(state.help_u1) - parameters.dQ_pipe * state.TS
+			 ELSE previous(state.help_u1) + parameters.dQ_pipe * state.TS ;
+
+   interface.Q_1 = IF (state.help_u1_h > interface.Q_Def1) THEN interface.Q_Def1
+   		ELSE IF (state.help_u1_h < interface.Q_Lim1) THEN interface.Q_Lim1
+			 ELSE state.help_u1_h ; 
+
+   // Pipe No.2
+   state.help_u2 = interface.Q_2 ;
+
+   state.help_u2_h = IF ((interface.IsActive == 0) || (interface.FD_2 < interface.FD_th_pipe))
+   		THEN previous(state.help_u2) + parameters.dQ_pipe * state.TS
+		ELSE IF (interface.FD_RBT > interface.FD_th_RBT)
+			 THEN previous(state.help_u2) - parameters.dQ_pipe * state.TS
+			 ELSE previous(state.help_u2) + parameters.dQ_pipe * state.TS ;
+
+   interface.Q_2 = IF (state.help_u2_h > interface.Q_Def2) THEN interface.Q_Def2
+   		ELSE IF (state.help_u2_h < interface.Q_Lim2) THEN interface.Q_Lim2
+			 ELSE state.help_u2_h ; 
+
+   // Pipe No.3
+   state.help_u3 = interface.Q_3 ;
+
+   state.help_u3_h = IF ((interface.IsActive == 0) || (interface.FD_3 < interface.FD_th_pipe))
+   		THEN previous(state.help_u3) + parameters.dQ_pipe * state.TS
+		ELSE IF (interface.FD_RBT > interface.FD_th_RBT)
+			 THEN previous(state.help_u3) - parameters.dQ_pipe * state.TS
+			 ELSE previous(state.help_u3) + parameters.dQ_pipe * state.TS ;
+
+   interface.Q_3 = IF (state.help_u3_h > interface.Q_Def3) THEN interface.Q_Def3
+   		ELSE IF (state.help_u3_h < interface.Q_Lim3) THEN interface.Q_Lim3
+			 ELSE state.help_u3_h ; 
+
+   // Pipe No.4
+   state.help_u4 = interface.Q_4 ;
+
+   state.help_u4_h = IF ((interface.IsActive == 0) || (interface.FD_4 < interface.FD_th_pipe))
+   		THEN previous(state.help_u4) + parameters.dQ_pipe * state.TS
+		ELSE IF (interface.FD_RBT > interface.FD_th_RBT)
+			 THEN previous(state.help_u4) - parameters.dQ_pipe * state.TS
+			 ELSE previous(state.help_u4) + parameters.dQ_pipe * state.TS ;
+
+   interface.Q_4 = IF (state.help_u4_h > interface.Q_Def3) THEN interface.Q_Def4
+   		ELSE IF (state.help_u4_h < interface.Q_Lim4) THEN interface.Q_Lim4
+			 ELSE state.help_u4_h ; 
+  };
+
+:};
+ 
+#endif // IUWS_CONTROLLERS_PUMPS

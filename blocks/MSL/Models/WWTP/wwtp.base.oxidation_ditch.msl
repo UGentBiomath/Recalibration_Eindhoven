@@ -1,0 +1,100 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:40$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_BASE_OXYDATION_DITCH
+#define WWTP_BASE_OXYDATION_DITCH
+
+
+CLASS Carrousel_Unit
+  (* icon = "carrousel_unit" *)
+  "Coupled model for a single AS unit within a carrousel/oxydation ditch. It incorporates an ASU tank and a controlled internal recycle."
+  SPECIALISES CoupledModelType :=
+  {:
+  comments <- "Coupled model for a single AS unit within a carrousel/oxydation ditch. It incorporates an ASU tank and a controlled internal recycle.";
+
+  interface <-
+  {
+	// FLUXES
+	OBJ Inflow (* terminal = "in_1" *) "Inflow" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+	OBJ Outflow1 (* terminal = "out_1" *) "Outflow" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+	OBJ InflowInternal (* terminal = "in_3" *) "Inflow from internal recycle" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+	OBJ InflowSludge (* terminal = "in_4" *) "Inflow from sludge recycle" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+	OBJ Outflow2 (* terminal = "out_3" *) "Outflow to internal recycle" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+	// MANIP VARS
+	OBJ Kla (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Oxygen transfer coefficient" : OxygenTransferCoefficient := {: causality <- "CIN" ; value <- 0 ; group <- "Operational" :};   
+	#ifdef StandardCategoryModels
+	OBJ Temp (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Temperature of the activated sludge" : CelsiusTemperature  := {: causality <- "CIN" ; value <- 15 ; group <- "Operational" :}; 
+	#endif
+	OBJ Q_In (* terminal = "in_2"; manip = "1" *) "Influent flow rate" : FlowRate := {: causality <- "CIN" ; value <- 10 ; group <- "Operational" :};   
+	OBJ R (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Internal split (to 2nd outflow)" : Real := {: causality <- "CIN" ; value <- 1 ; group <- "Operational" :};   
+//	OBJ AerationEnergy (* terminal = "out_2" *)"Aeration energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+//   OBJ AerationPower (* terminal = "out_2" *) "Aeration power" : Power := {: causality <- "COUT"; group <- "Energy" :};
+//	OBJ MixingEnergy (* terminal = "out_2" *)"Mixing energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+//   OBJ MixingPower (* terminal = "out_2" *) "Mixing power" : Power := {: causality <- "COUT"; group <- "Energy" :};
+  OBJ DO (* terminal = "out_2"; is_favorite = "1" *) "DO concentration" : DissolvedOxygen := {: causality <- "COUT" ; group <- "Sensors" :};
+  };
+
+  parameters <-
+  {
+    OBJ Vol (* is_favorite = "1" *) "Volume of the tank" : Volume := {: value <- 1000; group <- "Dimension"; :};
+  };
+
+  sub_models <-
+  {
+    OBJ ASTank "Activated sludge unit" : FixVolumeASU ;
+    OBJ IR "Ratio Controller" : ConstantRatio;
+    OBJ Combi "Three combiner" : ThreeCombiner;
+    OBJ Split "Two flow splitter" : AbsTwoSplitter;
+  };
+
+  coupling <-
+  {
+    sub_models.ASTank.parameters.Vol.value := parameters.Vol.value,
+
+    connect(sub_models.Combi.interface.Outflow, sub_models.ASTank.interface.Inflow),
+    connect(sub_models.ASTank.interface.Outflow, sub_models.Split.interface.Inflow),
+    connect(sub_models.IR.interface.u, sub_models.Split.interface.Q_Out2),
+
+    // influent -> in_2 of 3-combiner
+	connect(interface.Inflow, sub_models.Combi.interface.Inflow2),
+    // internal recycle in -> in_1 of 3-combiner
+	connect(interface.InflowInternal, sub_models.Combi.interface.Inflow1),
+    // sludge recycle in -> in_3 of 3-combiner
+	connect(interface.InflowSludge, sub_models.Combi.interface.Inflow3),
+    // out_1 of 2-splitter -> effluent
+	connect(sub_models.Split.interface.Outflow1, interface.Outflow1),
+    // out_2 of 2-splitter -> internal recycle out
+	connect(sub_models.Split.interface.Outflow2, interface.Outflow2),
+
+    connect(interface.Temp, sub_models.ASTank.interface.Temp),
+    connect(interface.Kla, sub_models.ASTank.interface.Kla),
+    connect(interface.Q_In, sub_models.IR.interface.y_M),
+    connect(interface.R, sub_models.IR.interface.ConstantRatio),
+#ifdef ASMG1	
+    connect(sub_models.ASTank.interface.DissolvedOxygen, interface.DO),
+#else	
+    connect(sub_models.ASTank.interface.DO, interface.DO),
+#endif // ASMG1	
+  };
+
+:};
+
+
+#include "WWTP/oxidation_ditch/wwtp.oxidation.ditch.04.msl"
+
+
+#endif   //WWTP_BASE_OXYDATION_DITCH

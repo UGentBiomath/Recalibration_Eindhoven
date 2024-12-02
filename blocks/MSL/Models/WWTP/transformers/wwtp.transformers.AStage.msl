@@ -1,0 +1,202 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 6. december 2016 13:05:25$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_TRANSFORMERS_ASTAGE
+#define WWTP_TRANSFORMERS_ASTAGE
+
+#if (defined ASM1Temp)
+
+CLASS ASM1toASM1_AB //(* icon = "activated_sludge_unit" *)
+"Translates the state vector of ASM1 components into their counterparts in ASM1_A"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  comments <- "Translates the state vector of ASM1 components into their counterparts in ASM1_A";
+
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow in flux" : InWWTPTerminal := {: causality <- "CIN"; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : ASM1_ABOutWWTPTerminal := {: causality <- "COUT"; group <- "Effluent" :};
+    OBJ f_S_Bs (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Slowly- to total biodegradable soluble organics" : Fraction := {: causality <- "CIN" ; value <- 0.589 ; group <- "Influent" :};
+    OBJ f_C_B (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Colloidal biodegradable to total suspended biodegradable organics" : Fraction := {: causality <- "CIN" ; value <- 0.124 ; group <- "Influent" :};
+    OBJ f_C_U (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Colloidal non-biodegradable to total suspended non-biodegradable organics" : Fraction := {: causality <- "CIN" ; value <- 0.114 ; group <- "Influent" :};
+    OBJ f_X_STO (* terminal = "in_2"; manip = "1" *) "Fraction of intracellular storage polymeric substances" : Fraction := {: causality <- "CIN" ; value <- 0.0005 ; group <- "Influent" :};
+    OBJ f_X_EPS (* terminal = "in_2"; manip = "1" *) "Fraction of extracellular polymeric substances" : Fraction := {: causality <- "CIN" ; value <- 0.00003 ; group <- "Influent" :};
+  };
+
+  state <-
+  {
+    OBJ Q_In "Flow rate" : FlowRate := {: group <- "Influent specs" :};
+    OBJ C_SU "Concentration of inert soluble organic matter" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_SBf "Conc. of rapidly biodegradable soluble organics" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_SBs "Conc. of slowly biodegradable soluble organics" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_SO "Dissolved oxygen" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_SNOx "Concentration of nitrate and nitrite" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_SNHx "Concentration of total ammonium nitrogen" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_SNorg "Conc. of soluble biodegradable organic nitrogen" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_SAlk "Alkalinity" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_CU "Conc. of colloidal non-biodegradable organics" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_CB "Conc. of colloidal biodegradable organics" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XU "Conc. of inert particulate organic matter" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XB "Conc. of particulate biodegradable organics" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XOHO "Conc. of active heterotrophic biomass" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XANO "Conc. of active autotrophic biomass" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XE "Conc. of particulate non-biodegradable endogenous products" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XEPS "Conc. of extracellular polymeric substances" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XSTO "Conc. of intracellular storage polymeric substances" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XNorg "Conc. of particulate biodegradable organic nitrogen" : Concentration := {: group <- "Influent specs" :};
+  };
+
+  independent <- 
+  {
+    OBJ t "Time" : Time := {: group <- "Time" :};
+  };
+
+  equations <-
+  {
+    state.Q_In = interface.Inflow[H2O] * 1E-06 ;
+    state.C_SU = - interface.Outflow[S_U] / state.Q_In ;
+    state.C_SBf = - interface.Outflow[S_Bf] / state.Q_In ;
+    state.C_SBs = - interface.Outflow[S_Bs] / state.Q_In ;
+    state.C_SO = - interface.Outflow[S_O] / state.Q_In ;
+    state.C_SNOx = - interface.Outflow[S_NOx] / state.Q_In ;
+    state.C_SNHx = - interface.Outflow[S_NHx] / state.Q_In ;
+    state.C_SNorg = - interface.Outflow[S_NB] / state.Q_In ;
+    state.C_SAlk = - interface.Outflow[S_Alk] / state.Q_In ;
+    state.C_CU = - interface.Outflow[C_U] / state.Q_In ;
+    state.C_CB = - interface.Outflow[C_B] / state.Q_In ;
+    state.C_XU = - interface.Outflow[X_U] / state.Q_In ;
+    state.C_XB = - interface.Outflow[X_B] / state.Q_In ;
+    state.C_XOHO = - interface.Outflow[X_OHO] / state.Q_In ;
+    state.C_XANO = - interface.Outflow[X_ANO] / state.Q_In ;
+    state.C_XE = - interface.Outflow[X_E] / state.Q_In ;
+    state.C_XEPS = - interface.Outflow[X_EPS] / state.Q_In ;
+    state.C_XSTO = - interface.Outflow[X_STO] / state.Q_In ;
+    state.C_XNorg = - interface.Outflow[X_NB] / state.Q_In ;
+    
+    interface.Outflow[H2O] = - interface.Inflow[H2O] ;
+    interface.Outflow[S_Bf] = - (1 - interface.f_S_Bs) * interface.Inflow[S_S] ;
+    interface.Outflow[S_Bs] = - interface.f_S_Bs * interface.Inflow[S_S] ;
+    interface.Outflow[S_O] = - interface.Inflow[S_O] ;
+    interface.Outflow[S_U] = - interface.Inflow[S_I] ;
+    interface.Outflow[S_NOx] = - interface.Inflow[S_NO] ;
+    interface.Outflow[S_NHx] = - interface.Inflow[S_NH] ;
+    interface.Outflow[S_NB] = - interface.Inflow[S_ND] ;
+    interface.Outflow[S_Alk] = - interface.Inflow[S_ALK] ;
+    interface.Outflow[C_U] = - interface.f_C_U * interface.Inflow[X_I] ;
+    interface.Outflow[X_U] = - (1 - interface.f_C_U) * interface.Inflow[X_I] ;
+    interface.Outflow[C_B] = - interface.f_C_B * interface.Inflow[X_S] ;
+    interface.Outflow[X_B] = - (1 - interface.f_C_B - interface.f_X_EPS) * interface.Inflow[X_S] ;
+    interface.Outflow[X_OHO] = - interface.Inflow[X_BH] - 0.5 * interface.f_X_STO * (interface.Inflow[X_BH] + interface.Inflow[X_BA]) ;
+    interface.Outflow[X_ANO] = - interface.Inflow[X_BA] - 0.5 * interface.f_X_STO * (interface.Inflow[X_BH] + interface.Inflow[X_BA]) ;
+    interface.Outflow[X_E] = - interface.Inflow[X_P] ;
+    interface.Outflow[X_EPS] = - interface.f_X_EPS * interface.Inflow[X_S] ;
+    interface.Outflow[X_STO] = - interface.f_X_STO * (interface.Inflow[X_BH] + interface.Inflow[X_BA]) ;
+    interface.Outflow[X_NB] = - interface.Inflow[X_ND] ;
+  };
+
+:};
+ 
+ 
+CLASS ASM1_ABtoASM1 // (* icon = "activated_sludge_unit" *)
+"Translates the state vector of ASM1_A components into their counterparts in ASM1"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  comments <- "Translates the state vector of ASM1_A components into their counterparts in ASM1";
+
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : ASM1_ABInWWTPTerminal := {: causality <- "CIN"; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutWWTPTerminal := {: causality <- "COUT"; group <- "Effluent" :};
+  };
+  
+  state <-
+  {
+    OBJ Q_In "Flow rate" : FlowRate := {: group <- "Influent specs" :};
+    OBJ f_OHO (* hidden = "1" *) "Fraction of active OHO" : Fraction := {: group <- "Influent specs" :};    
+    OBJ C_SU "Concentration of inert soluble organic matter" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_SBf "Conc. of rapidly biodegradable soluble organics" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_SBs "Conc. of slowly biodegradable soluble organics" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_SO "Dissolved oxygen" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_SNOx "Concentration of nitrate and nitrite" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_SNHx "Concentration of total ammonium nitrogen" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_SNorg "Conc. of soluble biodegradable organic nitrogen" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_SAlk "Alkalinity" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_CU "Conc. of colloidal non-biodegradable organics" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_CB "Conc. of colloidal biodegradable organics" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XU "Conc. of inert particulate organic matter" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XB "Conc. of particulate biodegradable organics" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XOHO "Conc. of active heterotrophic biomass" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XANO "Conc. of active autotrophic biomass" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XE "Conc. of particulate non-biodegradable endogenous products" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XEPS "Conc. of extracellular polymeric substances" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XSTO "Conc. of intracellular storage polymeric substances" : Concentration := {: group <- "Influent specs" :};
+    OBJ C_XNorg "Conc. of particulate biodegradable organic nitrogen" : Concentration := {: group <- "Influent specs" :};
+  };
+
+  independent <- 
+  {
+    OBJ t "Time": Time:= {: group <- "Time" :} ;
+  };
+
+  equations <-
+  {
+    state.f_OHO = interface.Inflow[X_OHO] / (interface.Inflow[X_OHO] + interface.Inflow[X_ANO]) ;
+    state.Q_In = interface.Inflow[H2O] * 1E-06 ;
+    state.C_SU = interface.Inflow[S_U] / state.Q_In ;
+    state.C_SBf = interface.Inflow[S_Bf] / state.Q_In ;
+    state.C_SBs = interface.Inflow[S_Bs] / state.Q_In ;
+    state.C_SO = interface.Inflow[S_O] / state.Q_In ;
+    state.C_SNOx = interface.Inflow[S_NOx] / state.Q_In ;
+    state.C_SNHx = interface.Inflow[S_NHx] / state.Q_In ;
+    state.C_SNorg = interface.Inflow[S_NB] / state.Q_In ;
+    state.C_SAlk = interface.Inflow[S_Alk] / state.Q_In ;
+    state.C_CU = interface.Inflow[C_U] / state.Q_In ;
+    state.C_CB = interface.Inflow[C_B] / state.Q_In ;
+    state.C_XU = interface.Inflow[X_U] / state.Q_In ;
+    state.C_XB = interface.Inflow[X_B] / state.Q_In ;
+    state.C_XOHO = interface.Inflow[X_OHO] / state.Q_In ;
+    state.C_XANO = interface.Inflow[X_ANO] / state.Q_In ;
+    state.C_XE = interface.Inflow[X_E] / state.Q_In ;
+    state.C_XEPS = interface.Inflow[X_EPS] / state.Q_In ;
+    state.C_XSTO = interface.Inflow[X_STO] / state.Q_In ;
+    state.C_XNorg = interface.Inflow[X_NB] / state.Q_In ;
+
+    interface.Outflow[H2O] = - interface.Inflow[H2O] ;  
+    interface.Outflow[S_S] = - (interface.Inflow[S_Bf] + interface.Inflow[S_Bs]);
+    interface.Outflow[S_O] = - interface.Inflow[S_O] ;
+    interface.Outflow[S_I] = - interface.Inflow[S_U] ;
+    interface.Outflow[S_NO] = - interface.Inflow[S_NOx] ;
+    interface.Outflow[S_NH] = - interface.Inflow[S_NHx] ;
+    interface.Outflow[S_ND] = - interface.Inflow[S_NB] ;
+    interface.Outflow[S_ALK] = - interface.Inflow[S_Alk] ;
+    interface.Outflow[X_I] = - (interface.Inflow[C_U] + interface.Inflow[X_U]) ;
+    interface.Outflow[X_S] = - (interface.Inflow[C_B] + interface.Inflow[X_EPS] + interface.Inflow[X_B]) ;
+    interface.Outflow[X_BH] = - interface.Inflow[X_OHO] + state.f_OHO * interface.Inflow[X_STO] ;
+    interface.Outflow[X_BA] = - interface.Inflow[X_ANO] + (1 - state.f_OHO) * interface.Inflow[X_STO] ;
+    interface.Outflow[X_P] = - interface.Inflow[X_E] ;
+    interface.Outflow[X_ND] = - interface.Inflow[X_NB] ;
+  };
+
+:};
+
+
+#endif
+
+
+#endif // WWTP_TRANSFORMERS_ASTAGE

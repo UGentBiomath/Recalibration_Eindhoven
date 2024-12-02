@@ -1,0 +1,494 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:57$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_FILTER_RAUCH
+#define WWTP_FILTER_RAUCH
+
+
+// This model is a simple dynamic model for fast simulation of the removal
+// of multiple substrates by different bacterial species growing in a
+// biofilm reactor. The model is an extension to the well-know half-order
+// reaction concept that combines a zero order kinetic dependency on substrate
+// concentration with diffusion limitation. The advantage of the model 
+// is the reduction of the computational effort as compared to 
+// state-of-the-art mixed-culture biofilm models.
+
+// Literature :
+// "Rauch W., Vanhooren H., Vanrolleghem P.A. (1998). A dynamic model for
+// fast simulation of mixed-culture biofilms. Wat. Res., accepted for 
+// publication.
+
+
+#ifdef ASM1Temp
+
+
+CLASS Rauch (* class = "trickling_filter" *) "Rauch Model for Biofilm Systems"
+SPECIALISES PhysicalDAEModelType :=
+ {:
+
+  comments <- "Rauch Model for Biofilm Systems" ;
+
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+    OBJ Kla (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Oxygen transfer coefficient" : OxygenTransferCoefficient := {: causality <- "CIN" ; value <- 0 ; group <- "Operational" :};   
+    OBJ Temp (* terminal = "in_2"; manip = "1"; is_favorite = "1" *)  "Temperature" : CelsiusTemperature  := {: causality <- "CIN" ; value <- 20 ; group <- "Operational" :}; 
+  };
+
+  parameters <- 
+  {
+    OBJ V_R "Volume of the reactor" : Volume := {: value <- 1000.0 ; group <- "Dimension" :};
+    OBJ A_R "Section of the reactor" : Area := {: value <- 400.0 ; group <- "Dimension" :};
+    OBJ H_R (* fixed = "1" *) "Height of the reactor" : Length := {: value <- 2.5 ; group <- "Dimension" :} ;    
+    OBJ A_sp "Specific surface area" : SpecificAreaVolume := {: value<- 100; group <- "Dimension" :};
+    OBJ f_vol "Fraction of the total volume occupied by the support material" : Fraction := {: value<- 0.05 ; group <- "Dimension" :};
+//W2017    OBJ As "Biofilm surface area" : Area := {: value <- 22; group <- "Biofilm" :} ;
+    OBJ A_B (* fixed = "1" *) "Area for biofilm growth" : Area := {: value <- 5000.0 ; group <- "Dimension" :};
+    
+    OBJ L_init "Initial biofilm thickness" : Length := {: value <- 100e-6; group <- "Biofilm" :} ;
+    // FAPO 07/05/2019 - maximum biofilm thickness used for derivation of detachment rate - Lackner et al. (2008)
+    OBJ L_max "Maximum biofilm thickness" : Length := {: value <- 10e-3; group <- "Biofilm" :} ;
+    OBJ rho "Biofilm density" : Density := {: value <- 50000; group <- "Biofilm" :} ;
+    // (EURE 25/07/2017) rather rename Ini_..
+    OBJ fh_init "Initial fraction of heterotrophs" : Fraction := {: value <- 0.4; group <- "System" :} ;
+    OBJ fa_init "Initial fraction of autotrophs" : Fraction := {: value <- 0.05; group <- "System" :} ;
+    OBJ fs_init "Initial fraction of hydrolysible particulates" : Fraction := {: value <- 0.15; group <- "System" :} ;
+    OBJ fph_init "Initial fraction of decay products (hetero)" : Fraction := {: value <- 0.32; group <- "System" :} ;
+    OBJ fpa_init "Initial fraction of decay products (auto)" : Fraction := {: value <- 0.04; group <- "System" :} ;
+    OBJ fi_init "Initial fraction of inerts" : Fraction := {: value <- 0.04; group <- "System" :} ;
+    OBJ MND_Biomass_init "Initial fraction of particulate N" : Fraction := {: value <- 0.05; group <- "System" :} ;
+    
+    OBJ mu_h "Growth rate of heterotrophs" : GrowthRate := {: value <- 6; group <- "Kinetics" :};
+    OBJ mu_hh "Growth rate of heterotrophs (anoxic)" : GrowthRate := {: value <- 4; group <- "Kinetics" :} ;
+    OBJ mu_a "Growth rate of autotrophs" : GrowthRate := {: value <- 0.8; group <- "Kinetics" :} ;
+    OBJ b_h "Decay coefficient for heterotrophs" : DecayCoefficient := {: value <- 0.6; group <- "Kinetics" :} ;
+    OBJ b_a "Decay coefficient for autotrophs" : DecayCoefficient := {: value <- 0.4; group <- "Kinetics" :} ;
+    // (EURE 25/07/2017) MaxSpecHydrolysisRate, MaxSpecAmmonRate -> Rate
+    OBJ k_h "Coefficient for hydrolysis of slowly biod. mat." : Rate := {: value <- 3.0; group <- "Kinetics" :} ;
+    OBJ k_a "Coefficient for ammonification of Snd" : Rate := {: value <- 0.08; group <- "Kinetics" :} ;
+    
+    OBJ DiSo "Diffusion coefficient for So" : Diffusivity := {: value <- 2.1e-4; group <- "Diffusivity" :};
+    OBJ DiSs "Diffusion coefficient for Ss" : Diffusivity := {: value <- 0.58e-4; group <- "Diffusivity" :};
+    OBJ DiSnh "Diffusion coefficient for Snh" : Diffusivity := {: value <- 1.8e-4; group <- "Diffusivity" :};
+    OBJ DiSno "Diffusion coefficient for Sno" : Diffusivity := {: value <- 1.0e-4; group <- "Diffusivity" :};
+
+    OBJ ktemp "Coefficient for temp. dependency of growth" : CorrectionFactor := {: value <- 1 :};
+    OBJ Y_h "Heterotrophic yield coefficient" : Yield := {: value <- 0.67; group <- "Kinetics" :};
+    OBJ Y_a "Autotrophic yield coefficient" : Yield := {: value <- 0.24; group <- "Kinetics" :};
+    OBJ fp "Fraction of biomass leading to inert decay prod." : Fraction := {: value <- 0.08; group <- "Kinetics" :};
+    OBJ vs "Settling velocity of part. in liquid" : Velocity := {: value <- 0.0; group <- "Settling" :}; 
+    OBJ ixh "Nitrogen in heterotrophic biomass" : Fraction := {:value <- 0.086; group <- "Composition parameters" :};
+    OBJ ixa "Nitrogen in autotrophic biomass" : Fraction := {:value <- 0.086; group <- "Composition parameters" :}; 
+    OBJ kdt "Coefficient for detachment" : CorrectionFactor := {: value <- 0.1; group <- "Kinetics" :}; 
+    OBJ So_sat "Oxygen saturation concentration" : Concentration := {: value <- 8; group <- "System" :};
+  };
+
+  independent <-
+  {
+    OBJ t "Time"  : Time := {: group <- "Time" :}; 
+  };
+
+  state <-
+  {
+    OBJ V "Water volume" : Volume := {: group <- "Dimension" :} ;
+    OBJ V_B "Biofilm volume" : Volume := {: group <- "System" :} ;
+    // Q_i -> Q_In
+    OBJ Q_In "Influent flow rate" : FlowRate:= {: group <- "Operation" :} ;
+    OBJ MH "Mass of heterotrophs / bulk volume" : Concentration:= {: group <- "Concentration" :} ;
+    OBJ MA "Mass of autotrophs / bulk volume" : Concentration:= {: group <- "Concentration" :} ;
+    OBJ MS "Mass of hydrolysible material / bulk volume" : Concentration:= {: group <- "Concentration" :} ;
+    OBJ MPH "Mass of decay prod. (het.) / bulk volume" : Concentration:= {: group <- "Concentration" :} ;
+    OBJ MPA "Mass of decay prod. (auto.) / bulk volume" : Concentration:= {: group <- "Concentration" :} ;
+    OBJ MI "Mass of inerts / bulk volume" : Concentration:= {: group <- "Concentration" :} ;
+    OBJ MND "Mass of part N / bulk volume" : Concentration:= {: group <- "Concentration" :} ;
+    OBJ Xh "Concentration of heterotrophs in bulk" : Concentration := {: value <- 20; group <- "Concentration bulk" :};
+    OBJ Xa "Concentration of autotrophs in bulk" : Concentration := {: value <- 5; group <- "Concentration bulk" :};
+    OBJ Xs "Concentration of hydrolysible mat. in bulk" : Concentration := {: value <- 10; group <- "Concentration bulk" :};
+    OBJ Xp "Concentration of decay prod. in bulk" : Concentration := {: value <- 5; group <- "Concentration bulk" :};
+    OBJ Xi "Concentration of inerts in bulk" : Concentration := {: value <- 5; group <- "Concentration bulk" :};
+    OBJ Xnd "Concentration of particulate N in bulk" : Concentration := {: value <- 2; group <- "Concentration bulk" :};
+    
+    OBJ Mh "Mass of part heterotrophs" : Mass := {: group <- "Composition" :} ;
+    OBJ Ma "Mass of part autotrophs" : Mass := {: group <- "Composition" :} ;
+    OBJ Ms "Mass of hydrolysible material" : Mass := {: group <- "Composition" :} ;
+    OBJ Mph "Mass of decay prod. (het.)" : Mass := {: group <- "Composition" :} ;
+    OBJ Mpa "Mass of decay prod. (aut.)" : Mass := {: group <- "Composition" :} ;
+    OBJ Mi "Mass of inerts" : Mass := {: group <- "Composition" :} ;
+    OBJ Mnd "Mass of part N" : Mass := {: group <- "Composition" :} ;
+    OBJ L "Biofilm thickness" : Length := {: group <- "System" :} ;
+    OBJ fh "Fraction of heterotrophs" : Fraction := {: group <- "Composition" :};
+    OBJ fa "Fraction of autotrophs" : Fraction := {: group <- "Composition" :};
+    OBJ fs "Fraction of hydrolysible material" : Fraction := {: group <- "Composition" :};
+    OBJ fi "Fraction of inerts" : Fraction := {: group <- "Composition" :};
+    OBJ fph "Fraction of decay prod. (het.)" : Fraction := {: group <- "Composition" :};
+    OBJ fpa "Fraction of decay prod. (auto.)" : Fraction := {: group <- "Composition" :};
+    OBJ MND_Biomass "Fraction of particulate N" : Fraction := {: group <- "Composition" :};
+    OBJ Xh_b (* hidden = "1" *) "Virtual concentration of heterotrophs in biofilm" : Concentration := {: group <- "Concentrations" :};
+    OBJ Xa_b (* hidden = "1" *) "Virtual concentration of autotrophs in biofilm" : Concentration := {: group <- "Concentrations" :};
+    OBJ Xs_b (* hidden = "1" *) "Virtual concentration of hydrolysible mat. in biofilm" : Concentration := {: group <- "Concentrations" :};
+    OBJ pr1 (* hidden = "1" *) "Aerobic heterotrophic growth rate" : Rate;
+    OBJ pr2 (* hidden = "1" *) "Anoxic heterotrophic growth rate" : Rate;
+    OBJ pr3 (* hidden = "1" *) "Aerobic autotrophic growth rate" : Rate;
+    OBJ r1 (* hidden = "1" *) "Oxygen conversion rate" : Rate;
+    OBJ r2 (* hidden = "1" *) "Ss conversion rate" : Rate;
+    OBJ r3 (* hidden = "1" *) "Sno conversion rate" : Rate;
+    OBJ r4 (* hidden = "1" *) "Snh conversion rate" : Rate;
+    OBJ r1l (* hidden = "1" *) "Oxic lower zone without Ss, only nitrification rate" : Rate;
+    OBJ r2l (* hidden = "1" *) "Lower zone denitrification only rate" : Rate;
+    OBJ r4l (* hidden = "1" *) "Lower zone nitrification and denitrification rate" : Rate;
+    OBJ Sno "Nitrate nitrogen concentration": Concentration := {:value <- 5 ; group <- "Concentrations" :};
+    OBJ So "DO concentration": Concentration := {:value <- 3 ; group <- "Concentrations" :};
+    OBJ Ss "Readily biodegradable substrate ": Concentration := {:value <- 50 ; group <- "Concentrations" :};;
+    OBJ Snh "Ammonia nitrogen concentration": Concentration := {:value <- 10 ; group <- "Concentrations" :};
+    OBJ Snd "Organic nitrogen concentration": Concentration := {:value <- 2 ; group <- "Concentrations" :};
+    OBJ Si "Soluble non-biodegradable COD": Concentration := {:value <- 30 ; group <- "Concentrations" :};
+    OBJ beta1 (* hidden = "1" *) "Penetration fraction for So": Fraction;
+    OBJ beta2 (* hidden = "1" *) "Penetration fraction for Ss": Fraction;
+    OBJ beta3 (* hidden = "1" *) "Penetration fraction for Sno": Fraction;
+    OBJ beta3_help (* hidden = "1" *) "Penetration fraction for Sno (work variable)": Fraction;
+    OBJ beta4 (* hidden = "1" *) "Penetration fraction for Snh": Fraction;
+    OBJ beta1l (* hidden = "1" *) "Lower zone penetration fraction for So": Fraction;
+    OBJ beta1l_help (* hidden = "1" *) "Lower zone penetration fraction for So (work variable)": Fraction;
+    OBJ beta2l (* hidden = "1" *) "Lower zone penetration fraction for Ss": Fraction;
+    OBJ beta2l_help (* hidden = "1" *) "Lower zone penetration fraction for Ss (work variable)": Fraction;
+    OBJ beta4l (* hidden = "1" *) "Lower zone penetration fraction for Snh": Fraction;
+    OBJ beta4l_helpa (* hidden = "1" *) "Lower zone penetration fraction for Snh (work variable 1)": Fraction;
+    OBJ beta4l_helpb (* hidden = "1" *) "Lower zone penetration fraction for Snh (work variable 2)": Fraction;
+    OBJ phih "Active fraction of heterotrophs (aer.)": Fraction := {: group <- "System" :};
+    OBJ phia "Active fraction of autotrophs": Fraction := {: group <- "System" :};
+    OBJ phihh "Active fraction of heterotrophs (an.)": Fraction := {: group <- "System" :};
+    OBJ pr_1 (* hidden = "1" *) "Het. growth (aer.)": Rate := {: group <- "Kinetics" :};
+    OBJ pr_2 (* hidden = "1" *) "Het. growth (an.)": Rate := {: group <- "Kinetics" :};
+    OBJ pr_3 (* hidden = "1" *) "Aut. growth": Rate := {: group <- "Kinetics" :};
+    OBJ pr_4 (* hidden = "1" *) "Het. decay": Rate := {: group <- "Kinetics" :};
+    OBJ pr_5 (* hidden = "1" *) "Aut. decay": Rate := {: group <- "Kinetics" :};
+    OBJ pr_6 (* hidden = "1" *) "Hydrolysis MS": Rate := {: group <- "Kinetics" :};
+    OBJ pr_7 (* hidden = "1" *) "Attachment Xh": Rate := {: group <- "Kinetics" :};
+    OBJ pr_8 (* hidden = "1" *) "Attachment Xa": Rate := {: group <- "Kinetics" :};
+    OBJ pr_9 (* hidden = "1" *) "Attachment Xs": Rate := {: group <- "Kinetics" :};
+    OBJ pr_10 (* hidden = "1" *) "Attachment Xp to Mph": Rate := {: group <- "Kinetics" :};
+    OBJ pr_11 (* hidden = "1" *) "Attachment Xp to Mpa": Rate := {: group <- "Kinetics" :};
+    OBJ pr_12 (* hidden = "1" *) "Attachment Xi to Mi": Rate := {: group <- "Kinetics" :};
+    OBJ pr_13 (* hidden = "1" *) "Attachment Xnd": Rate := {: group <- "Kinetics" :};
+    OBJ pr_14 (* hidden = "1" *) "Hydrolysis of MND": Rate := {: group <- "Kinetics" :};
+    OBJ pr_15 (* hidden = "1" *) "Ammonification of Snd": Rate := {: group <- "Kinetics" :};
+    OBJ r_1 (* hidden = "1" *) "Rate So": Rate := {: group <- "Kinetics" :};
+    OBJ r_2 (* hidden = "1" *) "Rate Ss": Rate := {: group <- "Kinetics" :};
+    OBJ r_3 (* hidden = "1" *) "Rate Sno": Rate := {: group <- "Kinetics" :};
+    OBJ r_4 (* hidden = "1" *) "Rate Snh": Rate := {: group <- "Kinetics" :};
+    OBJ r_5 (* hidden = "1" *) "Rate MH": Rate := {: group <- "Kinetics" :};
+    OBJ r_6 (* hidden = "1" *) "Rate MA": Rate := {: group <- "Kinetics" :};
+    OBJ r_7 (* hidden = "1" *) "Rate MS": Rate := {: group <- "Kinetics" :};
+    OBJ r_8 (* hidden = "1" *) "Rate MPH": Rate := {: group <- "Kinetics" :};
+    OBJ r_9 (* hidden = "1" *) "Rate MPA": Rate := {: group <- "Kinetics" :};
+    OBJ r_10 (* hidden = "1" *) "Rate MI": Rate := {: group <- "Kinetics" :};
+    OBJ r_11 (* hidden = "1" *) "Rate Xh": Rate := {: group <- "Kinetics" :};
+    OBJ r_12 (* hidden = "1" *) "Rate Xa": Rate := {: group <- "Kinetics" :};
+    OBJ r_13 (* hidden = "1" *) "Rate Xs": Rate := {: group <- "Kinetics" :};
+    OBJ r_14 (* hidden = "1" *) "Rate Xp": Rate := {: group <- "Kinetics" :};
+    OBJ r_15 (* hidden = "1" *) "Rate Xi": Rate := {: group <- "Kinetics" :};
+    OBJ r_16 (* hidden = "1" *) "Rate Snd": Rate := {: group <- "Kinetics" :};
+    OBJ r_17 (* hidden = "1" *) "Rate MND": Rate := {: group <- "Kinetics" :};
+    OBJ r_18 (* hidden = "1" *) "Rate Xnd": Rate := {: group <- "Kinetics" :};
+//W2017    OBJ h "Heigh of water column (for rivers)" : Length := {: group <- "Dimension" :} ;    
+    OBJ u_f "Biofilm surface velocity": Velocity := {: group <- "System" :};
+    OBJ kd "Biomass loss due to detachment" : Velocity := {: group <- "Detachment" :};
+  };
+    
+  initial <-
+  {
+    // Calculate the initial biomass concentration with respect to the bulk liquid volume    
+    state.MH := (parameters.L_init * parameters.A_B * parameters.rho * parameters.fh_init ) / (parameters.V_R - (parameters.V_R * parameters.f_vol) - (parameters.A_sp * parameters.f_vol * parameters.V_R * parameters.L_init)) ;
+    state.MA := (parameters.L_init * parameters.A_B * parameters.rho * parameters.fa_init ) / (parameters.V_R - (parameters.V_R * parameters.f_vol)- (parameters.A_sp * parameters.f_vol * parameters.V_R * parameters.L_init)) ;
+    state.MS := (parameters.L_init * parameters.A_B * parameters.rho * parameters.fs_init ) / (parameters.V_R - (parameters.V_R * parameters.f_vol)- (parameters.A_sp * parameters.f_vol * parameters.V_R * parameters.L_init)) ;
+    state.MPH := (parameters.L_init * parameters.A_B * parameters.rho * parameters.fph_init ) / (parameters.V_R - (parameters.V_R * parameters.f_vol)- (parameters.A_sp * parameters.f_vol * parameters.V_R * parameters.L_init)) ;
+    state.MPA := (parameters.L_init * parameters.A_B * parameters.rho * parameters.fpa_init ) / (parameters.V_R - (parameters.V_R * parameters.f_vol)- (parameters.A_sp * parameters.f_vol * parameters.V_R * parameters.L_init)) ;
+    state.MI := (parameters.L_init * parameters.A_B * parameters.rho * parameters.fi_init ) / (parameters.V_R - (parameters.V_R * parameters.f_vol)- (parameters.A_sp * parameters.f_vol * parameters.V_R * parameters.L_init)) ;    
+    state.MND := (parameters.L_init * parameters.A_B * parameters.rho * parameters.MND_Biomass_init ) / (parameters.V_R - (parameters.V_R * parameters.f_vol) - (parameters.A_sp * parameters.f_vol * parameters.V_R * parameters.L_init)) ;
+    
+//W2017    state.h := parameters.V / parameters.As ;
+    parameters.H_R := parameters.V_R / parameters.A_R ;
+    parameters.A_B := parameters.A_sp * parameters.f_vol * parameters.V_R ;
+    
+    // Initial water volume (m3) = V_R - V-carriers - V-biofilm
+    state.V = parameters.V_R - (parameters.V_R * parameters.f_vol) - (parameters.A_sp * parameters.f_vol * parameters.V_R * parameters.L_init) ;
+    
+    state.V_B = (parameters.A_sp * parameters.f_vol * parameters.V_R * parameters.L_init) ;
+  };
+
+  equations <-
+  {
+    state.Q_In = 1E-06 * interface.Inflow[H2O] ;
+    
+    // Calculate the mass of the biofilm components    
+    state.Mh = state.MH * previous(state.V) ;
+    state.Ma = state.MA * previous(state.V) ;
+    state.Ms = state.MS * previous(state.V) ;
+    state.Mph = state.MPH * previous(state.V) ;
+    state.Mpa = state.MPA * previous(state.V) ;
+    state.Mi = state.MI * previous(state.V) ;
+    state.Mnd = state.MND * previous(state.V) ;
+  
+    // Calculate the thickness of the biofilm and the fractions of the biofilm components
+    state.L = (state.Mh + state.Ma + state.Ms + state.Mi + state.Mph + state.Mpa) / (parameters.rho * parameters.A_B) ;
+    
+    state.fh  = state.Mh / (state.Mh + state.Ma + state.Ms + state.Mi + state.Mph + state.Mpa) ;
+    state.fa  = state.Ma / (state.Mh + state.Ma + state.Ms + state.Mi + state.Mph + state.Mpa) ;
+    state.fs  = state.Ms / (state.Mh + state.Ma + state.Ms + state.Mi + state.Mph + state.Mpa) ;
+    state.fi  = state.Mi / (state.Mh + state.Ma + state.Ms + state.Mi + state.Mph + state.Mpa) ;
+    state.fph  = state.Mph / (state.Mh + state.Ma + state.Ms + state.Mi + state.Mph + state.Mpa) ;
+    state.fpa  = state.Mpa / (state.Mh + state.Ma + state.Ms + state.Mi + state.Mph + state.Mpa) ;
+    state.MND_Biomass = (state.Mnd) / (state.Mh + state.Ma + state.Ms + state.Mi + state.Mph + state.Mpa) ;
+
+    // The volume of the biofilm
+    state.V_B = state.L * parameters.A_B ;
+    // The volume of the bulk liquid
+    state.V = parameters.V_R - (parameters.V_R * parameters.f_vol) - state.V_B ;
+  
+    // Calculate the virtual biomass concentrations in the biofilm (g / m3_biofilm)
+    state.Xh_b = state.Mh / state.V_B ;
+    state.Xa_b = state.Ma / state.V_B ;
+    state.Xs_b = state.Ms / state.V_B ;
+  
+    // **** STEP 1 **** : compute zero-order conversion rates for substrates in the biofilm
+    // Note that rates are defined here as positive for substrate conversion
+    // aerobic heterotrophic growth
+    state.pr1 = parameters.mu_h * exp(parameters.ktemp * (interface.Temp - 20)) * state.Xh_b ;  
+    // anoxic heterotrophic growth
+    state.pr2 = parameters.mu_hh * exp(parameters.ktemp * (interface.Temp - 20)) * state.Xh_b ; 
+    // aerobic autotrophic growth
+    state.pr3 = parameters.mu_a * exp(parameters.ktemp * (interface.Temp - 20)) * state.Xa_b ;  
+  
+    // zero-order conversion rates under aerobic conditions
+    // oxygen conversion
+    state.r1 = (1 - parameters.Y_h) / parameters.Y_h * state.pr1 + (4.57 - parameters.Y_a) / parameters.Y_a * state.pr3 ;
+    // Ss conversion
+    state.r2 = 1 / parameters.Y_h * state.pr1 ;
+    // Snh conversion
+    state.r4 = parameters.ixh * state.pr1 + (1/parameters.Y_a + parameters.ixa) * state.pr3 ;
+
+    // ** start denitrification part **
+    // Denitrification occurs only if Sno available in anoxic zone !
+    // r3 is only used in the final conversion equations if the presence of an anoxic zone has been checked for, so a check
+    // for the presence of an anoxic zone is not yet needed at this point
+    state.r3 = IF (state.Sno > 0.0) THEN ((1 - parameters.Y_h) / (2.86 * parameters.Y_h)) * state.pr2     // Sno is available
+      ELSE 0.0 ;            // Sno is not available
+  
+    // Calculate conversion rates in lower zone lower zone means : either So or Ss or Snh limiting =>
+    // No aerobic growth of heteretrophs is possible there => pr2 = only denitrification in lower region.
+    // There is also no check for anoxic zone needed (see above)
+    state.r2l = IF (state.Sno > 0.0) THEN 1 / parameters.Y_h * state.pr2 // Sno is available
+      ELSE 0.0 ;            // no Sno is available
+  
+    // The rate r4l is needed in case of nitrification and denitrification in the lower region
+    // => check for limitation of So or Ss is needed !
+    state.r4l =  IF ((state.beta1 <= state.beta2) && (state.beta1 <= state.beta4)) THEN    // So is limited => there is an anoxic zone
+      IF (state.Sno > 0.0) THEN parameters.ixh * state.pr2 // Sno is available
+        ELSE 0.0              // no Sno is available
+        // ** end denitrification part **
+        // ** begin nitrification part, nitrification in lower region **
+      ELSE IF (state.beta4 <= state.beta2) THEN 0.0  // Snh is limiting everything
+        // oxic lower zone without Ss, only nitrification
+        ELSE (1 / parameters.Y_a + parameters.ixa) * state.pr3 ;
+
+    // lower rate r1l is only needed in case of nitrification no checks needed
+    state.r1l = (4.57 - parameters.Y_a) / parameters.Y_a * state.pr3 ;
+    // oxic lower zone without Ss, only nitrification 
+    
+    // ** end nitrification part **
+  
+    // **** STEP 2 **** : calculate beta for all substrates
+    state.beta1 = IF (state.So <= 0.0) THEN 0.0
+      ELSE IF (state.r1 <= 0.0) THEN 1.0
+        ELSE IF ( (1 / state.L * sqrt(2 * parameters.DiSo * state.So / state.r1)) > 1) THEN 1.0
+          ELSE 1 / state.L * sqrt(2 * parameters.DiSo * state.So / state.r1) ;
+    
+    state.beta2 = IF (state.Ss <= 0.0) THEN 0.0
+      ELSE IF (state.r2 <= 0.0) THEN 1.0
+        ELSE IF ( (1 / state.L * sqrt(2 * parameters.DiSs * state.Ss / state.r2)) > 1) THEN 1.0
+          ELSE 1 / state.L * sqrt(2 * parameters.DiSs * state.Ss / state.r2) ;
+    
+    state.beta4 = IF (state.Snh <= 0.0) THEN 0.0
+      ELSE IF (state.r4 <= 0) THEN 1.0
+        ELSE IF( (1 / state.L * sqrt(2 * parameters.DiSnh * state.Snh / state.r4)) > 1) THEN 1.0
+          ELSE 1 / state.L * sqrt(2 * parameters.DiSnh * state.Snh / state.r4 ) ;
+    
+    // ** start denitrification part, only used if denitrification proceeds **
+    state.beta2l_help = IF (state.r2l > 0.0) THEN (((state.beta1 * state.L) * (state.beta1 * state.L) * (1 - state.r2 / state.r2l)) + (2 * parameters.DiSs * state.Ss / state.r2l))
+      ELSE 1.0 ;
+      
+    state.beta2l = IF ((state.r2l > 0) && (state.beta2l_help >= 0.0) && (1 / state.L * sqrt(state.beta2l_help) < 1)) THEN 1 / state.L * sqrt(state.beta2l_help)
+      ELSE 1.0 ;
+    
+    state.beta3_help = IF (state.r3 > 0.0) THEN (state.beta1 + 1 / state.L * sqrt(2 * parameters.DiSno * state.Sno / state.r3))
+      ELSE 1.0 ;
+    
+    state.beta3 = IF ((state.r3 > 0.0) && (state.beta3_help >= 0.0)) THEN state.beta3_help
+      ELSE 1.0 ;
+    
+    state.beta4l_helpa = IF (state.r4l > 0.0) THEN (((state.beta1 * state.L) * (state.beta1 * state.L) * (1 - state.r4 / state.r4l)) + (2 * parameters.DiSnh * state.Snh / state.r4l))
+      ELSE 1.0 ;
+    
+    state.beta4l_helpb = IF (state.r4l > 0.0) THEN (((state.beta2 * state.L) * (state.beta2 * state.L) * (1 - state.r4 / state.r4l)) + (2 * parameters.DiSnh * state.Snh / state.r4l))
+      ELSE 1.0 ;
+      
+    state.beta4l = IF ((state.beta1 <= state.beta2) && (state.beta1 <= state.beta4)) THEN
+      IF ((state.r4l > 0) && (state.beta4l_helpa >= 0) && (1 / state.L * sqrt(state.beta4l_helpa) < 1)) THEN 1 / state.L * sqrt(state.beta4l_helpa)
+        ELSE 1.0 
+        // ** end denitrification part **
+      // ** begin nitrification part, nitrification in lower region with **
+      // So available but no Ss (=> no heterotrophic growth)
+      ELSE IF ((state.r4l > 0) && (state.beta4l_helpb >= 0) && (1 / state.L * sqrt(state.beta4l_helpb) < 1)) THEN 1 / state.L * sqrt(state.beta4l_helpb)
+        ELSE 1.0 ;
+ 
+    state.beta1l_help = IF (state.r1l > 0.0) THEN (((state.beta2*state.L)*(state.beta2*state.L) * (1-state.r1/state.r1l)) + (2 * parameters.DiSo * state.So / state.r1l))
+      ELSE 1.0 ;
+    
+    state.beta1l = IF ((state.r1l > 0.0) && (state.beta1l_help >= 0.0) && (1 / state.L * sqrt(state.beta1l_help) < 1)) THEN 1 / state.L * sqrt(state.beta1l_help)
+      ELSE 1.0 ;
+    // ** end nitrification part **
+    // **** step3 **** : cases
+    state.phih = IF (state.beta1 == 1.0 && state.beta2 == 1.0 && state.beta4 == 1.0) THEN 1.0 // simple case, fully penetrated
+      ELSE IF (state.beta1 <= state.beta2 && state.beta1 <= state.beta4) THEN state.beta1 // So limiting
+        ELSE IF (state.beta4 <= state.beta2) THEN state.beta4 // Snh limiting
+          ELSE state.beta2 ;  // Ss limiting
+  
+    state.phia = IF (state.beta1 == 1.0 && state.beta4 == 1.0) THEN 1.0  // simple case, fully penetrated
+      ELSE IF (state.beta1 <= state.beta2 && state.beta1 <= state.beta4) THEN state.beta1 // So limiting first, 
+        // no sequential limitations
+        ELSE IF (state.beta4 <= state.beta2) THEN state.beta4 // Snh limiting,
+          // no sequential limitations
+          ELSE IF (state.beta1 <= state.beta4l) // Ss limiting first
+          // sequential limitations
+            THEN state.beta1l // So is limiting nitrification
+            ELSE state.beta4l ; // Snh is limiting nitrification
+  
+    state.phihh = IF (state.beta1 == 1.0) THEN 0.0 // simple case, fully penetrated
+      ELSE IF (state.beta1 <= state.beta2 && state.beta1 <= state.beta4) THEN // So limiting to oxic growth
+        IF (state.Sno > 0.0) THEN // Sno available to denitrify ?
+          IF ((state.beta2l <= state.beta3) && (state.beta2l <= state.beta4l)) THEN state.beta2l - state.phih   // Ss limiting anoxic growth
+            ELSE IF (state.beta3 <= state.beta4l) THEN state.beta3 - state.phih  // Sno limiting anoxic growth
+              ELSE state.beta4l - state.phih // Snh limiting anoxic growth
+        ELSE 0.0  // no Sno available to denitrify
+      ELSE 0.0 ;  // Snh of Ss limiting to oxic growth
+    // No anoxic zones with both Ss and Snh present
+    // assuming Snh is needed for growth
+  
+    // ** STEP 3 ** - CALCULATE ACTUAL REACTION RATES
+    state.pr_1  = parameters.mu_h * exp(parameters.ktemp*(interface.Temp-20)) * state.MH * state.phih ;     // het growth aerobic
+    state.pr_2  = parameters.mu_hh* exp(parameters.ktemp*(interface.Temp-20)) * state.MH * state.phihh ;    // het growth anoxic
+    state.pr_3  = parameters.mu_a * exp(parameters.ktemp*(interface.Temp-20)) * state.MA * state.phia ;     // aut growth       
+    state.pr_4  = parameters.b_h * exp(parameters.ktemp*(interface.Temp-20)) * state.MH ;                  // het decay
+    state.pr_5  = parameters.b_a * exp(parameters.ktemp*(interface.Temp-20)) * state.MA ;                  // aut decay
+    state.pr_6  = parameters.k_h * exp(parameters.ktemp*(interface.Temp-20)) * state.MS ;                  // hydrolysis MS
+    state.pr_7  = parameters.vs / parameters.H_R * (state.Xh) ;  // attachment Xh
+    state.pr_8  = parameters.vs / parameters.H_R * (state.Xa) ;  // attachment Xa
+    state.pr_9  = parameters.vs / parameters.H_R * (state.Xs) ;  // attachment Xs
+    state.pr_10 = parameters.vs / parameters.H_R * (state.Xp)*(state.Mph)/((state.Mph)+(state.Mpa)) ;  // attachment Xp to Mph
+    state.pr_11 = parameters.vs / parameters.H_R * (state.Xp)*(state.Mpa)/((state.Mph)+(state.Mpa)) ;  // attachment Xp to Mpa
+    state.pr_12 = parameters.vs / parameters.H_R * (state.Xi) ;  // attachment Xi to Mi
+    state.pr_13 = parameters.vs / parameters.H_R * (state.Xnd) ; // attachment Xnd
+    state.pr_14 = state.pr_6 * state.MND / state.MS ;     // hydrolysis of MND 
+    state.pr_15 = parameters.k_a * exp(parameters.ktemp*(interface.Temp-20)) * state.Snd ;  // ammonification of Snd
+
+    state.r_1 = (- (1 - parameters.Y_h) / parameters.Y_h * state.pr_1 - (4.57 - parameters.Y_a) / parameters.Y_a * state.pr_3) ; // rate So
+    state.r_2 = (- 1 / parameters.Y_h * state.pr_1 - 1 / parameters.Y_h * state.pr_2 + state.pr_6) ; // rate Ss
+    state.r_3 = (- (1 - parameters.Y_h) / (2.86 * parameters.Y_h) * state.pr_2 + 1 / parameters.Y_a * state.pr_3) ;  // rate Sno
+    state.r_4 = (- parameters.ixh * state.pr_1 - parameters.ixh * state.pr_2 - (1 / parameters.Y_a + parameters.ixa) * state.pr_3 + state.pr_15) ;  // rate Snh
+    state.r_5 =  state.pr_1 + state.pr_2 - state.pr_4 + state.pr_7 ; // rate MH
+    state.r_6 =  state.pr_3 - state.pr_5 + state.pr_8 ;     		  // rate MA
+    state.r_7  =  (1 - parameters.fp) * state.pr_4 + (1 - parameters.fp) * state.pr_5 - state.pr_6 + state.pr_9 ; // rate MS
+    state.r_8  = parameters.fp * state.pr_4 + state.pr_10 ;       // rate MPH
+    state.r_9  = parameters.fp * state.pr_5 + state.pr_11 ;       // rate MPA
+    state.r_10 = state.pr_12 ;                                    // rate MI
+    state.r_11 = - state.pr_7 ;	 						                      // rate Xh
+    state.r_12 = - state.pr_8 ;							                      // rate Xa
+    state.r_13 = - state.pr_9 ;							                      // rate Xs
+    state.r_14 = - state.pr_10 - state.pr_11 ;            		    // rate Xp
+    state.r_15 = - state.pr_12 ;                                  // rate Xi
+    state.r_16 = - state.pr_15 + state.pr_14 ;                    // rate Snd
+    state.r_17 = - state.pr_14 + (parameters.ixh * (1-parameters.fp)) * state.pr_4 + (parameters.ixh * (1-parameters.fp)) * state.pr_5 ; // rate MND
+    state.r_18 = - state.pr_13 ;                                  // rate Xnd
+
+    // pr, r = [g/m3/d]
+    // r * V = [g/d] / A = [g/m2/d] / rho [g/m3] = [m-B / d] = net velocity of growth of biofilm surface (thickness)
+
+    // FAPO 07/05/2019
+    state.u_f = ((state.r_5 + state.r_6 + state.r_7 + state.r_8 + state.r_9 + state.r_10) * state.V/(parameters.A_B*parameters.rho)) ; 
+    
+    // Detachment rate = growth rate when the biofilm reaches its maximum thickness L_max (Lackner et al., 2008)
+    state.kd = IF ( state.u_f > 1E-06 ) THEN (state.u_f * (state.L / parameters.L_max)*(state.L / parameters.L_max)) ELSE 0.0 ;
+    
+    DERIV(state.So,[independent.t]) := interface.Inflow[S_O] / state.V - state.Q_In / state.V * ( state.So ) + interface.Kla * (parameters.So_sat - state.So) + state.r_1 ;
+    
+    DERIV(state.Ss,[independent.t]) := interface.Inflow[S_S] / state.V - state.Q_In / state.V * ( state.Ss ) + state.r_2 ;
+    
+    DERIV(state.Sno,[independent.t]) := interface.Inflow[S_NO] / state.V - state.Q_In / state.V * ( state.Sno ) + state.r_3 ;
+
+    DERIV(state.Snh,[independent.t]) := interface.Inflow[S_NH] / state.V - state.Q_In / state.V * ( state.Snh ) + state.r_4 ;
+
+    DERIV(state.MH,[independent.t]) = state.r_5 - state.kd * (parameters.A_B * parameters.rho) * state.fh / state.V ;
+    DERIV(state.MA,[independent.t]) = state.r_6 - state.kd * (parameters.A_B * parameters.rho) * state.fa / state.V ;
+    DERIV(state.MS,[independent.t]) = state.r_7 - state.kd * (parameters.A_B * parameters.rho) * state.fs / state.V ;
+    DERIV(state.MPH,[independent.t]) = state.r_8 - state.kd * (parameters.A_B * parameters.rho) * state.fph / state.V ;
+    
+    DERIV(state.MPA,[independent.t]) = state.r_9 - state.kd * (parameters.A_B * parameters.rho) * state.fpa / state.V ;
+    
+    DERIV(state.MI,[independent.t]) = state.r_10 - state.kd * (parameters.A_B * parameters.rho) * state.fi / state.V ;
+    
+    DERIV(state.Xh,[independent.t]) := interface.Inflow[X_BH] / state.V - state.Q_In / state.V * ( state.Xh ) + state.r_11 + state.kd * (parameters.A_B * parameters.rho) * state.fh / state.V;
+
+    DERIV(state.Xa,[independent.t]) = interface.Inflow[X_BA] / state.V - state.Q_In / state.V * ( state.Xa ) + state.r_12 + state.kd * (parameters.A_B * parameters.rho) * state.fa / state.V ;
+
+    DERIV(state.Xs,[independent.t]) = interface.Inflow[X_S] / state.V - state.Q_In / state.V * ( state.Xs ) + state.r_13 + state.kd * (parameters.A_B * parameters.rho) * state.fs / state.V ;
+
+    DERIV(state.Xp,[independent.t]) = interface.Inflow[X_P] / state.V - state.Q_In / state.V * ( state.Xp ) + state.r_14 + state.kd * (parameters.A_B * parameters.rho) * (state.fph + state.fpa) / state.V ;
+
+    DERIV(state.Xi,[independent.t]) = interface.Inflow[X_I] / state.V - state.Q_In / state.V * ( state.Xi ) + state.r_15 + state.kd * (parameters.A_B * parameters.rho) * state.fi / state.V ;
+
+    DERIV(state.Snd,[independent.t]) = interface.Inflow[S_ND] / state.V - state.Q_In / state.V * ( state.Snd ) + state.r_16 ;
+    
+    DERIV(state.MND,[independent.t]) = state.r_17 - state.kd * (parameters.A_B * parameters.rho) * state.MND_Biomass / state.V ;
+    
+    DERIV(state.Xnd,[independent.t]) = interface.Inflow[X_ND] / state.V - state.Q_In / state.V * ( state.Xnd ) + state.r_18 ;
+    
+    DERIV(state.Si,[independent.t]) = interface.Inflow[S_I] / state.V - state.Q_In / state.V * ( state.Si ) ;
+
+    interface.Outflow[1] = - interface.Inflow[1] ;
+    interface.Outflow[S_O] = - state.Q_In * state.So ;
+    interface.Outflow[S_S] = - state.Q_In * state.Ss ;
+    interface.Outflow[S_NO] = - state.Q_In * state.Sno ;
+    interface.Outflow[S_NH] = - state.Q_In * state.Snh ;
+    interface.Outflow[X_BH] = - state.Q_In * state.Xh ;
+    interface.Outflow[X_BA] = - state.Q_In * state.Xa ;
+    interface.Outflow[X_S] = - state.Q_In * state.Xs ;
+    interface.Outflow[X_P] = - state.Q_In * state.Xp ;
+    interface.Outflow[X_I] = - state.Q_In * state.Xi ;
+    interface.Outflow[S_ND] = - state.Q_In * state.Snd ;
+    interface.Outflow[X_ND] = - state.Q_In * state.Xnd ;
+    interface.Outflow[S_I] = - state.Q_In * state.Si ;
+    interface.Outflow[S_ALK] = - interface.Inflow[S_ALK];
+  };
+
+:};
+
+
+#endif // ASM1Temp
+
+
+#endif // WWTP_FILTER_RAUCH

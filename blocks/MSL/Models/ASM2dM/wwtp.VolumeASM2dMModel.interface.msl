@@ -1,0 +1,23 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ AUR (*terminal = "out_2"; *) "Ammonium Uptake Rate measurement data" : AmmoniumUptakeRate := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ BOD20 (*terminal = "out_2"; *) "Biological Oxygen Demand measurement" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ BOD5 (*terminal = "out_2"; *) "BOD5" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ COD (*terminal = "out_2"; *) "Chemical Oxygen Demand measurement" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ DO (*is_favorite = "1"; terminal = "out_2"; *) "Dissolved oxygen concentration measurement" : DissolvedOxygen := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ ISS (*terminal = "out_2"; *) "Inert Suspended Solids" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ Kla_ASU (*terminal = "out_2"; *) "Kla measurement data" : OxygenTransferCoefficient := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ NH4 (*is_favorite = "1"; terminal = "out_2"; *) "Ammonium concentration measurement" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ NO3 (*is_favorite = "1"; terminal = "out_2"; *) "Nitrate+Nitrite concentration measurement" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ NPR (*terminal = "out_2"; *) "Nitrate Production Rate measurement data" : NitrateProductionRate := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ NUR (*terminal = "out_2"; *) "Nitrate Uptake Rate measurement data" : NitrateUptakeRate := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ OUR_ASU (*terminal = "out_2"; *) "OUR measurement data" : OxygenUptakeRate := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ PO4 (*is_favorite = "1"; terminal = "out_2"; *) "Phosphorous concentration measurement" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ PUR (*terminal = "out_2"; *) "Phosphate Uptake Rate measurement data" : PhosphateUptakeRate := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ TKN (*terminal = "out_2"; *) "Total Kjeldal nitrogen concentration measurement" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ TN (*terminal = "out_2"; *) "Total nitrogen concentration measurement" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ TP (*terminal = "out_2"; *) "Total phosphorous concentration measurement" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ TSS (*is_favorite = "1"; terminal = "out_2"; *) "Total Suspended Solids concentration" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ VSS (*terminal = "out_2"; *) "Volatile Suspended Solids" : Concentration := {: causality <- "COUT"; group <- "Measurement data"; :};
+    OBJ V_ASU (*terminal = "out_2"; *) "Volume measurement data" : Volume := {: causality <- "COUT"; group <- "Measurement data"; :};
+

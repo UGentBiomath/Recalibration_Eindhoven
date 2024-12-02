@@ -1,0 +1,84 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:54$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_DISINFECTION
+#define WWTP_BASE_DISINFECTION
+
+
+CLASS DisinfectionEfficiency "Intermediate class to compute disinfection efficiency" EXTENDS Base_Disinfection WITH
+{:
+
+  comments <- "Intermediate class to compute disinfection efficiency";
+  
+  interface <-
+  {
+    OBJ EColi_Out (* terminal = "out_2"; is_favorite = "1" *) "E-coli count in the effluent" : Real := {: causality <- "COUT"; group <- "Operation"; :};
+  };
+  
+  equations <-
+  {
+    state.r_EColi = IF (state.In_EColi > 0.0) THEN (state.In_EColi - interface.EColi_Out) / (state.In_EColi) ELSE 0.0 ;
+  };
+
+:};
+
+
+CLASS Base_Disinfection "Base class for a generic disinfection model" EXTENDS WWTPAtomicModelWithoutVolume WITH
+{:
+
+  comments <- "Base class for a generic disinfection model";
+  
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+    OBJ rho_EColi_WWTP (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "E-coli removal in the WWTP" : Fraction := {: value <- 0.95; causality <- "CIN"; group <- "Operation"; :};
+    OBJ EColi_In (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "E-coli count in the influent (from unit upstream)" : Real := {: causality <- "CIN"; value <- -1.0 ; group <- "Operation"; :};
+  };
+  
+  parameters <-
+  {
+    OBJ Vol "Volume" : Volume := {: value <- 25; group <- "Tank" :};
+    OBJ EColi_Ave "Average E-coli count in the WWTP influent" : Real := {: value <- 1E07; group <- "Operation"; :};
+  };
+  
+  state <-
+  {
+    OBJ HRT (* hidden = "1" *) "Contact time" : Time := {: group <- "Operation" :};
+    OBJ In_EColi (* hidden = "1" *) "E-coli in the influent (calculated or retrieved)" : Concentration := {: group <- "Operation" :};
+    OBJ r_EColi "Overall E-coli removal" : Real := {: group <- "Operation" :};    
+  };
+  
+  equations <-
+  {
+    // (EURE 09/01/2019) either calculated from influent to plant OR derived from output of unit upstream, for units in series
+    state.In_EColi = IF (interface.EColi_In >= 0.0) THEN interface.EColi_In
+      ELSE parameters.EColi_Ave * (1 - interface.rho_EColi_WWTP) ; 
+    
+    state.HRT = IF (state.Q_In <= 0.0) THEN 0.0 ELSE (parameters.Vol / state.Q_In) ; 
+    
+    {FOREACH Comp_Index IN {1 .. NrOfComponents}: interface.Outflow[Comp_Index] = - interface.Inflow[Comp_Index] ;};
+  };
+
+:};
+
+
+#include "WWTP/disinfection/wwtp.disinfection.uv.msl"
+#include "WWTP/disinfection/wwtp.disinfection.chlorine.msl"
+#include "WWTP/disinfection/wwtp.disinfection.paa.msl"
+
+
+#endif // WWTP_BASE_DISINFECTION

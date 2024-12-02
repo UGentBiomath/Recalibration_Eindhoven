@@ -1,0 +1,60 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:27$
+ *
+ ******************************************************************************/
+
+#ifndef SEWER_SPLITTERS_COMBINERS
+#define SEWER_SPLITTERS_COMBINERS
+
+
+CLASS Sewer_TwoSplitter_Base "Base class for absolute sewer splitters"
+EXTENDS SewerAtomicModelNoVolume WITH
+{:
+
+  interface <-
+  {
+   OBJ Outflow1 (* terminal = "out_1" *) "Outflow No.1" : OutSewTerminal := {: causality <- "COUT" ; group <- "Effluent 1" :};
+   OBJ Outflow2 (* terminal = "out_2" *) "Outflow No.2" : OutSewTerminal := {: causality <- "COUT" ; group <- "Effluent 2" :};
+  };
+
+  state <-
+  {
+   OBJ Q_Out_1 (* is_favorite = "1" *) "Actual flow rate No.1" : FlowRate := {: group <- "Operational" :};
+   OBJ Q_Out_2 (* is_favorite = "1" *) "Actual flow rate No.2" : FlowRate := {: group <- "Operational" :};
+  };
+
+:};
+
+
+ 
+CLASS Sewer_AbsTwoSplitter_Base "Base class for absolute sewer splitters"
+EXTENDS Sewer_TwoSplitter_Base WITH
+{:
+
+  interface <-
+  {
+   OBJ Q_Out2 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Flow rate for outflow No.2" : FlowRate := {: causality <- "CIN" ; value <- 20000; group <- "Operational" :};
+  };
+
+:};
+
+
+#include "Sewer/splitters_combiners/sewer.abstwosplitter.msl"
+#include "Sewer/splitters_combiners/sewer.absthreesplitter.msl"
+#include "Sewer/splitters_combiners/sewer.reltwosplitter.msl"
+#include "Sewer/splitters_combiners/sewer.relthreesplitter.msl"
+#include "Sewer/splitters_combiners/sewer.combiners.msl"
+
+
+#endif // SEWER_SPLITTERS_COMBINERS

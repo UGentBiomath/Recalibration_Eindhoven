@@ -1,4 +1,0 @@
-#include "Effluent_out_1.msl"
-
-OBJ _Effluent_out_1_ : Effluent_out_1;
-

@@ -1,0 +1,43 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:15:52$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_SENSORS_SENSORDO
+#define WWTP_BASE_SENSORS_SENSORDO
+
+#ifdef StandardCategoryModels
+CLASS Sensor_DO (* icon = "sensor_do" ; is_default = "true" *)
+"Oxygen sensor" EXTENDS Sensor WITH
+{:
+  comments <- "A model for a sensor measuring the dissolved oxygen";
+  
+  interface <-
+  {
+    OBJ y_M (* terminal = "out_2"; is_favorite = "1" *) "Sensor measured output" :
+    Concentration := {: causality <- "COUT" ; group <- "Measurement data" :};
+  };
+
+  equations <-
+  {
+    interface.y_M = IF (state.Q_In == 0) THEN 0
+      ELSE interface.Inflow[S_O] / state.Q_In ;
+  };
+
+:};
+
+#endif // defined ASM1Temp etc.
+
+#endif // WWTP_BASE_SENSORS_SENSORDO
+

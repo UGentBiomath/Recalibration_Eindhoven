@@ -1,0 +1,111 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:57$
+ *
+ ******************************************************************************/
+ 
+#ifndef WWTP_SAMPLER_FLOWPROPORTIONAL														
+#define WWTP_SAMPLER_FLOWPROPORTIONAL
+
+
+// (EURE 19/03/2019) This is in fact a volume-proportional sampler
+CLASS Flow_proportional (* icon = "sampler" *)
+"Flow proportional sampler with time-based emptying of bottle(s)" SPECIALISES Sampler :=
+{:
+
+  parameters <-
+  {
+    OBJ Flow_Min "Minimum flow above which sampling starts" : FlowRate := {: value <- 0 ; group <- "Sampling" :};
+    OBJ V_sample "Volume of each sample" : Volume := {: value <- 0.0001 ; group <- "Sampling" :};
+    OBJ V_frequency "Volume of water between each sample; must be >= V_sample" : Volume := {: value <- 100 ; group <- "Sampling" :};
+    OBJ T "Time frame for average calculation" : Time := {: value <- 1.0 ; group <- "Operational":};
+  };
+  
+  state <-
+  {
+    OBJ V_through "Cumulated flow (volume) through the sampler, between start and stop" : Volume := {: group <- "Sampling" :};
+    OBJ n_samples_bottle (* hidden = "1" *) "Cumulated number of aliquots collected over sampling period (updated at step time = frequency)" : Integer := {: group <- "Sampling" :};
+    OBJ C_comp_meas (* hidden = "1" *) "Measured concentration in the composite sample BEFORE full bottle" : Concentration := {: group <- "Sampling" :};
+    OBJ t1 "Start time for filling bottle" : Time := {: group <- "Sampling" :};
+    OBJ t2 "Stop time for filling bottle" : Time := {: group <- "Sampling" :};
+    OBJ C_avg_meas "Measured average concentration (over time T)" : Concentration := {: group <- "Sampling" :};
+  };
+  
+  initial <-
+  {
+    state.flag_samp_per = 0;
+    state.V_through = 0;
+    state.n_samples = 0;
+    state.n_samples_bottle = 0;
+    state.n_samples_bottle_temp = 0;
+    state.C_comp_meas = 0;
+    //(EURE 25/04/2019) only temp - needs to be related to volume sampled~through?
+    parameters.Help_dt = 0.0 ;
+  };
+  
+  equations <-
+  {
+    DERIV(state.C_avg_meas,[independent.t]) = (state.C_meas - state.C_avg_meas) / parameters.T ;
+        
+    state.V_through = IF (state.flag_samp_per == True) THEN
+      IF (state.Q_in >= parameters.Flow_Min) THEN previous(state.V_through) + state.Q_in * (independent.t - previous(independent.t))
+      ELSE previous(state.V_through)
+    ELSE 0 ;
+    
+    state.n_samples = IF (state.flag_samp_per == True) THEN
+  	  // (EURE 25/04/2019) this is to account for the last sample not collected, in case the volume (through) was insufficient (< vol_frequency)
+      IF (state.V_through >= (parameters.V_frequency * (previous(state.n_samples) + 1))) THEN previous(state.n_samples) + 1
+      ELSE previous(state.n_samples)
+    ELSE 0 ;
+    
+    state.n_samples_bottle = IF (state.n_comp_samples > previous(state.n_comp_samples)) THEN state.n_samples
+      ELSE previous(state.n_samples_bottle) ;
+    
+    state.n_comp_samples = IF (floor((independent.t - parameters.t_start) / parameters.frequency) > 0) THEN floor((independent.t - parameters.t_start) / parameters.frequency) ELSE 0;
+    
+    state.n_samples_bottle_temp = state.n_samples - state.n_samples_bottle;
+    
+    state.C_comp_meas = IF (state.flag_samp_per == True) THEN
+      IF (state.n_comp_samples == previous(state.n_comp_samples)) THEN
+        IF (state.n_samples == previous(state.n_samples)) THEN	previous(state.C_comp_meas)
+        ELSE (previous(state.C_comp_meas) * (state.n_samples_bottle_temp - 1) + interface.y_M) / (state.n_samples_bottle_temp)
+      ELSE 0
+    ELSE 0 ;
+    
+    state.C_meas = IF (state.flag_samp_per == True) THEN
+      IF (state.n_comp_samples > previous(state.n_comp_samples)) THEN
+        IF (previous(state.C_comp_meas) < parameters.Detection_limit) THEN parameters.Detection_limit / 2
+// 2017 (TT# 3687)        ELSE (previous(state.C_comp_meas) * (previous(state.n_samples_bottle_temp)) + interface.y_M) / (previous(state.n_samples_bottle_temp) + 1)
+        ELSE previous(state.C_comp_meas) 
+      ELSE previous(state.C_meas)
+    ELSE 0 ;
+    
+    state.t1 = IF (state.flag_samp_per == True) THEN
+    IF (state.n_comp_samples > previous(state.n_comp_samples)) THEN previous(state.t2)
+    ELSE previous(state.t1)
+    ELSE parameters.t_start;
+    
+    state.t2 = IF (state.flag_samp_per == True) THEN
+    IF (state.n_comp_samples > previous(state.n_comp_samples)) THEN independent.t
+    ELSE previous(state.t2)
+    ELSE parameters.t_start;
+    
+    state.L_meas = IF ((state.t2 - state.t1) > 0) THEN
+      state.C_meas * parameters.V_sample * state.n_samples_bottle_temp / (state.t2 - state.t1)
+    ELSE 0 ;
+  };
+
+:};
+
+
+#endif // WWTP_SAMPLER_FLOWPROPORTIONAL

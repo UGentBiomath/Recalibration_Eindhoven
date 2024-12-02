@@ -1,0 +1,95 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 5. december 2016 11:01:58$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_BASE_PUMPS
+#define WWTP_BASE_PUMPS
+
+
+OBJ n "Number of interpolation points" : Integer := 21 ;
+OBJ i "Temporary iteration variable, index of the component" : Integer ;
+
+
+CLASS Switch "Switch: 1=on, 0=off"
+SPECIALISES Integer :=
+{:
+  interval  <- {: lowerBound <- 0; upperBound <- 1 :};
+:};
+  
+
+CLASS Pump_Base "A base model for a pump" SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <- 
+  {
+    OBJ IsOn (* terminal = "in_2"; manip = "1" *) "Control signal: 0=off, 1=on" : Integer := {: causality <- "CIN" ; interval  <- {: lowerBound <- 0 ; upperBound <- 1 :}; value <- 1; group <- "Operational" :};
+    OBJ Q_Op (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Desired operating flow rate" : FlowRate := {: causality <- "CIN" ; value <- 20000; group <- "Input" :};
+    // original in kg/m3 (CHK DIMENSIONS!)
+    OBJ TSS (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "TSS concentration in the pumped liquid" : Concentration := {: causality <- "CIN" ; value <- 3000; group <- "Operational" :};
+    // Sensors
+    OBJ Q_Out (* terminal = "out_2"; is_favorite = "1" *) "Actual flow rate" : FlowRate := {: causality <- "COUT"; group <- "Operational" :};
+    OBJ PumpingEnergy (* terminal = "out_2"; is_favorite = "1" *) "Energy consumption since start of simulation" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ PowerConsumption (* terminal = "out_2"; is_favorite = "1" *) "Actual power consumption" : Power := {: causality <- "COUT"; group <- "Energy" :};
+  };
+
+  parameters <- 
+  {
+    OBJ g (* hidden = "1" *) "Gravity acceleration on earth (m/s2)": Real := {: value <- 9.81 :};
+    OBJ Rho_Water (* hidden = "1" *) "Density of water": Concentration := {: value <- 1.0E06 :};
+    OBJ Rho_TSS (* hidden = "1" *) "Density of Suspended Solids": Concentration := {: value <- 1.25E06 :};
+  };
+
+  independent <- 
+  { 
+    OBJ t "Time" : Time := {: group <- "Time" :}; 
+  };
+
+  state <-
+  {
+    OBJ help_Q (* hidden = "1" *) "Actual flow rate" : FlowRate := {: group <- "Operational" :};
+    OBJ help_Energy (* hidden = "1" *) "Specific pumping energy consumption for pump" : EnergyForPumping := {: group <- "Energy" :};
+    OBJ Rho_Fluid (* hidden = "1" *) "Density of the fluid to be pumped" : Density := {: group <- "Operational":};
+    OBJ H_System "Total head losses of the system" : Length := {: group <- "Operational" :};
+    OBJ Eta_Total "Total efficiency" : Fraction := {: group <- "Energy" :};
+    OBJ H (* is_favorite = "1" *) "Operating head at Qout" : Length := {: group <- "Operational" :};
+  };
+
+  equations <-
+  {
+    state.Rho_Fluid = interface.TSS + (1 - interface.TSS / parameters.Rho_TSS) * parameters.Rho_Water ; // g/m3
+    
+    interface.Q_Out = state.help_Q ;
+  
+    // Conversions: 1 J = 1 kg*m2/s2 ;   1 kWh = 3.6 MJ
+    state.help_Energy = state.Rho_Fluid * parameters.g * state.H * (0.27778 * 1E-09) ;
+
+    // Power consumption [kg m^2 / s^3 = W]
+    interface.PowerConsumption = IF ((state.help_Q <= 0.0) || (state.Eta_Total <= 0.0)) THEN 0.0
+      ELSE 1E3 * (state.help_Energy / state.Eta_Total) * state.help_Q / 24 ;
+  };
+
+:};
+
+
+// extreme simplification
+#include "WWTP/pumps/wwtp.pumps.generic.simpleq.msl"
+// centrifugal pumps: throttling valve control (1), VFD control (2)
+#include "WWTP/pumps/wwtp.pumps.generic.q.msl"
+// group controllers
+#include "WWTP/pumps/wwtp.pumps.control.msl"
+
+
+#endif // WWTP_BASE_PUMPS

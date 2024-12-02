@@ -1,0 +1,19 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ Alkalinity (*is_favorite = "1"; terminal = "out_4"; *) "mg CaCO3/L" : Concentration := {: causality <- "COUT"; group <- "Measured Data"; :};
+    OBJ COD_s (*is_favorite = "1"; terminal = "out_4"; *) "mg O/L" : Concentration := {: causality <- "COUT"; group <- "Measured Data"; :};
+    OBJ Ca_Tot (*terminal = "out_4"; *) "mg/L" : Concentration := {: causality <- "COUT"; group <- "Measured Data"; :};
+    OBJ FSA (*is_favorite = "1"; terminal = "out_4"; *) "mg N/L" : Concentration := {: causality <- "COUT"; group <- "Measured Data"; :};
+    OBJ ISSm (*terminal = "out_4"; *) "mg/L" : Concentration := {: causality <- "COUT"; group <- "Measured Data"; :};
+    OBJ K_Tot (*terminal = "out_4"; *) "mg/L" : Concentration := {: causality <- "COUT"; group <- "Measured Data"; :};
+    OBJ Mg_Tot (*terminal = "out_4"; *) "mg/L" : Concentration := {: causality <- "COUT"; group <- "Measured Data"; :};
+    OBJ OrthoP (*is_favorite = "1"; terminal = "out_4"; *) "mg P/L" : Concentration := {: causality <- "COUT"; group <- "Measured Data"; :};
+    OBJ TKN (*terminal = "out_4"; *) "mg/L" : Concentration := {: causality <- "COUT"; group <- "Measured Data"; :};
+    OBJ TP (*terminal = "out_4"; *) "mg/L" : Concentration := {: causality <- "COUT"; group <- "Measured Data"; :};
+    OBJ TSS_s (*is_favorite = "1"; terminal = "out_4"; *) "mg/L" : Concentration := {: causality <- "COUT"; group <- "Measured Data"; :};
+    OBJ T_oper (*terminal = "out_4"; *) "Operating temperature" : KelvinTemperature := {: causality <- "COUT"; group <- "Measured Data"; :};
+    OBJ VFA (*terminal = "out_4"; *) "mg COD/L" : Concentration := {: causality <- "COUT"; group <- "Measured Data"; :};
+    OBJ VSS (*is_favorite = "1"; terminal = "out_4"; *) "mg/L" : Concentration := {: causality <- "COUT"; group <- "Measured Data"; :};
+    OBJ V_liquid (*terminal = "out_4"; *) "Liquid volume" : Volume := {: causality <- "COUT"; group <- "Measured Data"; :};
+    OBJ p_H_s (*is_favorite = "1"; terminal = "out_4"; *) "pH ADM" : pH := {: causality <- "COUT"; group <- "Measured Data"; :};
+

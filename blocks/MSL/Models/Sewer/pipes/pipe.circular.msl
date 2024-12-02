@@ -1,0 +1,125 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_PIPES_PIPECIRCULAR
+#define SEWER_PIPES_PIPECIRCULAR
+
+ CLASS Pipe_Circular
+ (* icon = "Tank"; is_default = "true" *)
+ "A circular pipe. Outflow is calculated by using the outflow-volume relationship for circular pipes"
+ EXTENDS SewerAtomicModelWithVolume WITH
+ {:
+ 
+  comments <- "A circular pipe. Outflow is calculated by using the outflow-volume relationship for circular pipes";
+
+  interface <-
+  {
+    // common to PipeCircular_wReaction
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {:causality <- "COUT"; group <- "Outflow":};
+  };
+
+  parameters <-
+  {
+    OBJ Pi (* hidden = "1" *) : Real ;
+    OBJ help_f (* hidden = "1" *) ".." : Velocity ;
+    OBJ H_Min (* hidden ="1" *) "Minimum heigth of the tank, to avoid problems with to low numbers": Length := {: value <- 0.1; group <- "Hydraulics":};	
+    
+    // water (20 °C) has a kinematic viscosity of about 1 cSt = 1 mm2/s = 10-6 m2/s = 0.0864 m2/d
+    OBJ nue (* fixed ="1"; hidden ="1" *) "Kinematic viscosity": KinematicViscosity := {: value <- 0.0864; group <- "Hydraulics" :};
+    OBJ Q_Full (* fixed ="1" *) "Flow through the completely filled pipe" : FlowRate:= {: group <- "Hydraulics" :};
+    OBJ V_Full (* fixed ="1" *) "Volume of the completely filled pipe" : Volume:= {:group <- "Hydraulics":};
+    OBJ Q_Max (* fixed ="1"; hidden = "1" *) "Maximum outflow of the pipe": FlowRate:= {: group <- "Hydraulics":};
+    OBJ V_Max (* fixed ="1" *) "Maximum volume of the pipe": Volume:= {:group <- "Hydraulics":};
+    OBJ V_Min (* fixed ="1" *) "Minimum volume of the pipe": Volume := {: group <- "Hydraulics":};
+
+    OBJ D "Diameter of the pipe" : Length := {: value <- 0.3; group <- "Geometry" :};
+    OBJ L "Length of the pipe" : Length := {: value <- 1.0; group <- "Geometry" :};
+    OBJ s "Slope" : Fraction := {: value <- 0.001; group <- "Geometry" :};
+    OBJ H_Init "Initial level of the pipe" : Length := {: value <- 0.1; group <- "Geometry" :};
+    OBJ a "Slope in the volume-outflow relationship above Vfull": Real := {: value <- 1.0; group <- "Hydraulics":};
+    // common to PipeCircular_wReaction
+    OBJ ks "Roughness of the pipe" : Length := {: value <- 0.0015 ; group <- "Hydraulics":};
+  };
+
+  state <-
+  {
+    OBJ A_Rel "Relative area" : Fraction := {: group <- "Hydraulics" :};
+    OBJ tau "Filling level" : Fraction := {: group <- "Hydraulics" :};
+    OBJ phi "Filling angle" : Real := {: unit <- "rad"; group <- "Hydraulics" :};
+    OBJ zeta "Relative hydraulic radius" : Real := {: group <- "Hydraulics" :};
+    // common to PipeCircular_wReaction
+    OBJ Q_Rel "Relative flow rate" : FlowRate := {: group <- "Hydraulics" :};
+    OBJ xsi "Filling area" : Fraction := {: group <- "Hydraulics" :};
+    OBJ eta "Relative surface" : Fraction := {: group <- "Hydraulics" :};
+  };
+  
+  initial <-
+  {
+   state.SewM[H2O] = parameters.L * parameters.D/4.0 * parameters.H_Init / 1E-06 ;
+
+   // common to PipeCircular_wReaction
+   parameters.Pi = 2.0 * asin(1.0);
+   parameters.V_Full = parameters.L * parameters.Pi * pow(parameters.D, 2.0) / 4.0;
+      
+   // f in m/d
+   parameters.help_f = 2.0 * 9.81 * pow(86400.0, 2) * parameters.D * parameters.s ;
+   
+   //calculating Qfull using the Prandtl-Colebrook equation
+   parameters.Q_Full = - 2.0 * log10(2.51 * parameters.nue / (parameters.D * sqrt(parameters.help_f)) +
+    (parameters.ks / (3.71 * parameters.D))) * sqrt(parameters.help_f) * parameters.V_Full / parameters.L ;     
+      
+   parameters.Q_Max = parameters.Q_Full * 100.0;
+   parameters.V_Max = IF (parameters.Q_Max > parameters.Q_Full)
+   	THEN ((parameters.Q_Max - parameters.Q_Full)/(parameters.a * 86.4)) + parameters.V_Full
+   	ELSE parameters.V_Full; 
+
+   parameters.V_Min = parameters.H_Min * parameters.L * parameters.D/4.0 ;
+  };
+
+  equations <-
+  {
+   state.Q_Out = IF (state.V > parameters.V_Max) THEN parameters.Q_Max
+   	ELSE IF (state.V > parameters.V_Full) THEN parameters.a * 86.4* (state.V - parameters.V_Full) + parameters.Q_Full
+   		ELSE IF (state.V < parameters.V_Min) THEN 0
+   			ELSE parameters.Q_Full * state.Q_Rel ;
+  
+   // common to PipeCircular_wReaction
+   state.V = 1E-06 * state.SewM[H2O];
+   
+   state.A_Rel = IF (state.V > parameters.V_Full) THEN 1.0
+   	ELSE IF (state.V < parameters.V_Min) THEN 0.0
+   		ELSE state.V / parameters.V_Full ;	
+	
+   state.tau = MSLUTauCircularPipe(state.A_Rel, previous(state.tau), 0.00001);
+   state.phi =  2.0 * asin(sqrt(state.tau));
+   state.xsi = 1.0 / parameters.Pi * (state.phi - sin(2.0 * state.phi) / 2.0);
+   state.eta = state.phi / parameters.Pi;
+   state.zeta = IF (state.eta == 0) THEN 0
+   	ELSE state.xsi / state.eta;
+
+   state.Q_Rel = state.xsi * pow(state.zeta, 0.625);
+   
+   {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}: state.C[Comp_Index] =
+   	state.SewM[Comp_Index] / state.V ; };
+
+   {FOREACH Comp_Index IN {1 .. Kosim1NrOfComponents}: interface.Outflow[Comp_Index] =
+   	- state.C[Comp_Index] * state.Q_Out ; };
+  };
+
+ :};
+
+#endif // SEWER_PIPES_PIPECIRCULAR

@@ -1,0 +1,38 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE ASM1_ABComponents "The components considered" = 
+ENUM
+{
+  H2O,
+  S_Bf,
+  S_Bs,
+  S_O,
+  S_U,
+  S_NOx,
+  S_NHx,
+  S_NB,
+  S_Alk,
+  C_U,
+  C_B,
+  X_B,
+  X_U,
+  X_OHO,
+  X_ANO,
+  X_E,
+  X_STO,
+  X_EPS,
+  X_NB
+};
+
+#define ASM1_ABStandardCategoryModels
+OBJ ASM1_ABIndexOfSolvent "Index of the solvent in the component vector" : Integer := 1;
+#define ASM1_ABSolublesPresent
+OBJ ASM1_ABIndexOfFirstSolubleComponent "Index of the first soluble component in the component vector" : Integer := 2;
+OBJ ASM1_ABIndexOfLastSolubleComponent "Index of the last soluble component in the component vector" : Integer := 11;
+#define ASM1_ABParticulatesPresent
+OBJ ASM1_ABIndexOfFirstParticulateComponent "Index of the first particulate component in the component vector" : Integer := 12;
+OBJ ASM1_ABIndexOfLastParticulateComponent "Index of the last particulate component in the component vector" : Integer := 19;
+#define ASM1_ABCalculateTSSComponent
+OBJ ASM1_ABIndexOfFirstTSSComponent "Index of the first TSS component in the component vector" : Integer := 12;
+OBJ ASM1_ABIndexOfLastTSSComponent "Index of the last TSS component in the component vector" : Integer := 18;
+

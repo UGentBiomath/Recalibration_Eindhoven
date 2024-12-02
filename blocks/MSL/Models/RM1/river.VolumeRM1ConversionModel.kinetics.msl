@@ -1,0 +1,17 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    state.Kinetics[DegradationBODs] = state.rate_BODs;
+    state.Kinetics[MacroO2] = state.rate_MacroO2;
+    state.Kinetics[Nitrification] = state.rate_Nitrif;
+    state.Kinetics[OxiBOD1] = state.rate_OxiBOD1;
+    state.Kinetics[OxiBOD1p] = state.rate_OxiBOD1p;
+    state.Kinetics[OxiBOD2] = state.rate_OxiBOD2;
+    state.Kinetics[OxiBOD2p] = state.rate_OxiBOD2p;
+    state.Kinetics[Reaeration] = state.rate_Reaer;
+    state.Kinetics[ResuspensionBOD1] = parameters.Sed_BOD1/state.d;
+    state.Kinetics[ResuspensionBOD1p] = parameters.r_Sed1 * state.C[BOD1p];
+    state.Kinetics[ResuspensionBOD2] = parameters.Sed_BOD2/state.d;
+    state.Kinetics[ResuspensionBOD2p] = parameters.r_Sed2 * state.C[BOD2p];
+    state.Kinetics[ResuspensionNH4] = parameters.Sed_NH4/state.d;
+    state.Kinetics[SedO2] = state.rate_SedO2;
+

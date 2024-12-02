@@ -1,0 +1,52 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 15:21:58$
+ *
+ ******************************************************************************/
+
+#ifndef IUWS_CONTROLLERS_LINEAR_SATURATION
+#define IUWS_CONTROLLERS_LINEAR_SATURATION
+
+CLASS Linear_Saturation
+  (* icon = "Controller" *)
+  "Linear controller with saturation"
+  EXTENDS SewerControllers_Base WITH 
+  {:
+
+  comments <- "A model for a linear controller with saturation";
+
+  parameters <-
+  {
+   OBJ a (* is_favorite = "1" *) "Intercept (u = a + b * y_M)" : Real := {: value <- 0.0 ; group <- "Operational" :};
+   OBJ b (* is_favorite = "1" *) "Slope (u = a + b * y_M)" : Real := {: value <- 1.0 ; group <- "Operational" :};
+   OBJ u_Min (* is_favorite = "1" *) "Minimum control action" : Real := {: value <- 0.0 ; group <- "Operational" :};
+   OBJ u_Max (* is_favorite = "1" *) "Maximum control action" : Real := {: value <- 1000.0 ; group <- "Operational" :};
+  };
+
+  state <-
+  {
+   OBJ uhelp (* hidden = "1" *) "Help variable to calculate the proportional-integral control action" : Real;
+  };
+
+  equations <-
+  {
+   state.uhelp = parameters.a + parameters.b * interface.y_M ; 
+  
+   interface.u = IF (state.uhelp < parameters.u_Min) THEN parameters.u_Min
+   		ELSE IF (state.uhelp > parameters.u_Max) THEN parameters.u_Max
+			 ELSE state.uhelp ;                 
+  };
+
+ :};
+
+#endif // IUWS_CONTROLLERS_LINEAR_SATURATION

@@ -1,0 +1,52 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. maj 2019 21:58:05$
+ *
+ ******************************************************************************/
+ 
+#ifndef WWTP_SAMPLER_GRAB
+#define WWTP_SAMPLER_GRAB
+
+
+CLASS Grab (* icon = "sampler" *) "Grab sampler" EXTENDS Sampler2 WITH
+{:
+  
+  initial <-
+  {
+    state.Help_frequency = parameters.frequency ;
+    //(EURE 25/04/2019) only temp - needs to be related to volume sampled~through?
+    parameters.Help_dt = 0.0 ;
+  };
+  
+  equations <-
+  {
+    state.n_samples = IF ((state.flag_samp_time == True) && (previous(state.flag_samp_time) == False))
+    THEN (previous(state.n_samples) + 1)
+    ELSE previous(state.n_samples);
+    
+    //(EURE 29/03/2019) this is the purpose of the model, ie the output signal (in base class)
+    state.C_meas = IF (state.flag_samp_per == True) THEN
+      IF (state.flag_samp_time < previous(state.flag_samp_time)) THEN
+        IF (interface.y_M < parameters.Detection_limit) THEN parameters.Detection_limit / 2 ELSE interface.y_M
+      ELSE previous(state.C_meas)
+    ELSE 0 ;
+    
+    state.L_meas = state.C_meas * state.Q_in;
+    
+    state.n_comp_samples = state.n_samples;
+  };
+
+:};
+
+
+#endif // WWTP_SAMPLER_GRAB

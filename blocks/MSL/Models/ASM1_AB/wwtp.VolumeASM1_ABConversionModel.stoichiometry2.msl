@@ -1,0 +1,6 @@
+    state.Stoichiometry[AerGrowthOHOfast][S_Bf] := - 1 / (parameters.Y_OHO * (1 - state.k_EPS_PC - state.k_STO_PC));
+    state.Stoichiometry[AerGrowthOHOfast][X_STO] := state.k_STO_PC / (parameters.Y_OHO * (1 - state.k_EPS_PC - state.k_STO_PC));
+    state.Stoichiometry[AerGrowthOHOfast][X_EPS] := state.k_EPS_PC / (parameters.Y_OHO * (1 - state.k_EPS_PC - state.k_STO_PC));
+    state.Stoichiometry[AerGrowthOHOslow][S_Bs] := - 1 / (parameters.Y_OHO * (1 - state.k_EPS_PC - state.k_STO_PC));
+    state.Stoichiometry[AerGrowthOHOslow][X_STO] := state.k_STO_PC / (parameters.Y_OHO * (1 - state.k_EPS_PC - state.k_STO_PC));
+    state.Stoichiometry[AerGrowthOHOslow][X_EPS] := state.k_EPS_PC / (parameters.Y_OHO * (1 - state.k_EPS_PC));

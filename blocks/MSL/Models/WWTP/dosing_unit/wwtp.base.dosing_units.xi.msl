@@ -1,0 +1,55 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:49$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_BASE_CHEMICAL_DOSING_UNITS_XI
+#define WWTP_BASE_CHEMICAL_DOSING_UNITS_XI
+
+
+#if (defined StandardCategoryModels)
+
+#ifndef PWM_SA
+
+CLASS AdditionOfXI (* icon = "dosing_unit_alkalinity" *)
+"A dosing unit model to account for equivalent addition of inerts"
+EXTENDS DosingUnit_Base WITH
+{:
+
+  comments <- "A dosing unit model to account for equivalent addition of inerts";
+
+  interface <-
+  {
+    OBJ Q_Dose (* terminal = "in_1"; manip = "1" *) "Flow rate of the solution" : 
+        FlowRate := {: causality <- "CIN"; value <- 10 ; group <- "Operational" :};
+  }; 
+
+  equations <-
+  {
+    #ifdef ASM2dM
+    interface.Outflow[X_U] = - interface.Q_Dose * interface.C_Dose ;
+    #else
+    interface.Outflow[X_I] = - interface.Q_Dose * interface.C_Dose ;
+    #endif
+  };
+
+:};
+
+#endif // PWM_SA
+
+#endif //(defined StandardCategoryModels)
+
+ 
+#endif // WWTP_BASE_CHEMICAL_DOSING_UNITS_XI

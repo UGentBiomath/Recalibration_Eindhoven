@@ -1,0 +1,39 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$ EURE
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+
+#ifndef SEWER_SENSORS_FLOW
+#define SEWER_SENSORS_FLOW
+
+
+CLASS SewFlow (* icon = "Sensor" *) "Flow sensor" EXTENDS SensorSewer WITH 
+{:
+
+  comments <- "Flow sensor for Kosim1 component vector";
+
+  interface <-
+  {
+    OBJ Q (* terminal = "out_2"; is_favorite = "1" *) "Measured flow rate" : FlowRate := {: causality <- "COUT"; group <- "Measurements" :};
+  };
+
+  equations <-
+  {
+    interface.Q = state.Q_In ;
+  };
+
+:};
+
+
+#endif // SEWER_SENSORS_FLOW

@@ -1,0 +1,64 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE Components "The components considered" = 
+ENUM
+{
+  H2O,
+  S_H,
+  S_Na,
+  S_K,
+  S_Ca,
+  S_Mg,
+  S_NH,
+  S_Cl,
+  S_VFA,
+  S_Pr,
+  S_CO3,
+  S_SO4,
+  S_PO4,
+  S_H2,
+  S_U,
+  S_F,
+  S_Glu,
+  S_NOx,
+  S_O,
+  X_U_Inf,
+  X_B_Org,
+  X_PAO_PP,
+  X_PAO_Stor,
+  X_Str_NH4,
+  X_ACP,
+  X_Str_K,
+  X_Cal,
+  X_Mag,
+  X_Newb,
+  X_OHO,
+  X_PAO,
+  X_AD,
+  X_AC,
+  X_AM,
+  X_HM,
+  X_U_Org,
+  X_B_Inf,
+  X_ANO,
+  X_ISS,
+  G_CH4,
+  G_CO2,
+  G_N2
+};
+
+#define StandardCategoryModels
+OBJ IndexOfSolvent "Index of the solvent in the component vector" : Integer := 1;
+#define SolublesPresent
+OBJ IndexOfFirstSolubleComponent "Index of the first soluble component in the component vector" : Integer := 2;
+OBJ IndexOfLastSolubleComponent "Index of the last soluble component in the component vector" : Integer := 19;
+#define ParticulatesPresent
+OBJ IndexOfFirstParticulateComponent "Index of the first particulate component in the component vector" : Integer := 20;
+OBJ IndexOfLastParticulateComponent "Index of the last particulate component in the component vector" : Integer := 39;
+#define GasesPresent
+OBJ IndexOfFirstGasComponent "Index of the first gas component in the component vector" : Integer := 40;
+OBJ IndexOfLastGasComponent "Index of the last gas component in the component vector" : Integer := 42;
+#define CalculateTSSComponent
+OBJ IndexOfFirstTSSComponent "Index of the first TSS component in the component vector" : Integer := 20;
+OBJ IndexOfLastTSSComponent "Index of the last TSS component in the component vector" : Integer := 39;
+

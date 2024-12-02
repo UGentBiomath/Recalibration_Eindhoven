@@ -1,0 +1,136 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:47$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_DIGESTER_UCT
+#define WWTP_DIGESTER_UCT
+
+#if (defined PWM_SA)
+
+// EURE 10/03/2015 NEW IMPLEMENTATION
+CLASS UCTAD_BSM3P
+(* icon = "anaerobic_digester"; is_default = "true" *)
+"A UCT model for anaerobic digestion processes"
+EXTENDS UCTAD_LiquidPhaseDigester WITH
+{:
+ comments <- "UCTAD model for anaerobic digestion according to BSM2. This is different from the STR \
+ implementation in terms of the Hill functions used for inhibition and the alternative simple equation \
+ for the gas flow calculation. This implementation uses an algebraic model to calculate S_H for speeding \
+ up calculations (DAE2 - both pH and H2 are calculated algebraically)" ;
+
+  // This class represents a conventional digester, comprised of a liquid- and a headspace
+  // It implements the portion that in W2014 used to be denoted 'Headspace' EURE (10/03/2015)
+   
+  interface <- 
+  { 
+    OBJ Temperature (* terminal = "in_2"; manip = "1" ; is_favorite = "1" *) "System Temperature" : CelsiusTemperature	:= {: causality <- "CIN" ; value <- 35 ; group <- "Operational" :};
+    OBJ V_tot (* terminal = "out_4"; *) "Total volume" : Volume := {: causality <- "COUT"; group <- "Measured Data"; :};
+    // ~~~ may want to include an external interface.msl file
+    OBJ Kla (* terminal = "in_2"; manip = "1" ; is_favorite = "1" *) "Oxygen transfer coefficient" : OxygenTransferCoefficient := {: causality <- "CIN" ; value <- 250 ; group <- "Operational" :};
+    OBJ Gasflow (* terminal = "out_3" *) "Gasflow" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Gas" :};
+    // N2Flow -> Q_N2_Mol + MolFlowRate EURE 11/03/2015: confirm with CJB
+    OBJ Q_N2_Mol (* terminal = "in_2"; manip = "1" ; is_favorite = "1" *) "Inert molar flow through headspace" : Real := {: causality <- "CIN" ; value <- 0.0001 ; group <- "Operational" :} ;
+    // y_ -> f_
+    OBJ f_CH4 (* terminal = "out_4"; is_favorite = "1" *)	"Mole fraction of CH4 in the head space" : Fraction	:= {: causality <- "COUT" ; group <- "Headspace" :};
+    OBJ f_CO2 (* terminal = "out_4"; is_favorite = "1" *)	"Mole fraction of CO2 in the head space" : Fraction	:= {: causality <- "COUT" ; group <- "Headspace" :};
+    OBJ f_N2 (* terminal = "out_4" *)	"Mole fraction of N2 in the head space" : Fraction	:= {: causality <- "COUT" ; group <- "Headspace" :};
+    OBJ f_H2O (* terminal = "out_4" *)	"Mole fraction of H2O in the head space" : Fraction	:= {: causality <- "COUT" ; group <- "Headspace" :};
+    OBJ P_N2 (* terminal = "out_4" *) "Headspace partial pressure of nitrogen" : Pressure := {: causality <- "COUT" ; group <- "Headspace" :}; 
+    // GasFlow -> Q_Biogas
+    OBJ Q_Biogas (* terminal = "out_4"; is_favorite = "1" *) "Biogas flow rate" : FlowRate := {: causality <- "COUT"; group <- "Biogas" :};
+    OBJ Q_CH4 (* terminal = "out_4"; is_favorite = "1" *)	"Flowrate of CH4" : FlowRate := {: causality <- "COUT"; group <- "Biogas" :};
+    OBJ Q_CO2 (* terminal = "out_4"; is_favorite = "1" *)	"Flowrate of CO2" : FlowRate := {: causality <- "COUT"; group <- "Biogas" :};
+  };
+  
+  parameters <- 
+  { 
+    // ~~~ may want to include an external parameters.msl file
+    OBJ V_gas (* is_favorite = "1" *) "Volume of the headspace" : Volume := {: value <- 50; group <- "Dimension" :};
+    OBJ HeadspacePressure (* is_favorite = "1" *) "Pressure of the headspace" : Pressure := {: value <- 101325.0 ; group <- "Headspace" :};
+  };
+  
+  state <-
+  {
+    // ~~~ may want to include an external state.msl file
+    OBJ CO2_rate "CO2 molal flow rate" : Real := {: group <- "Headspace" :}; //MolFlowRate EURE 11/03/2015: confirm with CJB
+    OBJ CH4_rate "CH4 molal flow rate" : Real := {: group <- "Headspace" :}; //MolFlowRate EURE 11/03/2015: confirm with CJB
+    OBJ HeadGas "Total moles of gas" : AmountOfSubstance := {: value <- 1.0 ; group <- "Headspace" :};
+    OBJ P_H2O	"Water vapour pressure" : Pressure := {: group <- "Headspace" :};
+    OBJ P_CH4	"Headspace partial pressure of methane" : Pressure := {: group <- "Headspace" :};
+    // Q_gas -> Q_Gas_Mol
+    OBJ Q_Gas_Mol "Gas molal flowrate" : MolFlowRate := {: group <- "Headspace" :}; 
+  };
+  
+  initial <-
+  {
+    state.PCO2_eq := 0.3
+  };
+  
+  equations <- 
+  { 
+    state.Kla_Actual = interface.Kla ;
+
+    state.Temp_liq = interface.Temperature ;
+    interface.V_tot = parameters.V_liq + parameters.V_gas ;
+
+    // ~~~ may want to include an external kinetics.msl file
+    
+    state.Henry_CO2 = state.gam0 * pow(10,(1.469 + 1028.874 * (1.0 / 298.15 - 1.0 / state.TK)));//enthalpy of reaction constant
+    state.PCO2_eq = 101325.0 * state.molality[H2CO3] * state.Henry_CO2 ;
+        
+    state.HeadGas = parameters.V_gas * parameters.HeadspacePressure / (8.31451 * state.TK) ; // Moles of gas in headspace
+    
+    state.K_CO2_effective = state.Kla_Actual / 101.325 / state.Henry_CO2 ;   // 101.325 includess conversion from Pa to atm and from mo/L to mol/m3
+    state.CH4_rate = state.V / parameters.MW_[G_CH4] * (parameters.Stoichiometry[Acet_methanogenesis][G_CH4] * state.Kinetics[Acet_methanogenesis] + parameters.Stoichiometry[Hyd_methanogenesis][G_CH4]*state.Kinetics[Hyd_methanogenesis]) ;
+
+    state.K_CO2_effective = state.Kla_Actual/101.325 /state.Henry_CO2 ;   // 101.325 includess conversion from Pa to atm and from mo/L to mol/m3
+    state.CO2_rate = state.K_CO2_effective * (state.PCO2_eq - state.P_CO2) * state.V ;  // Divide by volume because VolumeConversionModel multiplies.
+
+    state.Kinetics[CO2_evolution] = state.CO2_rate / state.V ;
+    
+    state.P_H2O = 133.3333 * pow(10.0, (8.07131 - 1730.63 / (233.426 + state.Temp_liq))) ;
+    state.P_CO2 = state.M[G_CO2] / parameters.MW_[G_CO2] / state.HeadGas * parameters.HeadspacePressure ;
+    state.P_CH4 = state.M[G_CH4] / parameters.MW_[G_CH4] / state.HeadGas * parameters.HeadspacePressure ;
+    state.CH4_COD = (state.CH4_rate * (63.996 / 16.043) * state.V) / state.Q_Out ;
+    
+    // mol/d  gas flowrate
+    state.Q_Gas_Mol = IF (((state.CO2_rate + state.CH4_rate) + interface.Q_N2_Mol/28.014) < 0.0) THEN 0.0
+      ELSE ((state.CO2_rate + state.CH4_rate) + interface.Q_N2_Mol/28.014) / (1.0 - state.P_H2O/parameters.HeadspacePressure) ;
+    //
+    DERIV(state.M[G_CO2],[independent.t]) = (state.CO2_rate - state.Q_Gas_Mol*state.P_CO2/parameters.HeadspacePressure)*parameters.MW_[G_CO2] ; // ID 5, CJB
+    DERIV(state.M[G_CH4],[independent.t]) = (state.CH4_rate - state.Q_Gas_Mol*state.P_CH4/parameters.HeadspacePressure)*parameters.MW_[G_CH4];  // ID 5, CJB
+    
+    interface.Gasflow[G_CO2] = -state.Q_Gas_Mol * state.P_CO2 / parameters.HeadspacePressure * parameters.MW_[G_CO2] ;   // ID 5, CJB
+    interface.Gasflow[G_CH4] = -state.Q_Gas_Mol * state.P_CH4 / parameters.HeadspacePressure * parameters.MW_[G_CH4] ;   // ID 5, CJB
+    interface.Gasflow[H2O] = -state.Q_Gas_Mol * state.P_H2O / parameters.HeadspacePressure * parameters.MW_[H2O] ;       // ID 5, CJB
+    //
+    // ~~~ may want to include an external sensors.msl file
+    interface.Q_Biogas = state.Q_Gas_Mol * 8.31451 * state.TK / parameters.HeadspacePressure ;
+    interface.Q_CH4 = interface.Q_Biogas * interface.f_CH4 ;
+    interface.Q_CO2 = interface.Q_Biogas * interface.f_CO2 ;
+    //
+    interface.f_CH4 = state.P_CH4 /parameters.HeadspacePressure;
+    interface.f_CO2 = state.P_CO2 /parameters.HeadspacePressure; 
+    interface.f_H2O = state.P_H2O / parameters.HeadspacePressure ;
+    interface.P_N2 = parameters.HeadspacePressure - state.P_CO2 - state.P_CH4 - state.P_H2O ;
+    interface.f_N2 = interface.P_N2 / parameters.HeadspacePressure ;
+  };
+
+:};
+
+
+#endif // PWM_SA
+
+#endif // WWTP_DIGESTER_UCT

@@ -1,0 +1,254 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 26. maj 2020 15:36:10$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_BASE_COST_OPERATION2
+#define WWTP_BASE_COST_OPERATION2
+
+
+// --------------------------------
+// New W2017: REPLACES OBSOLETE OperationalCost
+// --------------------------------
+CLASS Cost_Operation (* icon = "cost" ; is_default = "true" *)
+"Calculation of the operational cost of the plant"
+EXTENDS OperationalCost_Base WITH
+{:
+
+  comments <- "Calculation of the operational cost of the plant";
+  
+  interface <-
+  {
+    OBJ TotEnergyAeration (* terminal = "out_1"; is_favorite = "1" *) "Aeration energy" : ElectricalEnergy := {: causality <- "COUT" ; group <- "Energy" :};
+    OBJ TotEnergyPumping (* terminal = "out_1"; is_favorite = "1" *) "Pumping energy" : ElectricalEnergy := {: causality <- "COUT" ; group <- "Energy" :};
+    OBJ TotEnergyMixing (* terminal = "out_1"; is_favorite = "1" *) "Mixing energy" : ElectricalEnergy := {: causality <- "COUT" ; group <- "Energy" :};
+  };
+
+  state <-
+  {
+    // 1) AERATION ENERGY (through KLa)
+    OBJ Help_TotEnAerat (* hidden = "1" *) "Total aeration energy" : ElectricalEnergy := {: group <- "Energy" :};
+    OBJ EnAerat01 "Aeration energy unit #1" : ElectricalEnergy := {: group <- "Aeration" :};
+    OBJ EnAerat02 "Aeration energy unit #2" : ElectricalEnergy := {: group <- "Aeration" :};
+    OBJ EnAerat03 "Aeration energy unit #3" : ElectricalEnergy := {: group <- "Aeration" :};
+    OBJ EnAerat04 "Aeration energy unit #4" : ElectricalEnergy := {: group <- "Aeration" :};
+    OBJ EnAerat05 "Aeration energy unit #5" : ElectricalEnergy := {: group <- "Aeration" :};
+    OBJ EnAerat06 "Aeration energy unit #6" : ElectricalEnergy := {: group <- "Aeration" :};
+    OBJ EnAerat07 "Aeration energy unit #7" : ElectricalEnergy := {: group <- "Aeration" :};
+    OBJ EnAerat08 "Aeration energy unit #8" : ElectricalEnergy := {: group <- "Aeration" :};
+    OBJ EnAerat09 "Aeration energy unit #9" : ElectricalEnergy := {: group <- "Aeration" :};
+    OBJ EnAerat10 "Aeration energy unit #10" : ElectricalEnergy := {: group <- "Aeration" :};
+    // 2) PUMPING ENERGY
+    OBJ Help_TotEnPump (* hidden = "1" *) "Total pumping energy" : ElectricalEnergy := {: group <- "Energy" :};
+    OBJ EnPump01 "Pumping energy unit #1" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump02 "Pumping energy unit #2" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump03 "Pumping energy unit #3" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump04 "Pumping energy unit #4" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump05 "Pumping energy unit #5" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump06 "Pumping energy unit #6" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump07 "Pumping energy unit #7" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump08 "Pumping energy unit #8" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump09 "Pumping energy unit #9" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump10 "Pumping energy unit #10" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump11 "Pumping energy unit #11" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump12 "Pumping energy unit #12" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump13 "Pumping energy unit #13" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump14 "Pumping energy unit #14" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump15 "Pumping energy unit #15" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump16 "Pumping energy unit #16" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump17 "Pumping energy unit #17" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump18 "Pumping energy unit #18" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump19 "Pumping energy unit #19" : ElectricalEnergy := {: group <- "Pumping" :};
+    OBJ EnPump20 "Pumping energy unit #20" : ElectricalEnergy := {: group <- "Pumping" :};
+    // 3) MIXING ENERGY
+    OBJ Help_TotEnMix (* hidden = "1" *) "Total mixing energy" : ElectricalEnergy := {: group <- "Energy" :};
+    OBJ EnMix01 "Mixing energy unit #1" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix02 "Mixing energy unit #2" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix03 "Mixing energy unit #3" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix04 "Mixing energy unit #4" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix05 "Mixing energy unit #5" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix06 "Mixing energy unit #6" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix07 "Mixing energy unit #7" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix08 "Mixing energy unit #8" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix09 "Mixing energy unit #9" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix10 "Mixing energy unit #10" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix11 "Mixing energy unit #11" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix12 "Mixing energy unit #12" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix13 "Mixing energy unit #13" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix14 "Mixing energy unit #14" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix15 "Mixing energy unit #15" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix16 "Mixing energy unit #16" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix17 "Mixing energy unit #17" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix18 "Mixing energy unit #18" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix19 "Mixing energy unit #19" : ElectricalEnergy := {: group <- "Mixing" :};
+    OBJ EnMix20 "Mixing energy unit #20" : ElectricalEnergy := {: group <- "Mixing" :};
+  };
+  
+  initial <-
+  {
+    // Aeration
+    state.EnAerat01 = 0.0 ;    
+    state.EnAerat02 = 0.0 ;    
+    state.EnAerat03 = 0.0 ;    
+    state.EnAerat04 = 0.0 ;    
+    state.EnAerat05 = 0.0 ;    
+    state.EnAerat06 = 0.0 ;    
+    state.EnAerat07 = 0.0 ;    
+    state.EnAerat08 = 0.0 ;    
+    state.EnAerat09 = 0.0 ;    
+    state.EnAerat10 = 0.0 ;
+    // Pumping
+    state.EnPump01 = 0.0 ;    
+    state.EnPump02 = 0.0 ;    
+    state.EnPump03 = 0.0 ;    
+    state.EnPump04 = 0.0 ;    
+    state.EnPump05 = 0.0 ;    
+    state.EnPump06 = 0.0 ;    
+    state.EnPump07 = 0.0 ;    
+    state.EnPump08 = 0.0 ;    
+    state.EnPump09 = 0.0 ;    
+    state.EnPump10 = 0.0 ;    
+    state.EnPump11 = 0.0 ;    
+    state.EnPump12 = 0.0 ;    
+    state.EnPump13 = 0.0 ;    
+    state.EnPump14 = 0.0 ;    
+    state.EnPump15 = 0.0 ;    
+    state.EnPump16 = 0.0 ;    
+    state.EnPump17 = 0.0 ;    
+    state.EnPump18 = 0.0 ;    
+    state.EnPump19 = 0.0 ;    
+    state.EnPump20 = 0.0 ;    
+    // Mixing
+    state.EnMix01 = 0.0 ;    
+    state.EnMix02 = 0.0 ;    
+    state.EnMix03 = 0.0 ;    
+    state.EnMix04 = 0.0 ;    
+    state.EnMix05 = 0.0 ;    
+    state.EnMix06 = 0.0 ;    
+    state.EnMix07 = 0.0 ;    
+    state.EnMix08 = 0.0 ;    
+    state.EnMix09 = 0.0 ;    
+    state.EnMix10 = 0.0 ;    
+    state.EnMix11 = 0.0 ;    
+    state.EnMix12 = 0.0 ;    
+    state.EnMix13 = 0.0 ;    
+    state.EnMix14 = 0.0 ;    
+    state.EnMix15 = 0.0 ;    
+    state.EnMix16 = 0.0 ;    
+    state.EnMix17 = 0.0 ;    
+    state.EnMix18 = 0.0 ;    
+    state.EnMix19 = 0.0 ;    
+    state.EnMix20 = 0.0 ;    
+  };
+  
+  equations <-
+  {
+    // 1) AERATION ENERGY (through KLa) for 10 tanks
+    DERIV(state.EnAerat01,[independent.t])= interface.AerationPower1 ;
+    DERIV(state.EnAerat02,[independent.t])= interface.AerationPower2 ;
+    DERIV(state.EnAerat03,[independent.t])= interface.AerationPower3 ;
+    DERIV(state.EnAerat04,[independent.t])= interface.AerationPower4 ;
+    DERIV(state.EnAerat05,[independent.t])= interface.AerationPower5 ;
+    DERIV(state.EnAerat06,[independent.t])= interface.AerationPower6 ;
+    DERIV(state.EnAerat07,[independent.t])= interface.AerationPower7 ;
+    DERIV(state.EnAerat08,[independent.t])= interface.AerationPower8 ;
+    DERIV(state.EnAerat09,[independent.t])= interface.AerationPower9 ;
+    DERIV(state.EnAerat10,[independent.t])= interface.AerationPower10 ;
+
+    state.Help_TotEnAerat = state.EnAerat01 + state.EnAerat02 + state.EnAerat03 + state.EnAerat04 +
+      state.EnAerat05 + state.EnAerat06 + state.EnAerat07 + state.EnAerat08 + state.EnAerat09 + state.EnAerat10 ;
+
+    interface.TotEnergyAeration = state.Help_TotEnAerat ;
+    //
+    // 2) PUMPING ENERGY for 10 pumps and 2 sludge wastage pumps
+    DERIV(state.EnPump01,[independent.t])= interface.PumpingPower1 ;
+    DERIV(state.EnPump02,[independent.t])= interface.PumpingPower2 ;
+    DERIV(state.EnPump03,[independent.t])= interface.PumpingPower3 ;
+    DERIV(state.EnPump04,[independent.t])= interface.PumpingPower4 ;
+    DERIV(state.EnPump05,[independent.t])= interface.PumpingPower5 ;
+    DERIV(state.EnPump06,[independent.t])= interface.PumpingPower6 ;
+    DERIV(state.EnPump07,[independent.t])= interface.PumpingPower7 ;
+    DERIV(state.EnPump08,[independent.t])= interface.PumpingPower8 ;
+    DERIV(state.EnPump09,[independent.t])= interface.PumpingPower9 ;
+    DERIV(state.EnPump10,[independent.t])= interface.PumpingPower10 ;
+    DERIV(state.EnPump11,[independent.t])= interface.PumpingPower11 ;
+    DERIV(state.EnPump12,[independent.t])= interface.PumpingPower12 ;
+    DERIV(state.EnPump13,[independent.t])= interface.PumpingPower13 ;
+    DERIV(state.EnPump14,[independent.t])= interface.PumpingPower14 ;
+    DERIV(state.EnPump15,[independent.t])= interface.PumpingPower15 ;
+    DERIV(state.EnPump16,[independent.t])= interface.PumpingPower16 ;
+    DERIV(state.EnPump17,[independent.t])= interface.PumpingPower17 ;
+    DERIV(state.EnPump18,[independent.t])= interface.PumpingPower18 ;
+    DERIV(state.EnPump19,[independent.t])= interface.PumpingPower19 ;
+    DERIV(state.EnPump20,[independent.t])= interface.PumpingPower20 ;
+
+    state.Help_TotEnPump = state.EnPump01 + state.EnPump02 + state.EnPump03 + state.EnPump04 + state.EnPump05 +
+      state.EnPump06 + state.EnPump07 + state.EnPump08 + state.EnPump09 + state.EnPump10 +
+      state.EnPump11 + state.EnPump12 + state.EnPump13 + state.EnPump14 + state.EnPump15 +
+      state.EnPump16 + state.EnPump17 + state.EnPump18 + state.EnPump19 + state.EnPump20 ;
+
+    interface.TotEnergyPumping = state.Help_TotEnPump ;
+    //
+    // 3) MIXING ENERGY for 10 tanks
+    DERIV(state.EnMix01,[independent.t])= interface.MixingPower1 ;
+    DERIV(state.EnMix02,[independent.t])= interface.MixingPower2 ;
+    DERIV(state.EnMix03,[independent.t])= interface.MixingPower3 ;
+    DERIV(state.EnMix04,[independent.t])= interface.MixingPower4 ;
+    DERIV(state.EnMix05,[independent.t])= interface.MixingPower5 ;
+    DERIV(state.EnMix06,[independent.t])= interface.MixingPower6 ;
+    DERIV(state.EnMix07,[independent.t])= interface.MixingPower7 ;
+    DERIV(state.EnMix08,[independent.t])= interface.MixingPower8 ;
+    DERIV(state.EnMix09,[independent.t])= interface.MixingPower9 ;
+    DERIV(state.EnMix10,[independent.t])= interface.MixingPower10 ;
+    DERIV(state.EnMix11,[independent.t])= interface.MixingPower11 ;
+    DERIV(state.EnMix12,[independent.t])= interface.MixingPower12 ;
+    DERIV(state.EnMix13,[independent.t])= interface.MixingPower13 ;
+    DERIV(state.EnMix14,[independent.t])= interface.MixingPower14 ;
+    DERIV(state.EnMix15,[independent.t])= interface.MixingPower15 ;
+    DERIV(state.EnMix16,[independent.t])= interface.MixingPower16 ;
+    DERIV(state.EnMix17,[independent.t])= interface.MixingPower17 ;
+    DERIV(state.EnMix18,[independent.t])= interface.MixingPower18 ;
+    DERIV(state.EnMix19,[independent.t])= interface.MixingPower19 ;
+    DERIV(state.EnMix20,[independent.t])= interface.MixingPower20 ;
+
+    state.Help_TotEnMix = state.EnMix01 + state.EnMix02 + state.EnMix03 + state.EnMix04 + state.EnMix05 +
+      state.EnMix06 + state.EnMix07 + state.EnMix08 + state.EnMix09 + state.EnMix10 +
+      state.EnMix11 + state.EnMix12 + state.EnMix13 + state.EnMix14 + state.EnMix15 +
+      state.EnMix16 + state.EnMix17 + state.EnMix18 + state.EnMix19 + state.EnMix20 ;
+
+    interface.TotEnergyMixing = state.Help_TotEnMix ;
+
+    state.Prev_TotalAerationEnergy = IF (independent.t < previous(state.Prev_t)) THEN 0.0
+      ELSE IF (independent.t - previous(state.Prev_t) < parameters.Period) THEN previous(state.Prev_TotalAerationEnergy)
+        ELSE state.Help_TotEnAerat ;
+
+    state.Prev_TotalPumpingEnergy = IF (independent.t < previous(state.Prev_t)) THEN 0.0
+      ELSE IF (independent.t - previous(state.Prev_t) < parameters.Period) THEN previous(state.Prev_TotalPumpingEnergy)
+        ELSE state.Help_TotEnPump ;
+
+    state.Prev_TotalMixingEnergy = IF (independent.t < previous(state.Prev_t)) THEN 0.0
+      ELSE IF (independent.t - previous(state.Prev_t) < parameters.Period) THEN previous(state.Prev_TotalMixingEnergy)
+        ELSE state.Help_TotEnMix ;
+    //
+    state.AC_Period = state.F_AC * (state.Help_TotEnAerat - state.Prev_TotalAerationEnergy) ;
+    state.PC_Period = state.F_PC * (state.Help_TotEnPump - state.Prev_TotalPumpingEnergy);
+    state.MC_Period = state.F_MC * (state.Help_TotEnMix - state.Prev_TotalMixingEnergy);
+  };
+
+:};
+
+  
+  
+#endif // WWTP_BASE_COST_OPERATION2

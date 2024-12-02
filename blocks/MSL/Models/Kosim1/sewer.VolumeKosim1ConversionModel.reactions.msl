@@ -1,0 +1,11 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE Kosim1Reactions "The reactions between the components considered" = 
+ENUM
+{
+  Removal_SCOD,
+  Removal_XCOD,
+  Removal_PO4,
+  Removal_NH4
+};
+

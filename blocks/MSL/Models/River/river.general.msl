@@ -1,0 +1,45 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:25$
+ *
+ ******************************************************************************/
+
+#ifndef TEMP_RIVER
+#define TEMP_RIVER
+
+#if (defined ASM2dModTemp || defined IUWS1 || defined IUWS2)
+
+OBJ RWQMNrOfComponents : Integer := Cardinality(RWQMComponents);
+OBJ RWQMNrOfReactions : Integer := Cardinality(RWQMReactions);
+
+// Terminal for Fluxes
+CLASS RiverTerminal
+"Variables passed between sewer model building blocks - we only consider a flux of biochemical material"
+= MassFlux[RWQMNrOfComponents;] ;
+// 03/04/2015 distinction In- vs. Out- terminal is essential to compute In(Out) fluxes by SUMOVER
+CLASS InRiverTerminal SPECIALISES RiverTerminal;
+CLASS OutRiverTerminal SPECIALISES RiverTerminal;
+
+// Terminal for Concentrations
+CLASS RiverConcTerminal = Concentration[RWQMNrOfComponents;];
+
+// s_in_terminal -> sew_term_index
+OBJ riv_term_index "Temporary iteration variable" : RiverTerminal;
+
+CLASS RWQMMassVector = Mass[RWQMNrOfComponents;];
+CLASS RWQMConcentrationVector = Concentration[RWQMNrOfComponents;];
+CLASS RWQMMassFluxVector = MassFlux[RWQMNrOfComponents;];
+
+#endif //ASM2dModTemp
+
+#endif //TEMP_RIVER

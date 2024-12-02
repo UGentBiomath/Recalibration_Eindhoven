@@ -1,28 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Tornado>
-  <ModelLib Name="Effluent_out_1" Version="1.0">
-    <Props>
-      <Prop Name="TornadoVersion" Value="2012"/>
-      <Prop Name="Author" Value="kacierke-PC\kacierke"/>
-      <Prop Name="Date" Value="Wed Jan 30 11:02:58 2013"/>
-      <Prop Name="Desc" Value=""/>
-      <Prop Name="FileName" Value="C:\Users\kacierke\Documents\Conversion\WEST2012_DRY_WEATHER_MODEL_2008 - SCA 0\Effluent_out_1.Partial.ModelLib.xml|.Tornado"/>
-      <Prop Name="DisplayName" Value=""/>
-    </Props>
-    <Models>
-      <Model Name="Effluent_out_1" Desc="" Elems="" FileName="" IconName="" IsDefault="false" IsLoopBreaker="false" Parent="" SourceFileName="" SourceLineNo="0" Type="Model">
-        <Params>
-          <Param Name="WWTPSpecificVolume" ClassName="SpecificVolumeVector" DefaultValue="0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0" Desc="The specific volumes (= 1/density) of the components" Elems="H2O,S_A,S_ALK,S_Al,S_F,S_I,S_N2,S_NH,S_NO,S_O,S_PO,X_AUT,X_H,X_I,X_I_i,X_MEOH,X_MEP,X_PAO,X_PHA,X_PP,X_S,X_TSS" Fixed="false" Group="" Hidden="true" IsFavorite="false" LowerBound="-INF" Manip="false" PDF="" Unit="" UpperBound="+INF"/>
-        </Params>
-        <InterfaceVars>
-          <InterfaceVar Name="Effluent_Load" Causality="Input" ClassName="InWWTPTerminal" DefaultValue="0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0" Desc="Effluent load" Elems="H2O,S_A,S_ALK,S_Al,S_F,S_I,S_N2,S_NH,S_NO,S_O,S_PO,X_AUT,X_H,X_I,X_I_i,X_MEOH,X_MEP,X_PAO,X_PHA,X_PP,X_S,X_TSS" Fixed="false" Group="Effluent" Hidden="false" IsFavorite="false" IsFlow="true" LowerBound="-INF" Manip="false" PDF="" Terminal="in_1" Unit="" UpperBound="+INF"/>
-        </InterfaceVars>
-        <StateVars>
-          <StateVar Name="InFluxPerComponent" ClassName="MassFluxVector" DefaultValue="0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0" Derived="false" Desc="Vector containing incoming fluxes for all components" Elems="H2O,S_A,S_ALK,S_Al,S_F,S_I,S_N2,S_NH,S_NO,S_O,S_PO,X_AUT,X_H,X_I,X_I_i,X_MEOH,X_MEP,X_PAO,X_PHA,X_PP,X_S,X_TSS" Fixed="false" Group="" Hidden="true" IsFavorite="false" LowerBound="-INF" Manip="false" PDF="" Unit="" UpperBound="+INF"/>
-          <StateVar Name="Outflow" ClassName="WWTPConcTerminal" DefaultValue="0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0" Derived="false" Desc="Temporary variable" Elems="H2O,S_A,S_ALK,S_Al,S_F,S_I,S_N2,S_NH,S_NO,S_O,S_PO,X_AUT,X_H,X_I,X_I_i,X_MEOH,X_MEP,X_PAO,X_PHA,X_PP,X_S,X_TSS" Fixed="false" Group="" Hidden="false" IsFavorite="false" LowerBound="-INF" Manip="false" PDF="" Unit="" UpperBound="+INF"/>
-          <StateVar Name="Q_In" ClassName="FlowRate" DefaultValue="0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0" Derived="false" Desc="Effluent flow rate" Elems="" Fixed="false" Group="" Hidden="false" IsFavorite="false" LowerBound="-INF" Manip="false" PDF="" Unit="" UpperBound="+INF"/>
-        </StateVars>
-      </Model>
-    </Models>
-  </ModelLib>
+<ModelLib Name="Effluent_out_1" Version="1.0">
+<Props>
+<Prop Name="TornadoVersion" Value="2016 Development"/>
+<Prop Name="Author" Value="DHI\eure"/>
+<Prop Name="Date" Value="Fri Apr 10 21:09:59 2015"/>
+<Prop Name="Desc" Value=""/>
+<Prop Name="FileName" Value="C:\Dev\Data\WEST\data\samples\BSM1_OL_ASM1\Effluent_out_1.Partial.ModelLib.xml|.Tornado"/>
+<Prop Name="DisplayName" Value=""/>
+<Prop Name="Includes" Value=""/>
+<Prop Name="IncludeNamespaces" Value=""/>
+</Props>
+<Models>
+<Model Name="Effluent_out_1" Desc="" Elems="" FileName="" IconName="effluent" IsDefault="false" IsLoopBreaker="false" Parent="" SourceFileName="" SourceLineNo="0" Type="Model">
+<Params>
+<Param Name="F_BOD5_BOD20" ClassName="Fraction" DefaultValue="0.25" Desc="Conversion factor BOD5/BOD20" Elems="" Fixed="false" Group="Conversion factors" Hidden="false" IsFavorite="true" IsInner="false" IsOuter="false" LowerBound="-INF" Manip="false" PDF="" Unit="-" UpperBound="+INF"/>
+<Param Name="F_TSS_COD" ClassName="Real" DefaultValue="0.75" Desc="Conversion factor TSS/COD" Elems="" Fixed="false" Group="Conversion factors" Hidden="false" IsFavorite="true" IsInner="false" IsOuter="false" LowerBound="-INF" Manip="false" PDF="" Unit="-" UpperBound="+INF"/>
+<Param Name="WWTPSpecificVolume" ClassName="SpecificVolumeVector" DefaultValue="0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0" Desc="The specific volumes (= 1/density) of the components" Elems="H2O,S_ALK,S_I,S_ND,S_NH,S_NO,S_O,S_S,X_BA,X_BH,X_I,X_ND,X_P,X_S" Fixed="false" Group="" Hidden="true" IsFavorite="false" IsInner="false" IsOuter="false" LowerBound="" Manip="false" PDF="" Unit="" UpperBound=""/>
+<Param Name="_1_" ClassName="Real" DefaultValue="1" Desc="" Elems="" Fixed="true" Group="" Hidden="true" IsFavorite="false" IsInner="false" IsOuter="false" LowerBound="-INF" Manip="false" PDF="" Unit="" UpperBound="+INF"/>
+<Param Name="i_X_B" ClassName="MassOfNitrogenPerMassOfCODInBiomass" DefaultValue="0.086" Desc="N/COD in biomass" Elems="" Fixed="false" Group="Composition parameters" Hidden="false" IsFavorite="true" IsInner="false" IsOuter="false" LowerBound="-INF" Manip="false" PDF="" Unit="-" UpperBound="+INF"/>
+<Param Name="i_X_P" ClassName="MassOfNitrogenPerMassOfCODInProdFromBiomass" DefaultValue="0.06" Desc="N/COD in product formed" Elems="" Fixed="false" Group="Composition parameters" Hidden="false" IsFavorite="true" IsInner="false" IsOuter="false" LowerBound="-INF" Manip="false" PDF="" Unit="-" UpperBound="+INF"/>
+</Params>
+<InterfaceVars>
+<InterfaceVar Name="COD" Causality="Output" ClassName="Real" DefaultValue="0" Desc="Total COD" Elems="" Fixed="false" Group="Custom specs" Hidden="false" IsFavorite="true" IsFlow="false" IsInner="false" IsOuter="false" LowerBound="-INF" Manip="false" PDF="" Terminal="" Unit="" UpperBound="+INF"/>
+<InterfaceVar Name="Effluent_Load" Causality="Input" ClassName="InWWTPTerminal" DefaultValue="0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0" Desc="Effluent load" Elems="H2O,S_ALK,S_I,S_ND,S_NH,S_NO,S_O,S_S,X_BA,X_BH,X_I,X_ND,X_P,X_S" Fixed="false" Group="Effluent" Hidden="false" IsFavorite="false" IsFlow="true" IsInner="false" IsOuter="false" LowerBound="" Manip="false" PDF="" Terminal="in_1" Unit="" UpperBound=""/>
+<InterfaceVar Name="TKN" Causality="Output" ClassName="Real" DefaultValue="0" Desc="TKN" Elems="" Fixed="false" Group="Custom specs" Hidden="false" IsFavorite="true" IsFlow="false" IsInner="false" IsOuter="false" LowerBound="-INF" Manip="false" PDF="" Terminal="" Unit="" UpperBound="+INF"/>
+<InterfaceVar Name="TSS" Causality="Output" ClassName="Real" DefaultValue="0" Desc="Total solids" Elems="" Fixed="false" Group="Custom specs" Hidden="false" IsFavorite="true" IsFlow="false" IsInner="false" IsOuter="false" LowerBound="-INF" Manip="false" PDF="" Terminal="" Unit="" UpperBound="+INF"/>
+<InterfaceVar Name="Water" Causality="Output" ClassName="Real" DefaultValue="0" Desc="Flow" Elems="" Fixed="false" Group="Custom specs" Hidden="false" IsFavorite="false" IsFlow="false" IsInner="false" IsOuter="false" LowerBound="-INF" Manip="false" PDF="" Terminal="" Unit="" UpperBound="+INF"/>
+</InterfaceVars>
+<StateVars>
+<StateVar Name="BOD20" ClassName="Concentration" DefaultValue="0" Derived="false" Desc="BOD20" Elems="" Fixed="false" Group="Custom specs" Hidden="false" IsFavorite="false" IsInner="false" IsOuter="false" LowerBound="-INF" Manip="false" PDF="" Unit="g/m3" UpperBound="+INF"/>
+<StateVar Name="InFluxPerComponent" ClassName="MassFluxVector" DefaultValue="0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0" Derived="false" Desc="Vector containing incoming fluxes for all components" Elems="H2O,S_ALK,S_I,S_ND,S_NH,S_NO,S_O,S_S,X_BA,X_BH,X_I,X_ND,X_P,X_S" Fixed="false" Group="" Hidden="true" IsFavorite="false" IsInner="false" IsOuter="false" LowerBound="" Manip="false" PDF="" Unit="" UpperBound=""/>
+<StateVar Name="Outflow" ClassName="WWTPConcTerminal" DefaultValue="0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0" Derived="false" Desc="Temporary variable" Elems="H2O,S_ALK,S_I,S_ND,S_NH,S_NO,S_O,S_S,X_BA,X_BH,X_I,X_ND,X_P,X_S" Fixed="false" Group="" Hidden="false" IsFavorite="false" IsInner="false" IsOuter="false" LowerBound="" Manip="false" PDF="" Unit="" UpperBound=""/>
+<StateVar Name="Q_In" ClassName="FlowRate" DefaultValue="0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0" Derived="false" Desc="Effluent flow rate" Elems="" Fixed="false" Group="" Hidden="false" IsFavorite="false" IsInner="false" IsOuter="false" LowerBound="" Manip="false" PDF="" Unit="" UpperBound=""/>
+<StateVar Name="S_COD" ClassName="Concentration" DefaultValue="0" Derived="false" Desc="Soluble COD" Elems="" Fixed="false" Group="Custom specs" Hidden="false" IsFavorite="true" IsInner="false" IsOuter="false" LowerBound="-INF" Manip="false" PDF="" Unit="g/m3" UpperBound="+INF"/>
+<StateVar Name="X_COD" ClassName="Concentration" DefaultValue="0" Derived="false" Desc="Particulate COD" Elems="" Fixed="false" Group="Custom specs" Hidden="false" IsFavorite="true" IsInner="false" IsOuter="false" LowerBound="-INF" Manip="false" PDF="" Unit="g/m3" UpperBound="+INF"/>
+</StateVars>
+</Model>
+</Models>
+</ModelLib>
 </Tornado>

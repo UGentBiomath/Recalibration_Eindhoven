@@ -1,0 +1,210 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:49$
+ *
+ ******************************************************************************/
+
+
+#ifndef OXIDATION_DITCH_04
+#define OXIDATION_DITCH_04
+
+
+CLASS Oxidation_Ditch_04
+  (* icon = "oxidation_ditch" *)
+  "Oxidation ditch with 4 compartments"
+  SPECIALISES CoupledModelType :=
+  {:
+  comments <- "Oxidation ditch with 4 compartments";
+
+  interface <-
+  {
+	// FLUXES
+	OBJ Inflow (* terminal = "in_1" *) "Inflow" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+	OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+	OBJ InflowSludge (* terminal = "in_4" *) "Sludge recycle" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Sludge Inflow" :};
+	// Manip vars (IN)
+	OBJ Kla1 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "KLa in compartment no.1" : OxygenTransferCoefficient := {: causality <- "CIN" ; value <- 0 ; group <- "Operational" :};   
+	OBJ Kla2 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "KLa in compartment no.2" : OxygenTransferCoefficient := {: causality <- "CIN" ; value <- 0 ; group <- "Operational" :};   
+	OBJ Kla3 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "KLa in compartment no.3" : OxygenTransferCoefficient := {: causality <- "CIN" ; value <- 0 ; group <- "Operational" :};   
+	OBJ Kla4 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "KLa in compartment no.4" : OxygenTransferCoefficient := {: causality <- "CIN" ; value <- 0 ; group <- "Operational" :};   
+	#ifdef StandardCategoryModels
+	OBJ Temp (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Temperature of the activated sludge" : CelsiusTemperature  := {: causality <- "CIN" ; value <- 15 ; group <- "Operational" :}; 
+	#endif
+	OBJ R (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Internal recirculation ratio" : Real := {: causality <- "CIN" ; value <- 1 ; group <- "Operational" :};   
+	// Sensor vars (OUT)
+	OBJ DO1 (* terminal = "out_2"; is_favorite = "1" *) "DO concentration in compartment no.1" : DissolvedOxygen := {: causality <- "COUT" ; group <- "Sensors" :};
+	OBJ DO2 (* terminal = "out_2"; is_favorite = "1" *) "DO concentration in compartment no.2" : DissolvedOxygen := {: causality <- "COUT" ; group <- "Sensors" :};
+	OBJ DO3 (* terminal = "out_2"; is_favorite = "1" *) "DO concentration in compartment no.3" : DissolvedOxygen := {: causality <- "COUT" ; group <- "Sensors" :};
+	OBJ DO4 (* terminal = "out_2"; is_favorite = "1" *) "DO concentration in compartment no.4" : DissolvedOxygen := {: causality <- "COUT" ; group <- "Sensors" :};
+  };
+
+  parameters <-
+  {
+	OBJ Vol1 (* is_favorite = "1" *) "Volume of compartment no.1:" : Volume := {: value <- 1000 ; group <- "Dimension" :};
+	OBJ Vol2 (* is_favorite = "1" *) "Volume of compartment no.2:" : Volume := {: value <- 1000 ; group <- "Dimension" :};
+	OBJ Vol3 (* is_favorite = "1" *) "Volume of compartment no.3:" : Volume := {: value <- 1000 ; group <- "Dimension" :};
+	OBJ Vol4 (* is_favorite = "1" *) "Volume of compartment no.4:" : Volume := {: value <- 1000 ; group <- "Dimension" :};
+	OBJ RAS_In (* is_favorite = "1" *) "RAS in compartment no.:" : Integer := {: value <- 1 ; interval <- {: lowerBound <- 1; upperBound <- 4 :}; group <- "Operational" :};
+	OBJ Outflow_Out (* is_favorite = "1" *) "Outflow in compartment no.:" : Integer := {: value <- 2 ; interval <- {: lowerBound <- 1; upperBound <- 4 :}; group <- "Operational" :};
+  };
+
+  sub_models <-
+  {
+    OBJ COMP_1 "Carrousel unit" : Carrousel_Unit ;
+    OBJ COMP_2 "Carrousel unit" : Carrousel_Unit ;
+    OBJ COMP_3 "Carrousel unit" : Carrousel_Unit ;
+    OBJ COMP_4 "Carrousel unit" : Carrousel_Unit ;
+    OBJ Loop_1 "Loop breaker" : DifferentialLoopBreaker ;
+    OBJ Sensor_In "Multiprobe sensor" : MultiSensor ;
+    OBJ Master "Master control" : Ctl_Carrousel_04 ;
+  };
+
+  coupling <-
+  {
+    // Volume of the compartments
+	sub_models.COMP_1.parameters.Vol.value := parameters.Vol1.value,
+	sub_models.COMP_2.parameters.Vol.value := parameters.Vol2.value,
+	sub_models.COMP_3.parameters.Vol.value := parameters.Vol3.value,
+	sub_models.COMP_4.parameters.Vol.value := parameters.Vol4.value,
+    // Effluent withdrawal
+	sub_models.Master.parameters.Outflow_Out.value := parameters.Outflow_Out.value,
+    // RAS input
+	sub_models.Master.parameters.RAS_In.value := parameters.RAS_In.value,
+    // Influent -> Compartment No.1
+	connect(interface.Inflow, sub_models.Sensor_In.interface.Inflow),
+    connect(sub_models.Sensor_In.interface.Outflow, sub_models.COMP_1.interface.Inflow),
+    // Compartment No.1 -> No.2 -> No.3 -> No.4 -> (Loop) -> No.1
+    connect(sub_models.COMP_1.interface.Outflow1, sub_models.COMP_2.interface.Inflow),
+	connect(sub_models.COMP_2.interface.Outflow1, sub_models.COMP_3.interface.Inflow),
+    connect(sub_models.COMP_3.interface.Outflow1, sub_models.COMP_4.interface.Inflow),
+	connect(sub_models.COMP_4.interface.Outflow2, sub_models.Loop_1.interface.Inflow),
+    connect(sub_models.Loop_1.interface.Outflow, sub_models.COMP_1.interface.InflowInternal),
+	connect(interface.R, sub_models.COMP_4.interface.R),
+	// Inform master layer about Outflows of compartments
+	connect(sub_models.COMP_1.interface.Outflow2, sub_models.Master.interface.OutflowInternal1),
+	connect(sub_models.COMP_2.interface.Outflow2, sub_models.Master.interface.OutflowInternal2),
+	connect(sub_models.COMP_3.interface.Outflow2, sub_models.Master.interface.OutflowInternal3),
+	connect(sub_models.COMP_4.interface.Outflow1, sub_models.Master.interface.Outflow4),
+	// Outflow
+	connect(sub_models.Master.interface.Outflow, interface.Outflow),
+
+    // Distribution of RAS
+    connect(interface.InflowSludge, sub_models.Master.interface.InflowSludge),
+	connect(sub_models.Master.interface.InflowSludge1, sub_models.COMP_1.interface.InflowSludge),
+	connect(sub_models.Master.interface.InflowSludge2, sub_models.COMP_2.interface.InflowSludge),
+	connect(sub_models.Master.interface.InflowSludge3, sub_models.COMP_3.interface.InflowSludge),
+	connect(sub_models.Master.interface.InflowSludge4, sub_models.COMP_4.interface.InflowSludge),
+
+	// Return the appropriate split flow ratios from the master layer
+	connect(sub_models.Master.interface.R1, sub_models.COMP_1.interface.R),
+	connect(sub_models.Master.interface.R2, sub_models.COMP_2.interface.R),
+	connect(sub_models.Master.interface.R3, sub_models.COMP_3.interface.R),
+	//
+	connect(sub_models.Sensor_In.interface.y_Q, sub_models.COMP_1.interface.Q_In),
+    connect(sub_models.Sensor_In.interface.y_Q, sub_models.COMP_2.interface.Q_In),
+    connect(sub_models.Sensor_In.interface.y_Q, sub_models.COMP_3.interface.Q_In),
+    connect(sub_models.Sensor_In.interface.y_Q, sub_models.COMP_4.interface.Q_In),
+	// KLa in the compartments
+    connect(interface.Kla1, sub_models.COMP_1.interface.Kla),
+    connect(interface.Kla2, sub_models.COMP_2.interface.Kla),
+    connect(interface.Kla3, sub_models.COMP_3.interface.Kla),
+    connect(interface.Kla4, sub_models.COMP_4.interface.Kla),
+    // Temperature in the compartments
+    connect(interface.Temp, sub_models.COMP_1.interface.Temp),
+    connect(interface.Temp, sub_models.COMP_2.interface.Temp),
+    connect(interface.Temp, sub_models.COMP_3.interface.Temp),
+    connect(interface.Temp, sub_models.COMP_4.interface.Temp),
+    // DO in the compartments
+  	connect(sub_models.COMP_1.interface.DO, interface.DO1),
+  	connect(sub_models.COMP_2.interface.DO, interface.DO2),
+  	connect(sub_models.COMP_3.interface.DO, interface.DO3),
+  	connect(sub_models.COMP_4.interface.DO, interface.DO4),
+  };
+
+:};
+
+
+
+CLASS Ctl_Carrousel_04
+  "Sets the split flow of compartments 1,2,3 ................................................."
+  SPECIALISES PhysicalDAEModelType :=
+  {:
+  comments <- "Sets the split flow of compartments 1,2,3 .................................................";
+
+  interface <-
+  {
+	// Outflows
+	OBJ OutflowInternal1 (* hidden = "0" *) "(Internal) outflow of compartment no.1" : OutWWTPTerminal := {: causality <- "CIN" ; group <- "Effluent No.1" :};
+	OBJ OutflowInternal2 (* hidden = "0" *) "(Internal) outflow of compartment no.2" : OutWWTPTerminal := {: causality <- "CIN" ; group <- "Effluent No.2" :};
+	OBJ OutflowInternal3 (* hidden = "0" *) "(Internal) outflow of compartment no.3" : OutWWTPTerminal := {: causality <- "CIN" ; group <- "Effluent No.3" :};
+	OBJ Outflow4 (* hidden = "0" *) "Outflow of compartment no.4" : OutWWTPTerminal := {: causality <- "CIN" ; group <- "Effluent No.4" :};
+	OBJ Outflow (* hidden = "0" *) "Outflow of compartment X" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+	// Sludge recycles
+	OBJ InflowSludge (* hidden = "0" *) "Sludge recycle" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Sludge Inflow" :};
+	OBJ InflowSludge1 (* hidden = "0" *) "RAS to compartment no.1" : InWWTPTerminal := {: causality <- "COUT" ; group <- "Sludge Inflow No.1" :};
+	OBJ InflowSludge2 (* hidden = "0" *) "RAS to compartment no.2" : InWWTPTerminal := {: causality <- "COUT" ; group <- "Sludge Inflow No.2" :};
+	OBJ InflowSludge3 (* hidden = "0" *) "RAS to compartment no.3" : InWWTPTerminal := {: causality <- "COUT" ; group <- "Sludge Inflow No.3" :};
+	OBJ InflowSludge4 (* hidden = "0" *) "RAS to compartment no.4" : InWWTPTerminal := {: causality <- "COUT" ; group <- "Sludge Inflow No.4" :};
+
+	OBJ R1 (* hidden = "0" *) "Split from compartment no.1" : Real := {: causality <- "COUT" ; group <- "Operational" :};
+	OBJ R2 (* hidden = "0" *) "Split from compartment no.2" : Real := {: causality <- "COUT" ; group <- "Operational" :};
+	OBJ R3 (* hidden = "0" *) "Split from compartment no.3" : Real := {: causality <- "COUT" ; group <- "Operational" :};
+  };
+
+  parameters <-
+  {
+	OBJ RAS_In (* hidden = "0" *) "RAS to compartment no." : Integer := {: value <- 1 ; interval <- {: lowerBound <- 0; upperBound <- 4 :}; group <- "Operational" :};
+	OBJ Outflow_Out (* hidden = "1" *) "Outflow in compartment no.:" : Integer := {: value <- 4 ; interval <- {: lowerBound <- 1; upperBound <- 4 :}; group <- "Operational" :};
+  };
+
+  independent <-
+  {
+	OBJ t "Time"  : Time := {: group <- "Time" :}; 
+  };
+
+  equations <-
+  {
+    // Depending on where the effluent is taken from, it sets the effluent of the oxy-ditch
+	// to either the effluent of the last compartment (#4) or to the internal effluents (splits)
+	// of the upstream compartments
+	interface.R1 = IF (parameters.Outflow_Out == 1) THEN 1.0 ELSE 0.0 ;
+	interface.R2 = IF (parameters.Outflow_Out == 2) THEN 1.0 ELSE 0.0 ;
+	interface.R3 = IF (parameters.Outflow_Out == 3) THEN 1.0 ELSE 0.0 ;
+
+	{FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}: interface.Outflow[Comp_Index] =
+      IF (parameters.Outflow_Out == 4) THEN - interface.Outflow4[Comp_Index]
+      	 ELSE IF (parameters.Outflow_Out == 3) THEN - interface.OutflowInternal3[Comp_Index]
+      	 	  ELSE IF (parameters.Outflow_Out == 2) THEN - interface.OutflowInternal2[Comp_Index]
+      	 	  	   ELSE - interface.OutflowInternal1[Comp_Index] ; };
+
+	{FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}: interface.InflowSludge1[Comp_Index] =
+      IF (parameters.RAS_In == 1) THEN - interface.InflowSludge[Comp_Index]
+      	 ELSE 0.0 ; };
+
+	{FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}: interface.InflowSludge2[Comp_Index] =
+      IF (parameters.RAS_In == 2) THEN - interface.InflowSludge[Comp_Index]
+      	 ELSE 0.0 ; };
+
+	{FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}: interface.InflowSludge3[Comp_Index] =
+      IF (parameters.RAS_In == 3) THEN - interface.InflowSludge[Comp_Index]
+      	 ELSE 0.0 ; };
+
+	{FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}: interface.InflowSludge4[Comp_Index] =
+      IF (parameters.RAS_In == 4) THEN - interface.InflowSludge[Comp_Index]
+      	 ELSE 0.0 ; };
+  };
+ 
+ :};
+
+
+#endif   //OXIDATION_DITCH_04

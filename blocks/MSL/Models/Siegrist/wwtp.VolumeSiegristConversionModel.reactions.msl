@@ -1,0 +1,23 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE SiegristReactions "The reactions between the components considered" = 
+ENUM
+{
+  H2Stripping,
+  CH4Stripping,
+  CO2Stripping,
+  BiopolymHydrol,
+  ASFermentation,
+  AnOxOfS_FA,
+  AnOxOfS_PRO,
+  AcToCH4Conv,
+  H2ToCH4Conv,
+  DecayOfX_AS,
+  DecayOfX_FA,
+  DecayOfX_PRO,
+  DecayOfX_AC,
+  DecayOfX_H2,
+  ProtolysisOfHCO3,
+  DeprotolysisOfCO2
+};
+

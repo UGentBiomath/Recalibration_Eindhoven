@@ -1,0 +1,25 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE RWQMReactions "The reactions between the components considered" = 
+ENUM
+{
+  RivAerobicGrowthOfHeterotrophsWithNH4,
+  RivAerobicGrowthOfHeterotrophsWithNO3,
+  RivAerobicEndogenousRespirationOfHeterotrophs,
+  RivAnoxicGrowthOfHeterotrophsWithNO3,
+  RivAnoxicGrowthOfHeterotrophsWithNO2,
+  RivAnoxicEndogenousRespirationOfHeterotrophs,
+  RivGrowthOfFirstStageNitrifiers,
+  RivAerobicEndogenousRespirationOfFirstStageNitrifiers,
+  RivGrowthOfSecondStageNitrifiers,
+  RivAerobicEndogenousRespirationOfSecondStageNitrifiers,
+  RivGrowthOfAlgaeWithNH4,
+  RivGrowthOfAlgaeWithNO3,
+  RivAerobicEndogenousRespirationOfAlgae,
+  RivDeathOfAlgae,
+  RivHydrolysis,
+  RivAeration,
+  RivAdsorptionOfPhosphate,
+  RivDesorptionOfPhosphate
+};
+

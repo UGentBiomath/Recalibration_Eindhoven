@@ -1,0 +1,48 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE Reactions "The reactions between the components considered" = 
+ENUM
+{
+  AerHydrol,
+  AnHydrol,
+  AnaerHydrol,
+  AerGrowthOnSf,
+  AerGrowthOnSa,
+  AnGrowthHeteroOnSfNO3_NO2,
+  AnGrowthHeteroOnSfNO2_NO,
+  AnGrowthHeteroOnSfNO_N2O,
+  AnGrowthHeteroOnSfN2O_N2,
+  AnGrowthHeteroOnSaNO3_NO2,
+  AnGrowthHeteroOnSaNO2_NO,
+  AnGrowthHeteroOnSaNO_N2O,
+  AnGrowthHeteroOnSaN2O_N2,
+  Fermentation,
+  LysisOfHetero,
+  StorageOfXPHA,
+  AerStorageOfXPP,
+  AnStorageOfXPPNO3_NO2,
+  AnStorageOfXPPNO2_NO,
+  AnStorageOfXPPNO_N2O,
+  AnStorageOfXPPN2O_N2,
+  AerGrowthOnXPHA,
+  AnGrowthOnXPHADenitrifNO3_NO2,
+  AnGrowthOnXPHADenitrifNO2_NO,
+  AnGrowthOnXPHADenitrifNO_N2O,
+  AnGrowthOnXPHADenitrifN2O_N2,
+  LysisOfXPAO,
+  LysisOfXPP,
+  LysisOfXPHA,
+  AutoGrowthAOB,
+  AutoGrowthNOB,
+  AOBdenNO2_NO,
+  AOBdenNO_N2O,
+  LysisOfAOB,
+  LysisOfNOB,
+  Precipitation,
+  Redissolution,
+  Aeration,
+  StrippingN2,
+  StrippingNO,
+  StrippingN2O
+};
+

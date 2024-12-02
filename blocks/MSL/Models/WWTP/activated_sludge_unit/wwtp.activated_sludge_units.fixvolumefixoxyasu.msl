@@ -1,0 +1,103 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 22. september 2020 14:54:01$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_ACTIVATED_SLUDGE_UNITS_FIXVOLUMEFIXOXYASU
+#define WWTP_ACTIVATED_SLUDGE_UNITS_FIXVOLUMEFIXOXYASU
+
+ CLASS FixVolumeFixOxyASU 
+ (* icon = "activated_sludge_unit" *)
+ SPECIALISES FixVolumeASMConversionModel :=
+ {:
+   comments <- "Model for an activated sludge unit with a fixed volume and controlled DO";
+   interface <-  
+   {
+    OBJ DOsp (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Dissolved Oxygen setpoint" : Concentration := {: causality <- "CIN" ; value <- 0.5 ; group <- "Operational" :};
+    OBJ OTR_Energy (* terminal = "in_2"; manip = "1" *) "Oxygen transfer rate per energy input" : TransferRateEnergy := {: causality <- "CIN" ; value <- 1800 ; group <- "Operational" :}; 
+    OBJ Kla (* terminal = "out_2"; is_favorite = "1" *) "Oxygen transfer coefficient" : OxygenTransferCoefficient := {: causality <- "COUT" ; group <- "Operational" :};   
+#ifdef StandardCategoryModels
+	 OBJ Temp (* terminal = "in_2"; manip = "1"; is_favorite = "1" *)  "Temperature of the activated sludge" : CelsiusTemperature  := {: causality <- "CIN" ; value <- 15 ; group <- "Operational" :};
+#endif
+	 OBJ AerationEnergy (* terminal = "out_2" *)"Aeration energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ AerationPower (* terminal = "out_2" *) "Aeration power" : Real := {: causality <- "COUT"; unit <- "kWh/d" ; group <- "Energy" :};
+	 OBJ MixingEnergy (* terminal = "out_2" *)"Mixing energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ MixingPower (* terminal = "out_2" *) "Mixing power" : Real := {: causality <- "COUT"; unit <- "kWh/d" ; group <- "Energy" :};
+   };   
+
+   parameters <- 
+   {
+	 // MIXING ENERGY
+	 OBJ ME_unit "Energy requirement per unit of volume for mixing in a AS tank" : EnergyForMixing := {: value <- 0.005; group <- "Mixing energy":};
+	 OBJ Kla_Min "Lowest kLa value that ensures adequate mixing" : OxygenTransferCoefficient :={: value <- 20.0; group <- "Mixing energy":};
+	 OBJ Mixing_When_Aerated "Mixing activity during aeration" : Integer := {: value <- 0 ; interval <- {: lowerBound <- 0; upperBound <- 1:}; group <- "Mixing energy":};
+   };
+ 
+   state <-
+   {
+	 OBJ Kinetics_Aeration (* hidden = "1" *) : OxygenUptakeRate ;
+	 OBJ O2_Consumption "O2 consumed by reactions" : OxygenUptakeRate := {: group <- "Aeration" :} ;
+	 // AERATION ENERGY (through KLa)
+	 OBJ Integ_AE (* hidden = "1" *) "Integral aeration energy" : Volume ;
+	 // MIXING ENERGY
+	 OBJ Integ_ME (* hidden = "1" *) "Integral mixing energy" : ElectricalEnergy ;
+	 OBJ ME_Instant (* hidden = "1" *) "Instantaneous mixing energy" : EnergyIndex := {: group <- "Mixing":};
+   };
+
+
+   initial <-
+   {
+	 state.M[S_O] = parameters.Vol * interface.DOsp ;
+	 state.C[S_O] = interface.DOsp ;
+	 state.Integ_AE = 0.0 ;
+	 state.Integ_ME = 0.0 ;
+   };
+
+   equations <- 
+   {
+#ifdef StandardCategoryModels
+	 state.Temp_Actual = interface.Temp;
+#endif
+
+	 state.O2_Consumption =  - state.ConversionTermPerComponent[S_O] / state.V
+	 	+ parameters.Stoichiometry[Aeration][S_O] * state.Kinetics[Aeration]  ; 
+
+	 state.Kinetics_Aeration = ((state.Q_In * interface.DOsp - interface.Inflow[S_O]) / state.V
+	 	+ previous(state.O2_Consumption)) / parameters.Stoichiometry[Aeration][S_O] ; 
+
+	 state.Kla_Actual = state.Kinetics_Aeration / (state.S_O_Saturation - interface.DOsp) ;
+	 
+	 interface.Kla = state.Kla_Actual ;
+	
+	 // AERATION ENERGY
+    //(EURE 08/02/2019) [kWh/g O2] * [g O2/m3] * [1/d] * [m3] = [kWh/d]
+    interface.AerationPower = (1 / interface.OTR_Energy) * state.S_O_Saturation * state.Kla_Actual * state.V ;
+    DERIV(state.Integ_AE,[independent.t])= state.S_O_Saturation * state.Kla_Actual * state.V ;
+    interface.AerationEnergy = (1 / interface.OTR_Energy) * state.Integ_AE ; 
+	 // MIXING ENERGY
+	 state.ME_Instant = IF ((state.Kla_Actual < parameters.Kla_Min) || (state.Kla_Actual == 0)) THEN parameters.ME_unit * state.V
+		ELSE IF (parameters.Mixing_When_Aerated == 1)
+			 THEN parameters.ME_unit * state.V
+			 ELSE 0 ;    
+
+    //(EURE 25/07/2019) [kWh/d]
+    interface.MixingPower = state.ME_Instant ;
+    DERIV(state.Integ_ME,[independent.t])= state.ME_Instant;
+    interface.MixingEnergy = state.Integ_ME ; 
+   };   
+
+ :};
+
+
+#endif // WWTP_ACTIVATED_SLUDGE_UNITS_FIXVOLUMEFIXOXYASU

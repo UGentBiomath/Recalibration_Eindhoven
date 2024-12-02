@@ -1,0 +1,62 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:26$
+ *
+ ******************************************************************************/
+
+
+#ifndef IUWS_SPLITTERS_COMBINERS_IUWS_KOSIMTRANSFORMER
+#define IUWS_SPLITTERS_COMBINERS_IUWS_KOSIMTRANSFORMER
+
+
+CLASS KosimInputTransformer
+  (* icon = "two_combiner" *)
+ /*
+ Combines the rain and evaporation data into a vector understood by the 
+ catchment surface runoff transformer. Also, it converts any rain input (e.g. mm/min) 
+ intervals into mm/day (general units of WEST)
+ */
+  SPECIALISES PhysicalDAEModelType :=
+  {:
+
+  comments <- "Combines rain and evaporation scalar data into a Kosim type vector";
+
+  interface <-
+  {
+   OBJ Rain (* terminal = "in_1" *) "Input from the rain influent file" : Real := {: causality <- "CIN"; group <- "Influent" :}; 
+   OBJ Evaporation (* terminal = "in_2" *) "Evaporation on current date" : Real := {: causality <- "CIN"; group <- "Influent" :};
+   OBJ Out_1 (*terminal = "out_1" *) "Output to the runoff calculators" : KosimDataVector := {: causality <- "COUT"; group <- "Effluent" :};
+  };
+  
+  parameters <-
+  {
+   OBJ InfluentTimestep "Time Unit of the rain influent file" : Minutes := {: value <- 10; group <- "Rain" :};
+   OBJ NrOfMinPerDay (* hidden = "1" *)  "Currently number of minutes per day" : Real := {:value <- 1440:};
+  };
+
+  independent <-
+  {
+   OBJ t : Time;
+  };
+
+  equations <-
+  {
+   // convert input file from mm/timestep to mm/d
+   interface.Out_1[Rain] = interface.Rain / parameters.InfluentTimestep * parameters.NrOfMinPerDay ;
+   interface.Out_1[Evaporation] = interface.Evaporation;
+  };
+
+  :};
+
+  
+#endif // IUWS_SPLITTERS_COMBINERS_IUWS_KOSIMTRANSFORMER

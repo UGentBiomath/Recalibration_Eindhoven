@@ -1,0 +1,196 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:25$
+ *
+ ******************************************************************************/
+
+#ifndef RIVER_BASE
+#define RIVER_BASE
+
+
+// need a second index of this type because it's used in combination with the base one in river.general.msl
+OBJ rTerm_index "Temporary iteration variable" : RiverTerminal;
+
+CLASS RivAtomicModelWithoutVolume "Atomic model for river blocks"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  parameters <-
+  { 
+    OBJ RivSpecificVolume (* hidden = "1" *) "Specific volume vector" : SpecificVolume[RWQMNrOfComponents;] ;
+  };
+  
+  initial <-
+  { 
+    parameters.RivSpecificVolume[H2O] := 0.000001;
+  };
+  
+  independent <-
+  { 
+    OBJ t "Time" : Time ;
+  };
+  
+  state <-
+  { 
+    OBJ InFluxPerComponent (* hidden = "1" *) "Vector containing incoming fluxes for all the components": RWQMMassFluxVector;
+    OBJ Q_In "Influent flow rate" : FlowRate := {: group <- "Flow" :};
+  };
+  
+  equations <-
+  { 
+    {FOREACH Comp_Index IN {1 .. RWQMNrOfComponents}: state.InFluxPerComponent[Comp_Index] =
+      SUMOVER riv_term_index IN {SelectByType(interface,InRiverTerminal)}: (riv_term_index[Comp_Index]) ; };
+    
+    state.Q_In = (parameters.RivSpecificVolume[H2O] * state.InFluxPerComponent[H2O]) ;
+  };
+
+:};
+
+
+CLASS RivAtomicModelWithVolume "Atomic model for river blocks"
+EXTENDS RivAtomicModelWithoutVolume WITH
+{:
+
+  state <-
+  { 
+    OBJ M "Vector containing masses for all the components" : RWQMMassVector := {: group <- "Masses" :};
+    OBJ FluxPerComponent (* hidden = "1" *) "Flux vector" : RWQMMassFluxVector;
+    OBJ ConversionTermPerComponent (* hidden = "1" *) "Conversion terms for all components": RWQMMassFluxVector;
+    OBJ Q_Out "Effluent flow rate" : FlowRate := {: group <- "Flow" :};
+    OBJ V "Volume" : Volume := {: group <- "Flow" :};
+    OBJ C "Vector containing concentrations for all the components" : RWQMConcentrationVector := {: group <- "Concentration" :}; 
+	  OBJ C_w "Vector containing pore water concentrations for all the components" : RWQMConcentrationVector := {: group <- "Concentration - pore water" :};
+  };
+  
+  equations <-
+  { 
+    {FOREACH Comp_Index IN {1 .. RWQMNrOfComponents}: state.FluxPerComponent[Comp_Index] =
+      (SUMOVER riv_term_index IN {SelectByType(interface,InRiverTerminal)}: riv_term_index[Comp_Index]) +
+      (SUMOVER rTerm_index IN {SelectByType(interface,OutRiverTerminal)}: rTerm_index[Comp_Index]) ; };
+    
+    {FOREACH Comp_Index IN {1 .. RWQMNrOfComponents}: DERIV(state.M[Comp_Index],[independent.t]) =
+      state.FluxPerComponent[Comp_Index] + state.ConversionTermPerComponent[Comp_Index] ; };
+  };
+
+:};
+
+
+CLASS RivAtomicModelWithVariableVolume EXTENDS RivAtomicModelWithVolume WITH
+{:
+
+  interface <-
+  { 
+    OBJ Inflow1 (* terminal = "in_1" *) "Inflow No.1" : InRiverTerminal := {: causality <- "CIN"; group <- "Inflow 1" :};
+    OBJ Inflow2 (* terminal = "in_2" *) "Inflow No.2" : InRiverTerminal := {: causality <- "CIN"; group <- "Inflow 2" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutRiverTerminal := {: causality <- "COUT"; group <- "Outflow" :};
+  };
+
+  parameters <-
+  { 
+    OBJ S (* is_favorite = "1" *) "Average channel slope along channel length" : Ratio := {: value <- 0.0005; group <- "River characteristics" :};
+    OBJ n (* is_favorite = "1" *) "Manning's 'n' value for channel" : Real := {:value <- 0.035; group <- "River characteristics" :};
+    OBJ W_b "Width of channel at bottom of bank" : Length := {: group <- "River characteristics" :};
+    OBJ L "Length of channel" : Length := {:value <- 2.657; group <- "River characteristics" :};
+    OBJ z "Banks slope" : Real := {:value <- 0.5; group <- "River characteristics" :};
+    OBJ d_min "Minimum depth of water" : Length := {:value <- 0.01; group <- "River characteristics" :};
+    OBJ Vol_min (* hidden = "1"; fixed = "1" *) "Minimum volume of water" : Volume := {: group <- "River characteristics" :};
+    OBJ Vol_init "Initial volume of water as ratio on minimum" : Real := {:value <- 1.5; group <- "River characteristics" :};
+    OBJ Phi "Porosity of the compartment": Fraction := {: value <- 0.58; group <- "River characteristics" :};	
+  };
+
+  state <-
+  { 
+    OBJ P "Wetted perimeter" : Length:= {: group <- "River characteristics" :};
+    OBJ R "Hydraulic radius" : Length:= {: group <- "River characteristics" :};
+    OBJ A "Cross-sectional area bulk water tank" : Area:= {: group <- "River characteristics" :};
+    OBJ A_man "Cross-sectional area bulk water tank, reduced for Manning equation, due to d_min" : Area:= {: group <- "River characteristics" :};
+    OBJ A_b "Bottom surface area of bulk water tank" : Area:= {: group <- "River characteristics" :};
+    OBJ d "Depth of water in channel" : Length:= {: group <- "River characteristics" :};
+    OBJ vel_water "Velocity of water" : Velocity := {: group <- "River characteristics" :};
+    OBJ Help_V (* hidden = "1" *) "Help volume" : Volume:= {: group <- "River characteristics" :};
+  };
+  
+  initial <-
+  { 
+    parameters.Vol_min = parameters.d_min * (parameters.W_b + parameters.d_min * parameters.z) * parameters.L ;
+    state.M[1] = parameters.Vol_min / parameters.RivSpecificVolume[1] * parameters.Vol_init ;
+  };
+  
+  equations <-
+  { 
+    state.P = parameters.W_b + 2 * (state.d - parameters.d_min) * sqrt(1 + pow(parameters.z,2)) ;
+    
+    state.R = state.A_man / state.P ;
+    
+    state.A = state.V / parameters.L ;
+    state.A_man = (state.V - parameters.Vol_min) / parameters.L ;
+    state.A_b = parameters.W_b * parameters.L ; 	
+    
+    state.d = IF (parameters.z > 0) THEN sqrt(state.A / parameters.z + pow((parameters.W_b / 2 / parameters.z),2)) - (parameters.W_b / 2 / parameters.z)
+      ELSE  state.A / parameters.W_b ; 
+    
+    state.Help_V = (SUMOVER Comp_Index IN {1 .. RWQMNrOfComponents}: (parameters.RivSpecificVolume[Comp_Index]*state.M[Comp_Index])) ;
+    // ALT MIUWS 2016
+//    state.Help_V = (SUMOVER Comp_Index IN {1 .. RWQMNrOfComponents}: (parameters.RivSpecificVolume[Comp_Index] * state.M[Comp_Index] / parameters.Phi)) ;
+    
+    state.V =  IF (state.Help_V <= parameters.Vol_min) THEN parameters.Vol_min
+      ELSE state.Help_V ;
+    
+    {FOREACH Comp_Index IN {1 .. RWQMNrOfComponents}: state.C[Comp_Index] =
+     IF (state.V == 0) THEN 0.0 ELSE state.M[Comp_Index]/state.V ; };
+
+    {FOREACH Comp_Index IN {RWQMIndexOfFirstSolubleComponent .. RWQMIndexOfLastSolubleComponent}: state.C_w[Comp_Index] =
+      IF (state.V == 0) THEN 0.0 ELSE state.M[Comp_Index] / state.V / parameters.Phi ; };
+  };
+
+:};
+
+
+CLASS RiverVarVolumeConversionModel EXTENDS RivAtomicModelWithVariableVolume WITH
+{:
+  // This is a "VolumeConversionModel.body" block
+  parameters <-
+  {
+    OBJ Stoichiometry (* hidden = "1" *) "The stoichiometry matrix" : QuantityType[RWQMNrOfReactions;][RWQMNrOfComponents,];
+  };
+  
+  state <-
+  {
+    OBJ Kinetics (* hidden = "1" *) "The kinetic vector" : QuantityType[RWQMNrOfReactions;];
+    OBJ Temp_Actual (* is_favorite = "1" *) "Actual air temperature" : CelsiusTemperature  := {: group <- "Operational" :}; 
+    OBJ I0_Actual "The actual radiation at water surface" : Real := {: unit <- "W/m2"; interval <- {: lowerBound <- 0; upperBound <- PLUS_INF; :}; group <- "Operational" :};
+  };
+  
+  equations <-
+  {
+    {FOREACH Comp_Index IN {1 .. RWQMNrOfComponents}:
+        state.ConversionTermPerComponent[Comp_Index] = SUMOVER Reaction_Index IN {1 .. RWQMNrOfReactions}:
+        (parameters.Stoichiometry[Reaction_Index][Comp_Index] * state.Kinetics[Reaction_Index]) * state.V ; };
+  };
+
+:};
+
+
+CLASS RivVarVolumeConversionModel EXTENDS RiverVarVolumeConversionModel WITH
+{:
+  #if (defined ASM2dModTemp || defined IUWS1)
+  #include "RM1/river.VolumeRM1ConversionModel.body.msl"
+  #endif //IUWS1
+  
+  #ifdef IUWS2
+  #include "RM2/river.VolumeRM2ConversionModel.body.msl"
+  #endif //IUWS2
+:};
+
+
+#endif //RIVER_BASE

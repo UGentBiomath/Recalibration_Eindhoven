@@ -1,0 +1,289 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 6. december 2016 12:22:10$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_PUMPS_CONTROL_MULTIPIPE_10P
+#define WWTP_PUMPS_CONTROL_MULTIPIPE_10P
+  
+
+CLASS Pump_Control_MultiPipe_10 "Intermediate control layer (for 10 centrifugal pumps, of which 5 controlled by throttling); each pump has its own discharge pipe"
+EXTENDS Base_Pump_Controller WITH
+{:
+
+  comments <- "Intermediate control layer (for 10 centrifugal pumps, of which 5 controlled by throttling); each pump has its own discharge pipe";
+  
+  interface <-
+  {
+    // Max flow rate :: input FROM pumps
+    OBJ QMax_PC1 (* hidden = "1" *) "Max flow rate" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QMax_PC2 (* hidden = "1" *) "Max flow rate" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QMax_PC3 (* hidden = "1" *) "Max flow rate" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QMax_PC4 (* hidden = "1" *) "Max flow rate" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QMax_PC5 (* hidden = "1" *) "Max flow rate" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QMax_PU1 (* hidden = "1" *) "Max flow rate" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QMax_PU2 (* hidden = "1" *) "Max flow rate" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QMax_PU3 (* hidden = "1" *) "Max flow rate" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QMax_PU4 (* hidden = "1" *) "Max flow rate" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QMax_PU5 (* hidden = "1" *) "Max flow rate" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    // Min flow rate :: input FROM pumps
+    OBJ QMin_PC1 (* hidden = "1" *) "Min flow rate" : FlowRate := {: causality <- "CIN"; value <- 1.0; group <- "_ Operational" :};
+    OBJ QMin_PC2 (* hidden = "1" *) "Min flow rate" : FlowRate := {: causality <- "CIN"; value <- 1.0; group <- "_ Operational" :};
+    OBJ QMin_PC3 (* hidden = "1" *) "Min flow rate" : FlowRate := {: causality <- "CIN"; value <- 1.0; group <- "_ Operational" :};
+    OBJ QMin_PC4 (* hidden = "1" *) "Min flow rate" : FlowRate := {: causality <- "CIN"; value <- 1.0; group <- "_ Operational" :};
+    OBJ QMin_PC5 (* hidden = "1" *) "Min flow rate" : FlowRate := {: causality <- "CIN"; value <- 1.0; group <- "_ Operational" :};
+    // Out flow rate :: input FROM pumps
+    OBJ QOut_PC1 (* hidden = "1" *) "Actual flow rate delivered" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QOut_PC2 (* hidden = "1" *) "Actual flow rate delivered" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QOut_PC3 (* hidden = "1" *) "Actual flow rate delivered" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QOut_PC4 (* hidden = "1" *) "Actual flow rate delivered" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QOut_PC5 (* hidden = "1" *) "Actual flow rate delivered" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QOut_PU1 (* hidden = "1" *) "Actual flow rate delivered" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QOut_PU2 (* hidden = "1" *) "Actual flow rate delivered" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QOut_PU3 (* hidden = "1" *) "Actual flow rate delivered" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QOut_PU4 (* hidden = "1" *) "Actual flow rate delivered" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    OBJ QOut_PU5 (* hidden = "1" *) "Actual flow rate delivered" : FlowRate := {: causality <- "CIN"; value <- 10000; group <- "_ Operational" :};
+    // Volume pumped :: input FROM pumps
+    OBJ Volume_PC1 (* hidden = "1" *) "Pumped quantity since start of simulation" : Volume := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Volume_PC2 (* hidden = "1" *) "Pumped quantity since start of simulation" : Volume := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Volume_PC3 (* hidden = "1" *) "Pumped quantity since start of simulation" : Volume := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Volume_PC4 (* hidden = "1" *) "Pumped quantity since start of simulation" : Volume := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Volume_PC5 (* hidden = "1" *) "Pumped quantity since start of simulation" : Volume := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Volume_PU1 (* hidden = "1" *) "Pumped quantity since start of simulation" : Volume := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Volume_PU2 (* hidden = "1" *) "Pumped quantity since start of simulation" : Volume := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Volume_PU3 (* hidden = "1" *) "Pumped quantity since start of simulation" : Volume := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Volume_PU4 (* hidden = "1" *) "Pumped quantity since start of simulation" : Volume := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Volume_PU5 (* hidden = "1" *) "Pumped quantity since start of simulation" : Volume := {: causality <- "CIN" ; group <- "_ Energy" :};
+    // Average energy consumed per m3 pumped :: input FROM pumps
+    OBJ EnergyAve_PC1 (* hidden = "1" *) "Average energy consumption since start of simulation" : EnergyForPumping := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ EnergyAve_PC2 (* hidden = "1" *) "Average energy consumption since start of simulation" : EnergyForPumping := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ EnergyAve_PC3 (* hidden = "1" *) "Average energy consumption since start of simulation" : EnergyForPumping := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ EnergyAve_PC4 (* hidden = "1" *) "Average energy consumption since start of simulation" : EnergyForPumping := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ EnergyAve_PC5 (* hidden = "1" *) "Average energy consumption since start of simulation" : EnergyForPumping := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ EnergyAve_PU1 (* hidden = "1" *) "Average energy consumption since start of simulation" : EnergyForPumping := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ EnergyAve_PU2 (* hidden = "1" *) "Average energy consumption since start of simulation" : EnergyForPumping := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ EnergyAve_PU3 (* hidden = "1" *) "Average energy consumption since start of simulation" : EnergyForPumping := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ EnergyAve_PU4 (* hidden = "1" *) "Average energy consumption since start of simulation" : EnergyForPumping := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ EnergyAve_PU5 (* hidden = "1" *) "Average energy consumption since start of simulation" : EnergyForPumping := {: causality <- "CIN" ; group <- "_ Energy" :};
+    // Actual power consumption :: input FROM pumps
+    OBJ Power_PC1 (* hidden = "1" *) "Actual power consumption" : Power := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Power_PC2 (* hidden = "1" *) "Actual power consumption" : Power := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Power_PC3 (* hidden = "1" *) "Actual power consumption" : Power := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Power_PC4 (* hidden = "1" *) "Actual power consumption" : Power := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Power_PC5 (* hidden = "1" *) "Actual power consumption" : Power := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Power_PU1 (* hidden = "1" *) "Actual power consumption" : Power := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Power_PU2 (* hidden = "1" *) "Actual power consumption" : Power := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Power_PU3 (* hidden = "1" *) "Actual power consumption" : Power := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Power_PU4 (* hidden = "1" *) "Actual power consumption" : Power := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Power_PU5 (* hidden = "1" *) "Actual power consumption" : Power := {: causality <- "CIN" ; group <- "_ Energy" :};
+    // Actual power consumption :: input FROM pumps
+    OBJ Energy_PC1 (* hidden = "1" *) "Energy consumption since start of simulation" : ElectricalEnergy := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Energy_PC2 (* hidden = "1" *) "Energy consumption since start of simulation" : ElectricalEnergy := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Energy_PC3 (* hidden = "1" *) "Energy consumption since start of simulation" : ElectricalEnergy := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Energy_PC4 (* hidden = "1" *) "Energy consumption since start of simulation" : ElectricalEnergy := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Energy_PC5 (* hidden = "1" *) "Energy consumption since start of simulation" : ElectricalEnergy := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Energy_PU1 (* hidden = "1" *) "Energy consumption since start of simulation" : ElectricalEnergy := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Energy_PU2 (* hidden = "1" *) "Energy consumption since start of simulation" : ElectricalEnergy := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Energy_PU3 (* hidden = "1" *) "Energy consumption since start of simulation" : ElectricalEnergy := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Energy_PU4 (* hidden = "1" *) "Energy consumption since start of simulation" : ElectricalEnergy := {: causality <- "CIN" ; group <- "_ Energy" :};
+    OBJ Energy_PU5 (* hidden = "1" *) "Energy consumption since start of simulation" : ElectricalEnergy := {: causality <- "CIN" ; group <- "_ Energy" :};
+    // Actual flow rate request directed to each pumpt :: output TO pumps
+    OBJ QInPC1 (* hidden = "1" *) "Actual flow rate imposed to pump" : FlowRate := {: causality <- "COUT"; group <- "Operational" :};
+    OBJ QInPC2 (* hidden = "1" *) "Actual flow rate imposed to pump" : FlowRate := {: causality <- "COUT"; group <- "Operational" :};
+    OBJ QInPC3 (* hidden = "1" *) "Actual flow rate imposed to pump" : FlowRate := {: causality <- "COUT"; group <- "Operational" :};
+    OBJ QInPC4 (* hidden = "1" *) "Actual flow rate imposed to pump" : FlowRate := {: causality <- "COUT"; group <- "Operational" :};
+    OBJ QInPC5 (* hidden = "1" *) "Actual flow rate imposed to pump" : FlowRate := {: causality <- "COUT"; group <- "Operational" :};
+    OBJ QInPU1 (* hidden = "1" *) "Actual flow rate imposed to pump" : FlowRate := {: causality <- "COUT"; group <- "Operational" :};
+    OBJ QInPU2 (* hidden = "1" *) "Actual flow rate imposed to pump" : FlowRate := {: causality <- "COUT"; group <- "Operational" :};
+    OBJ QInPU3 (* hidden = "1" *) "Actual flow rate imposed to pump" : FlowRate := {: causality <- "COUT"; group <- "Operational" :};
+    OBJ QInPU4 (* hidden = "1" *) "Actual flow rate imposed to pump" : FlowRate := {: causality <- "COUT"; group <- "Operational" :};
+    OBJ QInPU5 (* hidden = "1" *) "Actual flow rate imposed to pump" : FlowRate := {: causality <- "COUT"; group <- "Operational" :};
+    // Actual flow rate request directed to each pumpt :: output TO pumps
+    OBJ IsOnPC1 (* hidden = "1" *) "Pump is running (1) or not (0)?" : Integer := {: causality <- "COUT"; value <- 1; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOnPC2 (* hidden = "1" *) "Pump is running (1) or not (0)?" : Integer := {: causality <- "COUT"; value <- 1; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOnPC3 (* hidden = "1" *) "Pump is running (1) or not (0)?" : Integer := {: causality <- "COUT"; value <- 1; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOnPC4 (* hidden = "1" *) "Pump is running (1) or not (0)?" : Integer := {: causality <- "COUT"; value <- 1; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOnPC5 (* hidden = "1" *) "Pump is running (1) or not (0)?" : Integer := {: causality <- "COUT"; value <- 1; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOnPU1 (* hidden = "1" *) "Pump is running (1) or not (0)?" : Integer := {: causality <- "COUT"; value <- 1; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOnPU2 (* hidden = "1" *) "Pump is running (1) or not (0)?" : Integer := {: causality <- "COUT"; value <- 1; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOnPU3 (* hidden = "1" *) "Pump is running (1) or not (0)?" : Integer := {: causality <- "COUT"; value <- 1; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOnPU4 (* hidden = "1" *) "Pump is running (1) or not (0)?" : Integer := {: causality <- "COUT"; value <- 1; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    OBJ IsOnPU5 (* hidden = "1" *) "Pump is running (1) or not (0)?" : Integer := {: causality <- "COUT"; value <- 1; interval <- {: lowerBound <- 0 ; upperBound <- 1 :}; group <- "_ Operational" :};
+    // Output back TO wrapper: volume of liquor pumped; average energy per m3 of liquor pumped; power consumption
+    OBJ Q_Out "Actual flow rate delivered" : FlowRate := {: causality <- "COUT" ; group <- "Output" :};
+    OBJ PumpedVolume "Pumped quantity since start of simulation" : Volume := {: causality <- "COUT" ; group <- "Energy" :};
+    OBJ PumpingEnergy_Ave "Average energy consumption since start of simulation" : EnergyForPumping := {: causality <- "COUT" ; group <- "Energy" :};
+    OBJ PowerConsumption "Actual power consumption" : Power := {: causality <- "COUT" ; group <- "Energy" :};
+    OBJ PumpingEnergy "Energy consumption since start of simulation" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :}
+  };
+  
+  state <-
+  {
+    // Q_Max
+    OBJ help_QMax_PC1 (* hidden = "1" *) "Max flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QMax_PC2 (* hidden = "1" *) "Max flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QMax_PC3 (* hidden = "1" *) "Max flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QMax_PC4 (* hidden = "1" *) "Max flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QMax_PC5 (* hidden = "1" *) "Max flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QMax_PU1 (* hidden = "1" *) "Max flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QMax_PU2 (* hidden = "1" *) "Max flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QMax_PU3 (* hidden = "1" *) "Max flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QMax_PU4 (* hidden = "1" *) "Max flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QMax_PU5 (* hidden = "1" *) "Max flow rate" : FlowRate := {: group <- "_ Operational" :};
+    // Q_Min
+    OBJ help_QMin_PC1 (* hidden = "1" *) "Min flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QMin_PC2 (* hidden = "1" *) "Min flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QMin_PC3 (* hidden = "1" *) "Min flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QMin_PC4 (* hidden = "1" *) "Min flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QMin_PC5 (* hidden = "1" *) "Min flow rate" : FlowRate := {: group <- "_ Operational" :};
+    // Q_In -> Q_Op
+    OBJ help_QIn_PC (* hidden = "1" *) "Residual flow rate to controllable pumps" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QIn_PC1 (* hidden = "1" *) "Desired flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QIn_PC2 (* hidden = "1" *) "Desired flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QIn_PC3 (* hidden = "1" *) "Desired flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QIn_PC4 (* hidden = "1" *) "Desired flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QIn_PC5 (* hidden = "1" *) "Desired flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QIn_PU1 (* hidden = "1" *) "Desired flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QIn_PU2 (* hidden = "1" *) "Desired flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QIn_PU3 (* hidden = "1" *) "Desired flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QIn_PU4 (* hidden = "1" *) "Desired flow rate" : FlowRate := {: group <- "_ Operational" :};
+    OBJ help_QIn_PU5 (* hidden = "1" *) "Desired flow rate" : FlowRate := {: group <- "_ Operational" :};
+  };
+  
+  equations <-
+  {
+    // Minimum and maximum achievable Q per pump:  
+    state.help_QMax_PC1 = IF (state.help_IsOn_PC1 < 1) THEN 0.0 ELSE interface.QMax_PC1 ; 
+    state.help_QMax_PC2 = IF (state.help_IsOn_PC2 < 1) THEN 0.0 ELSE interface.QMax_PC2 ; 
+    state.help_QMax_PC3 = IF (state.help_IsOn_PC3 < 1) THEN 0.0 ELSE interface.QMax_PC3 ; 
+    state.help_QMax_PC4 = IF (state.help_IsOn_PC4 < 1) THEN 0.0 ELSE interface.QMax_PC4 ; 
+    state.help_QMax_PC5 = IF (state.help_IsOn_PC5 < 1) THEN 0.0 ELSE interface.QMax_PC5 ; 
+    state.help_QMin_PC1 = IF (state.help_IsOn_PC1 < 1) THEN 0.0 ELSE interface.QMin_PC1 ; 
+    state.help_QMin_PC2 = IF (state.help_IsOn_PC2 < 1) THEN 0.0 ELSE interface.QMin_PC2 ; 
+    state.help_QMin_PC3 = IF (state.help_IsOn_PC3 < 1) THEN 0.0 ELSE interface.QMin_PC3 ; 
+    state.help_QMin_PC4 = IF (state.help_IsOn_PC4 < 1) THEN 0.0 ELSE interface.QMin_PC4 ; 
+    state.help_QMin_PC5 = IF (state.help_IsOn_PC5 < 1) THEN 0.0 ELSE interface.QMin_PC5 ; 
+    state.help_QMax_PU1 = IF (state.help_IsOn_PU1 < 1) THEN 0.0 ELSE interface.QMax_PU1 ; 
+    state.help_QMax_PU2 = IF (state.help_IsOn_PU2 < 1) THEN 0.0 ELSE interface.QMax_PU2 ; 
+    state.help_QMax_PU3 = IF (state.help_IsOn_PU3 < 1) THEN 0.0 ELSE interface.QMax_PU3 ; 
+    state.help_QMax_PU4 = IF (state.help_IsOn_PU4 < 1) THEN 0.0 ELSE interface.QMax_PU4 ; 
+    state.help_QMax_PU5 = IF (state.help_IsOn_PU5 < 1) THEN 0.0 ELSE interface.QMax_PU5 ; 
+    
+    // Basic control logic: pump X is enabled only if pump (X-1) is also active (simple and probably inefficient,
+    // but may be a starting point.
+    // The desired flow rate is obtained as follows:
+    // First as many fixed flow rate pumps (PU) as possible are turned on; the remaining flow rate is obtained from
+    // the variable flow rate pumps (PC) - which however are limited to minimum flow rate (Q_min for VFD control)
+    // Therefore the PU pump is only turned on when Qin > (PU1.Q_Max + PC1.Q_Min)
+    // It is assumed that the pumps are always started in the same order (1 to 5)
+    state.help_QIn_PU1 = IF (interface.Q_In < (state.help_QMax_PU1 + state.help_QMin_PC1)) THEN 0.0 ELSE state.help_QMax_PU1 ;
+    state.help_QIn_PU2 = IF (interface.Q_In < (state.help_QMax_PU1 + state.help_QMax_PU2 + state.help_QMin_PC1)) THEN 0.0 ELSE state.help_QMax_PU2 ;
+    state.help_QIn_PU3 = IF (interface.Q_In < (state.help_QMax_PU1 + state.help_QMax_PU2 + state.help_QMax_PU3 + state.help_QMin_PC1)) THEN 0.0 ELSE state.help_QMax_PU3 ;
+    state.help_QIn_PU4 = IF (interface.Q_In < (state.help_QMax_PU1 + state.help_QMax_PU2 + state.help_QMax_PU3 + state.help_QMax_PU4 + state.help_QMin_PC1)) THEN 0.0 ELSE state.help_QMax_PU4 ;
+    state.help_QIn_PU5 = IF (interface.Q_In < (state.help_QMax_PU1 + state.help_QMax_PU2 + state.help_QMax_PU3 + state.help_QMax_PU4 + state.help_QMax_PU5 + state.help_QMin_PC1)) THEN 0.0 ELSE state.help_QMax_PU5 ;
+    
+    state.help_QIn_PC = (interface.Q_In - state.help_QIn_PU1 - state.help_QIn_PU2 - state.help_QIn_PU3 - state.help_QIn_PU4 - state.help_QIn_PU5) ;
+    // The remainder of the flow rate is distributed over the needed number of variable flow rate pumps
+    state.help_QIn_PC1 = IF (state.help_IsOn_PC1 == 0) THEN 0.0
+      ELSE IF (state.help_QIn_PC < state.help_QMin_PC1) THEN 0.0
+        ELSE IF (state.help_QIn_PC < state.help_QMax_PC1) THEN state.help_QIn_PC
+          ELSE IF (state.help_QIn_PC < (state.help_QMin_PC1 + state.help_QMin_PC2)) THEN state.help_QMax_PC1
+            ELSE IF (state.help_QIn_PC < (state.help_QMax_PC1 + state.help_QMax_PC2)) THEN state.help_QMin_PC1 + (state.help_QMax_PC1 - state.help_QMin_PC1) * (state.help_QIn_PC - state.help_QMin_PC1 - state.help_QMin_PC2) / (state.help_QMax_PC1 + state.help_QMax_PC2 - state.help_QMin_PC1 - state.help_QMin_PC2)
+              ELSE IF (state.help_QIn_PC < (state.help_QMin_PC1 + state.help_QMin_PC2 + state.help_QMin_PC3)) THEN state.help_QMax_PC1
+                ELSE IF (state.help_QIn_PC < (state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMax_PC3)) THEN state.help_QMin_PC1 + (state.help_QMax_PC1 - state.help_QMin_PC1) * (state.help_QIn_PC - state.help_QMin_PC1 - state.help_QMin_PC2 - state.help_QMin_PC3) / (state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMax_PC3 - state.help_QMin_PC1 - state.help_QMin_PC2 - state.help_QMin_PC3)
+                  ELSE state.help_QMax_PC1 ;
+    
+    state.help_QIn_PC2 = IF (state.help_IsOn_PC2 == 0) THEN 0.0
+      ELSE IF (state.help_QIn_PC < MSLUGetMax2(state.help_QMin_PC1 + state.help_QMin_PC2, state.help_QMax_PC1)) THEN 0.0
+        ELSE IF (state.help_QIn_PC < (state.help_QMax_PC1 + state.help_QMax_PC2)) THEN state.help_QMin_PC2 + (state.help_QMax_PC2 - state.help_QMin_PC2) * (state.help_QIn_PC - state.help_QMin_PC1 - state.help_QMin_PC2) / (state.help_QMax_PC1 + state.help_QMax_PC2 - state.help_QMin_PC1 - state.help_QMin_PC2)
+          ELSE IF (state.help_QIn_PC < (state.help_QMin_PC1 + state.help_QMin_PC2 + state.help_QMin_PC3)) THEN state.help_QMax_PC2
+            ELSE IF (state.help_QIn_PC < (state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMax_PC3)) THEN state.help_QMin_PC2 + (state.help_QMax_PC2 - state.help_QMin_PC2) * (state.help_QIn_PC - state.help_QMin_PC1 - state.help_QMin_PC2 - state.help_QMin_PC3) / (state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMax_PC3 - state.help_QMin_PC1 - state.help_QMin_PC2 - state.help_QMin_PC3)
+              ELSE IF (state.help_QIn_PC < (state.help_QMax_PC1 + state.help_QMin_PC2 + state.help_QMin_PC3 + state.help_QMin_PC4)) THEN state.help_QMax_PC2
+                ELSE IF (state.help_QIn_PC < (state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMax_PC3 + state.help_QMax_PC4)) THEN state.help_QMin_PC2 + (state.help_QMax_PC2 - state.help_QMin_PC2) * (state.help_QIn_PC - state.help_QMin_PC1 - state.help_QMax_PC1 - state.help_QMin_PC2 - state.help_QMin_PC3 - state.help_QMin_PC4) / (state.help_QMax_PC2 + state.help_QMax_PC3 + state.help_QMax_PC4 - state.help_QMin_PC2 - state.help_QMin_PC3 - state.help_QMin_PC4)
+                  ELSE state.help_QMax_PC2 ;
+    
+    state.help_QIn_PC3 = IF (state.help_IsOn_PC3 == 0) THEN 0.0
+      ELSE IF (state.help_QIn_PC < MSLUGetMax2(state.help_QMin_PC1 + state.help_QMin_PC2 + state.help_QMin_PC3, state.help_QMax_PC1 + state.help_QMax_PC2)) THEN 0.0
+        ELSE IF (state.help_QIn_PC < (state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMax_PC3)) THEN state.help_QMin_PC3 + (state.help_QMax_PC3 - state.help_QMin_PC3) * (state.help_QIn_PC - state.help_QMin_PC1 - state.help_QMin_PC2 - state.help_QMin_PC3) / (state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMax_PC3 - state.help_QMin_PC1 - state.help_QMin_PC2 - state.help_QMin_PC3)
+          ELSE IF (state.help_QIn_PC < (state.help_QMax_PC1 + state.help_QMin_PC2 + state.help_QMin_PC3 + state.help_QMin_PC4)) THEN state.help_QMax_PC3
+            ELSE IF (state.help_QIn_PC < (state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMax_PC3 + state.help_QMax_PC4)) THEN state.help_QMin_PC3 + (state.help_QMax_PC3 - state.help_QMin_PC3) * (state.help_QIn_PC - state.help_QMax_PC1 - state.help_QMin_PC2 - state.help_QMin_PC3 - state.help_QMin_PC4) / (state.help_QMax_PC2 + state.help_QMax_PC3 + state.help_QMax_PC4 - state.help_QMin_PC2 - state.help_QMin_PC3 - state.help_QMin_PC4)
+              ELSE IF (state.help_QIn_PC < (state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMin_PC3 + state.help_QMin_PC4 + state.help_QMin_PC5)) THEN state.help_QMax_PC3
+                ELSE IF (state.help_QIn_PC < (state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMax_PC3 + state.help_QMax_PC4 + state.help_QMax_PC5)) THEN state.help_QMin_PC3 + (state.help_QMax_PC3 - state.help_QMin_PC3) * (state.help_QIn_PC  - state.help_QMax_PC1 - state.help_QMax_PC2 - state.help_QMin_PC3 - state.help_QMin_PC4 - state.help_QMin_PC5) / (state.help_QMax_PC3 + state.help_QMax_PC4 + state.help_QMax_PC5 - state.help_QMin_PC3 - state.help_QMin_PC4 - state.help_QMin_PC5)
+                  ELSE state.help_QMax_PC3 ;
+    
+    state.help_QIn_PC4 = IF (state.help_IsOn_PC4 == 0) THEN 0.0
+      ELSE IF (state.help_QIn_PC < MSLUGetMax2(state.help_QMax_PC1 + state.help_QMin_PC2 + state.help_QMin_PC3 + state.help_QMin_PC4, state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMax_PC3)) THEN 0.0
+        ELSE IF (state.help_QIn_PC < (state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMax_PC3 + state.help_QMax_PC4)) THEN state.help_QMin_PC4 + (state.help_QMax_PC4 - state.help_QMin_PC4) * (state.help_QIn_PC - state.help_QMax_PC1 - state.help_QMin_PC2 - state.help_QMin_PC3 - state.help_QMin_PC4) / (state.help_QMax_PC2 + state.help_QMax_PC3 + state.help_QMax_PC4 - state.help_QMin_PC2 - state.help_QMin_PC3 - state.help_QMin_PC4)
+          ELSE IF (state.help_QIn_PC < (state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMin_PC3 + state.help_QMin_PC4 + state.help_QMin_PC5)) THEN state.help_QMax_PC4
+            ELSE IF (state.help_QIn_PC < (state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMax_PC3 + state.help_QMax_PC4 + state.help_QMax_PC5)) THEN state.help_QMin_PC4 + (state.help_QMax_PC4 - state.help_QMin_PC4) * (state.help_QIn_PC - state.help_QMax_PC1 - state.help_QMax_PC2 - state.help_QMin_PC3 - state.help_QMin_PC4 - state.help_QMin_PC5) / (state.help_QMax_PC3 + state.help_QMax_PC4 + state.help_QMax_PC5 - state.help_QMin_PC3 - state.help_QMin_PC4 - state.help_QMin_PC5)
+              ELSE state.help_QMax_PC4 ;
+    
+    state.help_QIn_PC5 = IF (state.help_IsOn_PC5 == 0) THEN 0.0
+      ELSE IF (state.help_QIn_PC < MSLUGetMax2(state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMin_PC3 + state.help_QMin_PC4 + state.help_QMin_PC5, state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMax_PC3 + state.help_QMax_PC4)) THEN 0.0
+        ELSE IF (state.help_QIn_PC < (state.help_QMax_PC1 + state.help_QMax_PC2 + state.help_QMax_PC3 + state.help_QMax_PC4 + state.help_QMax_PC5)) THEN state.help_QMin_PC5 + (state.help_QMax_PC5 - state.help_QMin_PC5) * (state.help_QIn_PC - state.help_QMax_PC1 - state.help_QMax_PC2 - state.help_QMin_PC3 - state.help_QMin_PC4 - state.help_QMin_PC5) / (state.help_QMax_PC3 + state.help_QMax_PC4 + state.help_QMax_PC5 - state.help_QMin_PC3 - state.help_QMin_PC4 - state.help_QMin_PC5)
+          ELSE state.help_QMax_PC5 ;
+    
+    interface.QInPU1 = IF (state.help_QIn_PU1 >= 0.0) THEN state.help_QIn_PU1 ELSE 0.0 ;
+    interface.QInPU2 = IF (state.help_QIn_PU2 >= 0.0) THEN state.help_QIn_PU2 ELSE 0.0 ;
+    interface.QInPU3 = IF (state.help_QIn_PU3 >= 0.0) THEN state.help_QIn_PU3 ELSE 0.0 ;
+    interface.QInPU4 = IF (state.help_QIn_PU4 >= 0.0) THEN state.help_QIn_PU4 ELSE 0.0 ;
+    interface.QInPU5 = IF (state.help_QIn_PU5 >= 0.0) THEN state.help_QIn_PU5 ELSE 0.0 ;
+    interface.QInPC1 = IF (state.help_QIn_PC1 >= 0.0) THEN state.help_QIn_PC1 ELSE 0.0 ;
+    interface.QInPC2 = IF (state.help_QIn_PC2 >= 0.0) THEN state.help_QIn_PC2 ELSE 0.0 ;
+    interface.QInPC3 = IF (state.help_QIn_PC3 >= 0.0) THEN state.help_QIn_PC3 ELSE 0.0 ;
+    interface.QInPC4 = IF (state.help_QIn_PC4 >= 0.0) THEN state.help_QIn_PC4 ELSE 0.0 ;
+    interface.QInPC5 = IF (state.help_QIn_PC5 >= 0.0) THEN state.help_QIn_PC5 ELSE 0.0 ;
+    
+    // It should be the state var 'help_IsOn_PXi' but this is a further check on the actual flow rate requested to the pump
+    interface.IsOnPC1 = IF (state.help_IsOn_PC1 < 1) THEN 0 ELSE IF (state.help_QIn_PC1 <= 0.0) THEN 0 ELSE 1 ;
+    interface.IsOnPC2 = IF (state.help_IsOn_PC2 < 1) THEN 0 ELSE IF (state.help_QIn_PC2 <= 0.0) THEN 0 ELSE 1 ;
+    interface.IsOnPC3 = IF (state.help_IsOn_PC3 < 1) THEN 0 ELSE IF (state.help_QIn_PC3 <= 0.0) THEN 0 ELSE 1 ;
+    interface.IsOnPC4 = IF (state.help_IsOn_PC4 < 1) THEN 0 ELSE IF (state.help_QIn_PC4 <= 0.0) THEN 0 ELSE 1 ;
+    interface.IsOnPC5 = IF (state.help_IsOn_PC5 < 1) THEN 0 ELSE IF (state.help_QIn_PC5 <= 0.0) THEN 0 ELSE 1 ;
+    interface.IsOnPU1 = IF (state.help_IsOn_PU1 < 1) THEN 0 ELSE IF (state.help_QIn_PU1 <= 0.0) THEN 0 ELSE 1 ;
+    interface.IsOnPU2 = IF (state.help_IsOn_PU2 < 1) THEN 0 ELSE IF (state.help_QIn_PU1 <= 0.0) THEN 0 ELSE 1 ;
+    interface.IsOnPU3 = IF (state.help_IsOn_PU3 < 1) THEN 0 ELSE IF (state.help_QIn_PU1 <= 0.0) THEN 0 ELSE 1 ;
+    interface.IsOnPU4 = IF (state.help_IsOn_PU4 < 1) THEN 0 ELSE IF (state.help_QIn_PU1 <= 0.0) THEN 0 ELSE 1 ;
+    interface.IsOnPU5 = IF (state.help_IsOn_PU5 < 1) THEN 0 ELSE IF (state.help_QIn_PU1 <= 0.0) THEN 0 ELSE 1 ;
+    
+    interface.Q_Out = interface.QOut_PC1 + interface.QOut_PC2 + interface.QOut_PC3 + interface.QOut_PC4 + interface.QOut_PC5 +
+      interface.QOut_PU1 + interface.QOut_PU2 + interface.QOut_PU3 + interface.QOut_PU4 + interface.QOut_PU5 ;  
+    
+    interface.PumpedVolume = interface.Volume_PC1 + interface.Volume_PC2 + interface.Volume_PC3 + interface.Volume_PC4 +
+      interface.Volume_PC5 + interface.Volume_PU1 + interface.Volume_PU2 + interface.Volume_PU3 + interface.Volume_PU4 +  
+      interface.Volume_PU5 ;
+    
+    interface.PumpingEnergy_Ave = IF (interface.PumpedVolume <= 0.0) THEN 0.0
+      ELSE (interface.EnergyAve_PC1 + interface.EnergyAve_PC2 + interface.EnergyAve_PC3 + interface.EnergyAve_PC4 +
+      interface.EnergyAve_PC5 + interface.EnergyAve_PU1 + interface.EnergyAve_PU2 + interface.EnergyAve_PU3 + interface.EnergyAve_PU4 +  
+      interface.EnergyAve_PU5) / interface.PumpedVolume ;
+    
+    interface.PowerConsumption = interface.Power_PC1 + interface.Power_PC2 + interface.Power_PC3 + interface.Power_PC4 +
+      interface.Power_PC5 + interface.Power_PU1 + interface.Power_PU2 + interface.Power_PU3 + interface.Power_PU4 +    
+      interface.Power_PU5 ;
+    
+    interface.PumpingEnergy = interface.Energy_PC1 + interface.Energy_PC2 + interface.Energy_PC3 + interface.Energy_PC4 +
+      interface.Energy_PC5 + interface.Energy_PU1 + interface.Energy_PU2 + interface.Energy_PU3 + interface.Energy_PU4 +    
+      interface.Energy_PU5 ;
+  };
+
+:};
+
+
+// Actual (coupled) models
+#include "WWTP/pumps/wwtp.pumps.control.multipipe.10c5t.msl"
+
+
+#endif // WWTP_PUMPS_CONTROL_MULTIPIPE_10P

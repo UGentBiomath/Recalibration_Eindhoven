@@ -1,0 +1,29 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE Reactions "The reactions between the components considered" = 
+ENUM
+{
+  AerHydrol,
+  AnHydrol,
+  AnaerHydrol,
+  AerGrowthOnSf,
+  AerGrowthOnSvfa,
+  AnGrowthOnSf,
+  AnGrowthOnSvfa,
+  Fermentation,
+  LysisOfHetero,
+  StorageOfXPHA,
+  AerStorageOfXPP,
+  AnStorageOfXPP,
+  AerGrowthOnXPHA,
+  AnGrowthOnXPHA,
+  LysisOfXPAO,
+  LysisOfXPP,
+  LysisOfXPHA,
+  GrowthOfAuto,
+  LysisOfAuto,
+  Precipitation,
+  Redissolution,
+  Aeration
+};
+

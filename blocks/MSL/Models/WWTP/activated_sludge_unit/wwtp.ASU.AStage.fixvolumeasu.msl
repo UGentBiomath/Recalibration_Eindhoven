@@ -1,0 +1,226 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 22. september 2020 14:54:01$
+ *
+ ******************************************************************************/
+ 
+ 
+#ifndef WWTP_ASU_ASTAGE_FIXVOLUMEASU
+#define WWTP_ASU_ASTAGE_FIXVOLUMEASU
+
+#ifdef ASM1Temp
+
+CLASS FixVolumeASU_AStage_Single (* icon = "activated_sludge_unit" *)
+EXTENDS FixVolumeASMConversionModel_AStage WITH
+{:
+
+  comments <- "Model for an A-stage activated sludge tank with a fixed volume";
+  
+  interface <-  
+  {
+    OBJ Kla (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Oxygen transfer coefficient" : OxygenTransferCoefficient := {: causality <- "CIN" ; value <- 0 ; group <- "Operational" :};   
+    OBJ Temp (* terminal = "in_2"; manip = "1"; is_favorite = "1" *)  "Temperature of the activated sludge" : CelsiusTemperature  := {: causality <- "CIN" ; value <- 15 ; group <- "Operational" :}; 
+    OBJ AerationEnergy (* terminal = "out_2" *)"Aeration energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ AerationPower (* terminal = "out_2" *) "Aeration power" : Real := {: causality <- "COUT"; unit <- "kWh/d" ; group <- "Energy" :};
+    OBJ MixingEnergy (* terminal = "out_2" *)"Mixing energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ MixingPower (* terminal = "out_2" *) "Mixing power" : Real := {: causality <- "COUT"; unit <- "kWh/d" ; group <- "Energy" :};
+  };
+  
+  parameters <- 
+  {
+    // AERATION ENERGY (through KLa)
+    OBJ OTR_Energy  "Oxygen transfer rate per energy input" : TransferRateEnergy := {: value <- 1800 ; group <- "Aeration" :}; 
+    // MIXING ENERGY
+    OBJ ME_unit "Energy requirement per unit of volume for mixing in a AS tank" : EnergyForMixing := {: value <- 0.005; group <- "Mixing energy":};
+    OBJ Kla_Min "Lowest kLa value that ensures adequate mixing" : OxygenTransferCoefficient :={: value <- 20.0; group <- "Mixing energy":};
+    OBJ Mixing_When_Aerated "Mixing activity during aeration" : Integer := {: value <- 0 ; interval <- {: lowerBound <- 0; upperBound <- 1:}; group <- "Mixing energy":}; //EnergyIndex
+  };
+  
+  state <-
+  {
+    // AERATION ENERGY (through KLa)
+    OBJ Integ_AE (* hidden = "1" *)"Integral aeration energy" : Volume ;
+    // MIXING ENERGY
+    OBJ Integ_ME (* hidden = "1" *)"Integral mixing energy" : ElectricalEnergy ;
+    OBJ ME_Instant (* hidden = "1" *)"Instantaneous mixing energy" : EnergyIndex := {: group <- "Mixing":};
+  };
+  
+  initial <-
+  {
+    state.Integ_AE = 0.0 ;
+    state.Integ_ME = 0.0 ;
+  };
+  
+  equations <- 
+  {
+    state.Kla_Actual = interface.Kla;
+    state.Temp_Actual = interface.Temp;
+  
+    // AERATION ENERGY
+    //(EURE 08/02/2019) [kWh/g O2] * [g O2/m3] * [1/d] * [m3] = [kWh/d]
+    interface.AerationPower = (1 / parameters.OTR_Energy) * state.S_O_Saturation * state.Kla_Actual * state.V ;
+    DERIV(state.Integ_AE,[independent.t])= state.S_O_Saturation * state.Kla_Actual * state.V ;
+    interface.AerationEnergy = (1/parameters.OTR_Energy) * state.Integ_AE ; 
+    
+    // MIXING ENERGY
+    state.ME_Instant = IF ((state.Kla_Actual < parameters.Kla_Min) || (state.Kla_Actual == 0)) THEN parameters.ME_unit * state.V
+      ELSE IF (parameters.Mixing_When_Aerated == 1) THEN parameters.ME_unit * state.V
+        ELSE 0.0 ;    
+    
+    //(EURE 25/07/2019) [kWh/d]
+    interface.MixingPower = state.ME_Instant ;
+    DERIV(state.Integ_ME,[independent.t]) = state.ME_Instant;
+    interface.MixingEnergy = state.Integ_ME ;
+  };   
+
+:};
+
+
+CLASS FixVolumeASMConversionModel_AStage EXTENDS FixVolumeConversionModel_AStage WITH
+{:
+  #include "ASM1_AB/wwtp.VolumeASM1_ABConversionModel.body.msl"
+:};
+
+
+// Combines FixVolumeConversionModel + WWTPAtomicModelWithFixedVolume
+CLASS FixVolumeConversionModel_AStage EXTENDS WWTPAtomicModelWithVolume_AStage WITH
+{:
+
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : ASM1_ABInWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : ASM1_ABOutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent" :};
+  };
+  
+  parameters <-  
+  {
+    // (EURE 17/10/2016) this has to be defined as state - manual solution for the time being
+//    OBJ Stoichiometry (* hidden = "1" *) "A-stage stoichiometry" : PhysicalQuantityType[ASM1_ABNrOfReactions;][ASM1_ABNrOfComponents,];
+    OBJ Vol (* is_favorite = "1" *) "Volume of the tank" : Volume := {: value <- 1000; group <- "Dimension" :};
+  };   
+  
+  state <-
+  {
+    OBJ Stoichiometry (* hidden = "1" *) "A-stage stoichiometry" : PhysicalQuantityType[ASM1_ABNrOfReactions;][ASM1_ABNrOfComponents,] := {: group <- "Stoichiometry" :} ;
+    OBJ Kinetics (* hidden = "1" *) "A-stage kinetics" : PhysicalQuantityType[ASM1_ABNrOfReactions;] := {: group <- "_Kinetics" :};
+    OBJ Kla_Actual (* is_favorite = "1" *) "Actual kLa in the tank" : OxygenTransferCoefficient := {: group <- "Operational" :};
+    OBJ Temp_Actual (* is_favorite = "1" *) "Actual temperature of the activated sludge" : CelsiusTemperature  := {: group <- "Operational" :}; 
+  };
+
+  initial <-  
+  {
+    state.M[ASM1_ABIndexOfSolvent] = parameters.Vol / 0.000001 ;
+  };
+  
+  equations <-
+  {
+    {FOREACH Comp_Index IN {ASM1_ABIndexOfSolvent .. ASM1_ABNrOfComponents}:
+      state.ConversionTermPerComponent[Comp_Index] =
+        SUMOVER Reaction_Index IN {1 .. ASM1_ABNrOfReactions}:
+        // (EURE 17/10/2016) this has to be defined as state - manual solution for the time being
+//        (parameters.Stoichiometry[Reaction_Index][Comp_Index] * state.Kinetics[Reaction_Index]) * state.V ;};
+        (state.Stoichiometry[Reaction_Index][Comp_Index] * state.Kinetics[Reaction_Index]) * state.V ;};
+
+    {FOREACH Comp_Index IN {ASM1_ABIndexOfSolvent .. ASM1_ABNrOfComponents}:
+      state.C[Comp_Index] = IF (state.V <= 0.0) THEN 0.0
+        ELSE state.M[Comp_Index] / state.V ; };
+  
+    {FOREACH Comp_Index IN {ASM1_ABIndexOfSolvent .. ASM1_ABNrOfComponents}:
+      interface.Outflow[Comp_Index] = - state.C[Comp_Index] * state.Q_In ; };
+
+    state.V = parameters.Vol ;
+  };
+  
+:};
+
+
+CLASS WWTPAtomicModelWithVolume_AStage EXTENDS WWTPAtomicModel_AStage WITH
+{:
+
+  state <-
+  {
+    OBJ V (* is_favorite = "1" *) "Volume" : Volume := {: group <- "Dimension" :};
+    OBJ C "(state components) concentration vector" : ASM1_ABConcentrationVector := {: group <- "Concentration" :};
+  };
+
+:};
+
+
+CLASS WWTPAtomicModel_AStage SPECIALISES PhysicalDAEModelType :=
+{:
+
+  independent <- 
+  {
+    OBJ t "Time"  : Time := {: group <- "Time" :}; 
+  };
+  
+  state <-
+  {
+         OBJ M "(state components) mass vector" : ASM1_ABMassVector 
+//#if (defined ASM1Temp)
+/*
+//    H2O                             S_Bf            S_Bs              S_O                 S_U
+  := [{: value <- 1000000000:}, {: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :},
+  // S_NOx              S_NHx             S_NB              S_Alk
+  {: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :},
+  // C_U                C_B               X_B                 X_U
+  {: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :},
+    //X_OHO                x_A_ANO              X_E               X_STO
+  {: value <- 1000 :}, {: value <- 100 :}, {: value <- 1 :}, {: value <- 1 :}, 
+  // X_EPS              X_NB
+  {: value <- 1 :},{: value <- 1 :}; ] ;
+  
+*/  
+  
+  //PERA 03.06.2019
+//    H2O                             S_Bf            S_Bs              S_O                 S_U
+  := [{: value <- 1000000000:}, {: value <- 17.20550289 :}, {: value <- 21.01489814 :}, {: value <- 1.199353142 :}, {: value <- 8.248260375 :},
+  // S_NOx              S_NHx             S_NB              S_Alk
+  {: value <- 0.1339327707 :}, {: value <- 14.53676395 :}, {: value <- 1.14812285 :}, {: value <- 17.89451839 :},
+  // C_U                C_B               X_B                 X_U
+  {: value <- 2.469166597 :}, {: value <- 19.98574934 :}, {: value <- 377.1885391 :}, {: value <- 86.43215147 :},
+    //X_OHO                x_A_ANO              X_E               X_STO
+  {: value <- 74.46421139 :}, {: value <- 3.067400777 :}, {: value <- 0.07439595118 :}, {: value <- 1.895716105 :}, 
+  // X_EPS              X_NB
+  {: value <- 0.8217210168 :},{: value <- 23.77321306 :}; ] ;
+  
+//#endif // ASM1Temp
+    OBJ FluxPerComponent (* hidden = "1" *) "(state components) flux vector" : ASM1_ABMassFluxVector := {: group <- "_Flux" :} ;
+    OBJ InFluxPerComponent (* hidden = "1" *) "(state components) in-flux vector": ASM1_ABMassFluxVector := {: group <- "_Flux - In" :} ;
+    OBJ ConversionTermPerComponent (* hidden = "1" *) "(state components) conversion terms vector": ASM1_ABMassFluxVector := {: group <- "_Conversion" :} ;
+    OBJ Q_In (* is_favorite = "1" *) "Influent flow rate" : FlowRate := {: group <- "Operational" :};
+  };
+
+  equations <-
+  {
+    {FOREACH Comp_Index IN {ASM1_ABIndexOfSolvent .. ASM1_ABNrOfComponents}:
+      state.FluxPerComponent[Comp_Index] =
+        (SUMOVER ASM1_ABIn_Terminal IN {SelectByType(interface,ASM1_ABInWWTPTerminal)}: ASM1_ABIn_Terminal[Comp_Index]) +
+        (SUMOVER ASM1_ABOut_Terminal IN {SelectByType(interface,ASM1_ABOutWWTPTerminal)}: ASM1_ABOut_Terminal[Comp_Index]) ; };
+    
+    {FOREACH Comp_Index IN {ASM1_ABIndexOfSolvent .. ASM1_ABNrOfComponents}:
+      DERIV(state.M[Comp_Index],[independent.t]) =
+        state.FluxPerComponent[Comp_Index] + state.ConversionTermPerComponent[Comp_Index] ; };
+    
+    {FOREACH Comp_Index IN {ASM1_ABIndexOfSolvent .. ASM1_ABNrOfComponents}:
+      state.InFluxPerComponent[Comp_Index] =
+        SUMOVER ASM1_ABIn_Terminal IN {SelectByType(interface,ASM1_ABInWWTPTerminal)}: (ASM1_ABIn_Terminal[Comp_Index]) ; };
+    
+    state.Q_In = state.InFluxPerComponent[ASM1_ABIndexOfSolvent] * 1E-06 ;
+  };
+
+:};
+
+#endif // ASM1, ..
+
+#endif // WWTP_ASU_ASTAGE_FIXVOLUMEASU

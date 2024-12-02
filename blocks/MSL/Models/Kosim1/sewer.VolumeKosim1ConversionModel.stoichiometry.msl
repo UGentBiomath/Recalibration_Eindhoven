@@ -1,0 +1,7 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    parameters.Stoichiometry[Removal_SCOD][SCOD] := -1;
+    parameters.Stoichiometry[Removal_XCOD][XCOD] := -1;
+    parameters.Stoichiometry[Removal_PO4][PO4] := -1;
+    parameters.Stoichiometry[Removal_NH4][NH4] := -1;
+

@@ -1,0 +1,194 @@
+/*******************************************************************************
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:54$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_GENERATORS
+#define SEWER_GENERATORS
+
+
+CLASS SewerDWF_Base EXTENDS InfiltrationFlow_Base WITH //SewGenerator //SewerFlow_Base
+{:
+
+parameters <-
+{
+  OBJ f_we_water "Correction factor for flow rate during weekends": Real := {: value <- 0.7; group <- "General" :} ;
+  OBJ f_we_pollution "Correction factor for concentration during week-end": Real :={:value <- 0.5; group <- "General":};
+  OBJ f_tourist_water "Correction factor for flow rate in tourist season": Real :={:value <- 1; group <- "General":};
+  OBJ f_tourist_pollution "Correction factor for concentration in tourist season": Real :={:value <- 1.1; group <- "General" :} ;
+  OBJ FirstDayYear "Week day at the start of the year, Saturday = 1": Integer :={: value <- 1; group <- "General" :};
+  OBJ Tourist_Start "Start of tourist season (day nr)": Integer :={:value <- 162; group <- "General":};
+  OBJ Tourist_End "End of tourist season (day nr)": Integer :={:value <- 300; group <- "General":};
+  OBJ PatternFlow (* hidden = "1" *) "Actual flow pattern" : HourlyDailyPattern := {: group <- "General" :}; 
+  OBJ PatternPollution (* hidden = "1" *) "Actual pollution pattern" : HourlyDailyPattern := {: group <- "General" :}; 
+  // NEW (EURE 26/08/2014)
+  OBJ PatternFlow_Corr (* hidden = "1" *) "Corrected flow pattern" : HourlyDailyPattern := {: group <- "General" :}; 
+  OBJ PatternPollution_Corr (* hidden = "1" *) "Corrected pollution pattern" : HourlyDailyPattern := {: group <- "General" :};
+};
+
+  state <- 
+  {
+    OBJ Help_Pattern_Flow (* hidden = "1" *) "Working variable for Flow Pattern" : Real ;
+    OBJ Help_Pattern_Pollution (* hidden = "1" *) "Working variable for Pollution Pattern" : Real ;
+  };
+ 
+  equations <- 
+  {
+    // MODIF by "_Corr" (EURE 26/08/2014)
+    state.Help_Pattern_Flow = IF (independent.t <= 0.0) THEN (parameters.PatternFlow_Corr[1])
+        ELSE (parameters.PatternFlow_Corr[state.Timestep] * (1 - state.Weight) + parameters.PatternFlow_Corr[state.Next_Timestep] * state.Weight) ;
+    
+    state.Help_Pattern_Pollution = IF (independent.t <= 0.0) THEN (parameters.PatternPollution_Corr[1])
+        ELSE (parameters.PatternPollution_Corr[state.Timestep] * (1 - state.Weight) + parameters.PatternPollution_Corr[state.Next_Timestep] * state.Weight) ;
+    // END-MODIF
+  };
+
+:};
+
+
+CLASS InfiltrationFlow_Base " .. base for infiltration flow .. " EXTENDS Sewer_Base WITH
+{:
+
+  parameters <-
+  {
+    // Catchment
+    OBJ TotalArea "Area of the subcatchment" : Area := {: value <- 2000000; group <- "Catchment" :};
+    OBJ Infiltration "Water infiltration flow (l/s/ha)" : Real := {: value <- 0.11; group <- "Catchment" :} ;
+    OBJ NrPatternInfiltration "Seasonal infiltration pattern: 0 (Custom), 1 (constant)" : Integer := {: value <- 0; interval <- {: lowerBound <- 0; upperBound <- 1; :}; group <- "Catchment" :};
+    OBJ PatternInfiltration (* hidden = "1" *) "Seasonal infiltration pattern" : MonthlyYearlyPattern := {: group <- "Catchment" :}; 
+    // Patterns
+    #include "Sewer/patterns/patterns.infiltration.msl"
+  };
+
+  initial <-
+  {
+    {FOREACH Comp_Index IN {1 .. 12}: parameters.PatternInfiltration[Comp_Index] =
+        IF (parameters.NrPatternInfiltration == 0) THEN parameters.InfiltrationCustom[Comp_Index]
+        ELSE parameters.InfiltrationConstant[Comp_Index] ; };
+  };
+
+  state <- 
+  {
+    OBJ Q_Infiltration "Total infiltration flow" : FlowRate := {: group <- "Output" :} ;
+    //
+    OBJ NrMonth (* hidden = "1" *) "Month nr" : Integer;
+    OBJ NrMonthNext (* hidden = "1" *) "Next month nr" : Integer;
+    OBJ MonthWeight (* hidden = "1" *) "Interpolates between two timestep" : Fraction;
+  };
+
+  equations <-
+  { 
+    state.NrMonth = ceil(state.NrDayYear / 30.5) ;
+    state.MonthWeight = fmod(state.NrDayYear - 1, 30) / 30 ;
+    state.NrMonthNext = IF (state.NrMonth >= 12) THEN 1 // = added by VG090701
+      	ELSE state.NrMonth + 1 ;
+    
+    state.Q_Infiltration = 
+      	(parameters.PatternInfiltration[state.NrMonth] * (1-state.MonthWeight) +
+    parameters.PatternInfiltration[state.NrMonthNext] * (state.MonthWeight)) *
+    (parameters.Infiltration /10000 /1000 * 86400) * parameters.TotalArea ;
+  };
+
+:};
+
+
+CLASS Sewer_Base EXTENDS Sewer_Generator_Mean WITH
+{:
+
+  state <- 
+  {
+    OBJ NrDayYear (* hidden = "1" *) "Day of the year" : Real; //DayOfTheYear
+    OBJ NrDayWeek (* hidden = "1" *) "Day of the week, Saturday = 1" : Integer; //weekday
+    OBJ TimeInHours (* hidden = "1" *) "Hour of the day" : Real; //Daytime
+    OBJ TimeInDays (* hidden = "1" *) "Time of the day expressed in days" : Real; //Help_Time
+    OBJ Timestep (* hidden = "1" *) "Hour of the day" : Integer;
+    OBJ Next_Timestep (* hidden = "1" *)"The next hour of the day" : Integer;
+    OBJ Weight (* hidden = "1" *) "Interpolates between two timestep" : Fraction;
+  };
+
+  equations <- 
+  {
+    state.NrDayYear = ceil(independent.t) - floor(floor(independent.t)/365)*365;
+    
+    state.TimeInDays = independent.t - floor(independent.t);
+    
+    state.TimeInHours = state.TimeInDays*24; 
+    
+    state.Weight = fmod(state.TimeInHours,1);
+    
+    state.Timestep = floor(state.TimeInHours) + 1;
+    
+    state.Next_Timestep = IF (state.Timestep >= 24) THEN 1 ELSE state.Timestep + 1;
+    
+    state.NrDayWeek = fmod(state.NrDayYear,7);
+  };
+
+:};
+
+
+// EURE latest for WEFTEC 2014
+CLASS Sewer_Generator_Mean "A generator model" EXTENDS Sewer_Generator WITH //SPECIALISES PhysicalDAEModelType :=
+{:
+
+  parameters <-
+  {
+    OBJ Mean_S "Vector containing the mean concentration in DWF" : Kosim1ConcentrationVector :=
+     [{:value <-1000000 :}, {:value <- 30 :}, {:value <- 10 :}, {:value <- 100 :}, {:value <- 150 :}, {:value <- 200 :};];
+  };
+  
+  state <-
+  {
+    OBJ Help_Pollution (* hidden = "1" *) "Help variable for pollution" : FlowRate;
+  };
+  
+  equations <-
+  {    		  
+    {FOREACH Comp_Index IN {2 .. Kosim1NrOfComponents}:
+      interface.Outflow[Comp_Index] = - parameters.Mean_S[Comp_Index] * state.Help_Pollution ; };			    
+  };
+  
+:};
+
+
+CLASS Sewer_Generator "Base class for sewer type influent generators"
+SPECIALISES PhysicalDAEModelType :=
+{:
+
+  comments <- "Base class for sewer type influent generators" ;
+  
+  interface <-
+  {
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {: causality <- "COUT"; group <- "Outflow" :};
+  };
+
+  independent <-
+  {
+    OBJ t "Time"  : Time := {: group <- "Time" :}; 
+  };
+  
+  state <-
+  {
+    OBJ Help_Flow (* hidden = "1" *) "Help variable for flow" :  FlowRate;
+    OBJ Q_Out (* is_favorite = "1" *) "Effluent flow rate" : FlowRate := {: group <- "Output" :} ;
+  };
+  
+  equations <-
+  {
+    interface.Outflow[1] = - state.Help_Flow * 1E06 ;
+
+    state.Q_Out = state.Help_Flow ; 			 
+  };
+  
+:};
+
+
+#include "Sewer/generators/flow.dryweather.msl"
+#include "Sewer/generators/flow.infiltration.msl"
+#include "Sewer/generators/flow.evaporation.msl"
+#include "Sewer/generators/runoff.msl"
+
+
+#endif // SEWER_GENERATORS

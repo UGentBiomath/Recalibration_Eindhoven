@@ -1,0 +1,50 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+  interface <-
+  {
+    #include "pHAlk/wwtp.VolumepHAlkModel.interface.msl"
+  };
+
+  parameters <-
+  {
+    #include "pHAlk/wwtp.VolumepHAlkConversionModel.parameters.msl"
+  };
+
+  state <-
+  {
+    #include "pHAlk/wwtp.VolumepHAlkConversionModel.state.msl"
+  };
+
+  initial <-
+  {
+    // Params
+
+
+    // StateVars
+
+
+    // Extra
+
+
+    // Stoichiometry
+
+    #include "pHAlk/wwtp.VolumepHAlkConversionModel.stoichiometry.msl"
+  };
+
+  equations <-
+  {
+    // StateVars
+
+
+    // Extra
+
+
+    // Kinetics
+
+    #include "pHAlk/wwtp.VolumepHAlkConversionModel.kinetics.msl"
+
+    // InterfaceVars
+
+    #include "pHAlk/wwtp.VolumepHAlkModel.sensors.msl"
+  };
+

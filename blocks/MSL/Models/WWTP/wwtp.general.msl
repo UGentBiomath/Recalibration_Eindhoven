@@ -1,0 +1,256 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 7. september 2017 11:16:38$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_GENERAL
+#define WWTP_GENERAL
+
+// Number of ... statements
+
+//#ifndef Kosim1 // EURE 02/03/2015 this is necessary for new hierarchy
+OBJ NrOfComponents "The number of biological components considered in the WWTP models"
+: Integer := Cardinality(Components);
+
+OBJ NrOfReactions
+  "The number of reactions between biological components considered in the WWTP models"
+  : Integer := Cardinality(Reactions);
+
+OBJ NrOfLayers "The number of layers in the secondary clarifier"
+  : Integer := NR_OF_LAYERS;
+
+OBJ IndexOfFeedLayer "The index of the layer where the influent is feeded to the clarifier"
+  : Integer := INDEX_OF_FEED_LAYER;
+
+OBJ NrOfLayersButOne "The number of layers in the secondary clarifier minus one"
+  : Integer := NR_OF_LAYERS_BUT_ONE;
+
+OBJ NrOfLayersPlusOne "The number of layers in the secondary clarifier plus one"
+  : Integer := NR_OF_LAYERS_PLUS_ONE;
+
+// 3. february 2012 :: specific to the Burger-Diehl model ::
+OBJ IndexOfFeedLayerBurger "The index of the layer where the influent is feeded to the clarifier" : Integer := INDEX_OF_FEED_LAYER_BURGER;
+
+OBJ NrOfLayersBurger "Burger-Diehl model: The number of layers in the secondary clarifier (N)" : Integer := NR_OF_LAYERS_BURGER;
+OBJ NrOfLayersPlusOneBurger "Burger-Diehl model: The number of layers in the clarifier plus one (N+1)" : Integer := NR_OF_LAYERS_PLUS_ONE_BURGER;
+OBJ NrOfLayersPlusTwoBurger "Burger-Diehl model: The number of layers in the clarifier plus two extra layers in the underflow (N+2)" : Integer := NR_OF_LAYERS_PLUS_TWO_BURGER;
+OBJ NrOfLayersPlusThreeBurger "Burger-Diehl model: The number of layers in the secondary clarifier plus 3 (N+3)" : Integer := NR_OF_LAYERS_PLUS_THREE_BURGER;
+OBJ NrOfLayersPlusFourBurger "Burger-Diehl model: The number of layers in the clarifier plus the extra layers in effluent and underflow (N+4)" : Integer := NR_OF_LAYERS_PLUS_FOUR_BURGER;
+// end Burger model
+
+//#endif
+
+//
+// Terminal for Fluxes
+CLASS WWTPTerminal
+"The variables which are passed between WWTP model building blocks"
+= MassFlux[NrOfComponents;] ;
+
+CLASS InWWTPTerminal SPECIALISES WWTPTerminal; //used to indicate inflow
+CLASS OutWWTPTerminal SPECIALISES WWTPTerminal; //used to indicate outflow
+
+// Terminal for Concentrations
+CLASS WWTPConcTerminal = Concentration[NrOfComponents;]; 
+
+CLASS InWWTPConcTerminal SPECIALISES WWTPConcTerminal; //used to indicate inflow
+CLASS OutWWTPConcTerminal SPECIALISES WWTPConcTerminal; //used to indicate outflow
+
+OBJ Terminal "Temporary iteration variable" : WWTPTerminal;
+OBJ In_Terminal "Temporary iteration variable" : WWTPTerminal;
+OBJ Out_Terminal "Temporary iteration variable" : WWTPTerminal;
+
+
+#ifndef Kosim1 // EURE 02/03/2015 this is necessary for new hierarchy
+CLASS MassVector = Mass[NrOfComponents;];
+CLASS MassFluxVector = MassFlux[NrOfComponents;];
+CLASS ConcentrationVector = Concentration[NrOfComponents;];
+CLASS SpecificVolumeVector = SpecificVolume[NrOfComponents;];
+//CLASS VelocityVector = Velocity[NrOfComponents;];
+//CLASS ArealFluxVector = ArealFlux[NrOfComponents;];
+CLASS LengthVector = Length[NrOfLayers;];
+
+//CLASS TakacsMassVector = Mass[NrOfLayers;];
+CLASS LayerConcentrationVector = Concentration[NrOfLayers;];
+CLASS LayerVelocityVector = Velocity[NrOfLayers;];
+CLASS LayerArealFluxVector = ArealFlux[NrOfLayers;];
+CLASS LayerConcentrationMatrix = Concentration[NrOfComponents;][NrOfLayers;];
+#endif
+
+
+// (EURE 06/03/2015) new Siegrist category for ASM1
+#ifdef ASM1Temp
+
+// SIEGRIST MODEL
+OBJ SiegristNrOfComponents : Integer := Cardinality(SiegristComponents);
+OBJ SiegristNrOfReactions : Integer := Cardinality(SiegristReactions);
+
+CLASS SiegristWWTPTerminal = MassFlux[SiegristNrOfComponents;] ;
+
+CLASS SiegristSpecificVolumeVector = SpecificVolume[SiegristNrOfComponents;];
+CLASS SiegristConcentrationVector = Concentration[SiegristNrOfComponents;];
+CLASS SiegristMassVector = Mass[SiegristNrOfComponents;];
+CLASS SiegristMassFluxVector = MassFlux[SiegristNrOfComponents;];
+
+OBJ Siegrist_Terminal "Temporary iteration variable" : SiegristWWTPTerminal ;
+
+#endif //ASM1Temp
+
+
+#if (defined ASM1Temp || defined ASMG1 || defined ASM2dModTemp || defined IUWS1 || defined IUWS2)
+// ADM1 MODEL
+// EURE 13/03/2015 - preferably get rid of "kg"
+CLASS kgMass "A class for (kg, kmol) mass in the scope of ADM1"
+SPECIALISES PhysicalQuantityType := 
+{:
+  quantity  <- "Mass";
+  unit      <- "kg";
+  interval  <- {: lowerBound <- 0; upperBound <- PLUS_INF; :};
+:};
+
+CLASS kgConcentration "A class for kg concentration in the scope of ADM1"
+SPECIALISES PhysicalQuantityType :=
+{:
+  nature <- "ACROSS";
+  quantity <- "Concentration";
+  unit <- "kg/m3";
+  interval <- {: lowerBound <- 0; upperBound <- PLUS_INF :};
+:};
+
+CLASS kmolConcentration "A class for kmol concentration in the scope of ADM1"
+SPECIALISES PhysicalQuantityType :=
+{:
+  nature <- "ACROSS";
+  quantity <- "Concentration";
+  unit <- "kmol/m3";
+  interval <- {: lowerBound <- 0; upperBound <- PLUS_INF :};
+:};
+
+CLASS kgMassFlux "Mass per time unit"
+SPECIALISES PhysicalQuantityType :=
+ {:
+  quantity  <- "MassFlux";  //EURE probably mistake here TT 20406
+  unit      <- "kg/d";
+  interval  <- {: lowerBound <- MIN_INF; upperBound <- PLUS_INF :};
+  nature <- "THROUGH";
+ :};
+
+OBJ ADM1NrOfComponents : Integer := Cardinality(ADM1Components);
+OBJ ADM1NrOfReactions : Integer := Cardinality(ADM1Reactions);
+
+CLASS ADM1ConcTerminal = Concentration[ADM1NrOfComponents;];
+
+CLASS ADM1MassVector = kgMass[ADM1NrOfComponents;]; 
+//CLASS ADM1InConcTerminal SPECIALISES ADM1ConcTerminal; //used to indicate inflow concentrations
+//CLASS ADM1OutConcTerminal SPECIALISES ADM1ConcTerminal; //used to indicate outflow concentrations
+CLASS ADM1GasConcTerminal = Concentration[3;];
+
+CLASS ADM1ConcentrationVector = kgConcentration[ADM1NrOfComponents;];
+CLASS ADM1MassFluxVector = kgMassFlux[ADM1NrOfComponents;];
+
+#endif //ASM1Temp
+
+
+// (EURE 06/03/2015) pHAlk (formerly: Stream) category for PWM_SA
+#ifdef PWM_SA
+
+OBJ pHAlkNrOfComponents "The number of components considered in the input of a pHAlkalinity transformer"
+: Integer := Cardinality(pHAlkComponents);
+/*
+OBJ In_BOD_COD_Terminal "Temporary iteration variable" : pHAlkalinityWWTPTerminal;
+
+// TypePrefix: [pHAlkalinity]
+ CLASS pHAlkalinityWWTPTerminal = MassFlux[pHAlkalinityNrOfComponents;]; 
+*/
+CLASS pHAlkWWTPConcTerminal = Concentration[pHAlkNrOfComponents;]; 
+/*
+ CLASS pHAlkalinityInWWTPTerminal SPECIALISES pHAlkalinityWWTPTerminal;
+ CLASS pHAlkalinityOutWWTPTerminal SPECIALISES pHAlkalinityWWTPTerminal;
+*/
+CLASS pHAlkInWWTPConcTerminal SPECIALISES pHAlkWWTPConcTerminal;
+CLASS pHAlkOutWWTPConcTerminal SPECIALISES pHAlkWWTPConcTerminal;        // ID 4, CJB
+CLASS pHAlkSpecificVolumeVector = SpecificVolume[pHAlkNrOfComponents;];  // ID 3, CJB (EURE)
+/*
+ OBJ pHAlkalinityTerminal "Temporary iteration variable" : pHAlkalinityWWTPTerminal;
+ OBJ pHAlkalinityIn_Terminal "Temporary iteration variable" : pHAlkalinityWWTPTerminal;
+ OBJ pHAlkalinityOut_Terminal "Temporary iteration variable" : pHAlkalinityWWTPTerminal;
+
+ OBJ pHAlkalinityConcTerminal "Temporary iteration variable" : pHAlkalinityWWTPConcTerminal;
+ OBJ pHAlkalinityConcIn_Terminal "Temporary iteration variable" : pHAlkalinityWWTPConcTerminal;
+ OBJ pHAlkalinityConcOut_Terminal "Temporary iteration variable" : pHAlkalinityWWTPConcTerminal ;
+*/
+
+OBJ UCTADNrOfComponents : Integer := Cardinality(Components);
+OBJ UCTADNrOfReactions : Integer := Cardinality(UCTADReactions);
+// the IonicComponents vector is common to the PWM_SA category
+OBJ UCTADNrOfIonicComponents : Integer := Cardinality(IonicComponents);
+OBJ UCTADNrOfIonicSpecies : Integer := Cardinality(IonicSpecies);
+// UCTADIonicComponentMolalities -> UCTADIonicComponentsMolalities
+CLASS UCTADIonicComponentsMolalities = Real[UCTADNrOfIonicComponents;];
+CLASS UCTADIonicSpeciesMolalities = Real[UCTADNrOfIonicSpecies;];
+
+CLASS UCTADMassFluxVector = PhysicalQuantityType[UCTADNrOfComponents;];
+
+#endif //PWM_SA
+
+// ~~~~~~~~~~~~ NEW FOR INFLUENT GENERATORS ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/* on-hold
+// (EURE 26/11/2015) new In_CODTSS for ASM1
+#if (defined ASM1Temp || defined ASM2dModTemp || defined IUWS1 || defined IUWS2)
+
+#ifdef ASM1Temp
+OBJ InCODTSSNrOfComponents : Integer := Cardinality(InCODTSSComponents);
+#endif
+#if (defined ASM2dModTemp || defined IUWS1 || defined IUWS2)
+OBJ InCODTSSNrOfComponents : Integer := Cardinality(InCODTSS2Components);
+#endif
+//
+CLASS InCODTSSTerminal = MassFlux[InCODTSSNrOfComponents;] ;
+CLASS InCODTSSConcentrationVector = Concentration[InCODTSSNrOfComponents;];
+
+#endif // all Instances
+// ~~~~~~~~~~~~ (end) NEW FOR INFLUENT GENERATORS ~~~~~~~~~~~~~~~~~~~~~~
+*/
+// new ASM1_AB category for ASM1
+#ifdef ASM1Temp
+
+OBJ ASM1_ABNrOfComponents : Integer := Cardinality(ASM1_ABComponents);
+OBJ ASM1_ABNrOfReactions : Integer := Cardinality(ASM1_ABReactions);
+
+//~~~
+// Terminal for Fluxes
+CLASS ASM1_ABWWTPTerminal = MassFlux[ASM1_ABNrOfComponents;] ;
+
+CLASS ASM1_ABInWWTPTerminal SPECIALISES ASM1_ABWWTPTerminal; //used to indicate inflow
+CLASS ASM1_ABOutWWTPTerminal SPECIALISES ASM1_ABWWTPTerminal; //used to indicate outflow
+
+// Terminal for Concentrations
+CLASS ASM1_ABWWTPConcTerminal = Concentration[ASM1_ABNrOfComponents;]; 
+
+CLASS ASM1_ABInWWTPConcTerminal SPECIALISES ASM1_ABWWTPConcTerminal; //used to indicate inflow
+CLASS ASM1_ABOutWWTPConcTerminal SPECIALISES ASM1_ABWWTPConcTerminal; //used to indicate outflow
+
+OBJ ASM1_ABTerminal "Temporary iteration variable" : ASM1_ABWWTPTerminal;
+OBJ ASM1_ABIn_Terminal "Temporary iteration variable" : ASM1_ABWWTPTerminal;
+OBJ ASM1_ABOut_Terminal "Temporary iteration variable" : ASM1_ABWWTPTerminal;
+//~~~
+
+CLASS ASM1_ABMassVector = Mass[ASM1_ABNrOfComponents;];
+CLASS ASM1_ABMassFluxVector = MassFlux[ASM1_ABNrOfComponents;];
+CLASS ASM1_ABSpecificVolumeVector = SpecificVolume[ASM1_ABNrOfComponents;];
+CLASS ASM1_ABConcentrationVector = Concentration[ASM1_ABNrOfComponents;];
+
+#endif //ASM1Temp
+
+
+#endif // WWTP_GENERAL

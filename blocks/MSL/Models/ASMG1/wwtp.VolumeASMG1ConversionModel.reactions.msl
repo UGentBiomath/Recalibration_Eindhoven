@@ -1,0 +1,26 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE Reactions "The reactions between the components considered" = 
+ENUM
+{
+  AerGrowthHetero,
+  AnGrowthHeteroNO3_NO2,
+  AnGrowthHeteroNO2_NO,
+  AnGrowthHeteroNO_N2O,
+  AnGrowthHeteroN2O_N2,
+  DecayOfHetero,
+  AutoGrowthAOB,
+  AutoGrowthNOB,
+  DecayOfAOB,
+  DecayOfNOB,
+  AmmonOfSolOrgN,
+  HydrolOfEntrOrg,
+  HydrolOfEntrOrgN,
+  Aeration,
+  StrippingN2,
+  StrippingNO,
+  StrippingN2O,
+  AutoNO2_NO,
+  AutoNO_N2O
+};
+

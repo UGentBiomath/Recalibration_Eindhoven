@@ -1,0 +1,61 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:55$
+ *
+ ******************************************************************************/
+
+#ifndef N_TANKS_FIXVOLUMEASUTHREETANK
+#define N_TANKS_FIXVOLUMEASUTHREETANK
+
+
+CLASS  FixVolumeASUThreeTank (* icon = "activated_sludge_unit" *)
+SPECIALISES FixVolumeThreeTank:=
+{:
+
+  comments <- "A coupled model for three activated sludge units in series";
+  
+  interface <-
+  {
+    #if (defined ASM2dModTemp)
+    OBJ TSSc1 (* terminal = "out_2"; is_favorite = "1" *) "COD-based TSS concentration in tank #1" : Concentration := {: causality <- "COUT" ; group <- "Measurement data" :};
+    OBJ TSSc2 (* terminal = "out_2"; is_favorite = "1" *) "COD-based TSS concentration in tank #2" : Concentration := {: causality <- "COUT" ; group <- "Measurement data" :};
+    OBJ TSSc3 (* terminal = "out_2"; is_favorite = "1" *) "COD-based TSS concentration in tank #3" : Concentration := {: causality <- "COUT" ; group <- "Measurement data" :};
+    #endif
+    OBJ V_Tot (* terminal = "out_2"; is_favorite = "1" *) "Total volume" : Volume := {: causality <- "COUT" ; group <- "Measurement data" :};
+    OBJ TSS_Tot (* terminal = "out_2"; is_favorite = "1" *) "Average TSS concentration" : Concentration := {: causality <- "COUT" ; group <- "Measurement data" :};
+  };
+
+  equations <-
+  {
+    interface.V_Tot = sub_models.ASU1.state.V + sub_models.ASU2.state.V + sub_models.ASU3.state.V ;
+    interface.TSS_Tot = IF (interface.V_Tot <= 0.0) THEN 0.0
+      ELSE ((sub_models.ASU1.state.V * sub_models.ASU1.interface.TSS) + (sub_models.ASU2.state.V * sub_models.ASU2.interface.TSS) +
+      (sub_models.ASU3.state.V * sub_models.ASU3.interface.TSS)) / interface.V_Tot ;
+  };
+
+  coupling <-
+  {
+    // sub-model coupling
+    connect(sub_models.ASU3.interface.Outflow, interface.Outflow),
+    
+    #if (defined ASM2dModTemp)
+    connect(sub_models.ASU1.interface.TSSc, interface.TSSc1),
+    connect(sub_models.ASU2.interface.TSSc, interface.TSSc2),
+    connect(sub_models.ASU3.interface.TSSc, interface.TSSc3),
+    #endif
+  };
+
+:};
+
+
+#endif // N_TANKS_FIXVOLUMEASUTHREETANK

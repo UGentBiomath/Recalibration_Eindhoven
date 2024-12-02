@@ -1,0 +1,80 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 15. april 2019 16:57:39$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASIC_BASE_BUFFERTANK
+#define WWTP_BASIC_BASE_BUFFERTANK
+
+
+CLASS PumpedVolumeBuffer
+ "A class for buffertanks with a pumped variable volume"
+ EXTENDS WWTPAtomicModelWithPumpedVolume WITH
+ {:
+  comments <- "A model for a tank with a variable volume caused by a pump";
+
+  interface <-
+   {
+     OBJ V_Buffer (* terminal = "out_2" *) "Volume of the tank" : Volume := {: causality <- "COUT" ; group <- "Measurement data" :};
+//     OBJ Q_Bypass (* terminal = "out_2" *) "Bypass flow rate" : FlowRate := {: causality <- "COUT"; group <- "Measurement data" :};
+//     OBJ Q_Dewatering (* terminal = "in_2"; manip = "1" *) "Dewatering flow rate" : FlowRate  := {: causality <- "CIN"; group <- "Operational" :};
+   };
+
+  state <-
+   {
+//     OBJ Help_Q_Bypass (* hidden = "1" *) "Bypass flow rate" : FlowRate := {: group <- "Operational" :};
+   };
+
+  equations <-
+   {
+     interface.V_Buffer = state.V;
+/*
+     state.Help_Q_Bypass = IF ((state.V > (0.9 * parameters.V_Max)) && (interface.Q_Dewatering > interface.Q_Pump))
+     	THEN interface.Q_Dewatering ELSE 0.0 ;
+     	
+     interface.Q_Bypass = state.Help_Q_Bypass ;
+*/
+   };
+
+ :};
+
+
+CLASS FixVolumeBuffer
+ "A class for buffertanks with a fixed volume"
+ EXTENDS WWTPAtomicModelWithFixedVolume WITH
+ {:
+   comments <- "A model for a tank with a fixed volume";
+
+   interface <-
+   {
+     OBJ V_Buffer  (* terminal = "out_2" *) "Buffertank volume measurement data" : 
+       Volume := {: causality <- "COUT" ; group <- "Measurement data" :};
+   };
+
+   equations <-
+   {
+     interface.V_Buffer = state.V;
+   };
+
+   initial <-
+   {
+   };
+ :};
+
+
+#include "WWTP/buffertank/wwtp.base.buffertanks.pumpedvolumestormtank.msl"
+#include "WWTP/buffertank/wwtp.base.buffertanks.fixvolumeequalisationtank.msl"
+ 
+
+#endif // WWTP_BASIC_BASE_BUFFERTANK

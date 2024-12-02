@@ -1,0 +1,50 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:26$
+ *
+ ******************************************************************************/
+
+#ifndef RIVER_SPLITTERS_COMBINERS_RIVER_RELTWOSPLITTER
+#define RIVER_SPLITTERS_COMBINERS_RIVER_RELTWOSPLITTER
+
+
+CLASS RivRelTwoSplitter (* icon = "two_fraction_splitter" *)
+"2-way splitter (valve) for river"
+EXTENDS River_TwoSplitter_Base WITH
+{:
+
+  comments <- "2-way splitter (valve) for river";
+  
+  interface <-
+  {
+    OBJ f_Out2 (* manip = "1"; terminal = "in_2" *) "Fraction of the influent flux going to Outflow No.2" : Fraction := {: causality <- "CIN"; value <- 0.9; group <- "Operational" :};
+  };
+  
+  equations <-
+  {
+    // REMARK: in this model, there is no check on fractions (i.e. that the sum be 1) or flow rate
+    state.Q_Out_1 = state.Q_In * (1 - interface.f_Out2) ;
+    
+    state.Q_Out_2 = state.Q_In * (interface.f_Out2) ;
+    
+    {FOREACH Comp_Index IN {1 .. RWQMNrOfComponents}: interface.Outflow1[Comp_Index] =
+    - state.InFluxPerComponent[Comp_Index] * (1 - interface.f_Out2) ;};
+    
+    {FOREACH Comp_Index IN {1 .. RWQMNrOfComponents}: interface.Outflow2[Comp_Index] =
+    - state.InFluxPerComponent[Comp_Index] * (interface.f_Out2) ;};
+  };
+  
+:};
+
+
+#endif // RIVER_SPLITTERS_COMBINERS_RIVER_RELTWOSPLITTER

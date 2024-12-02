@@ -1,0 +1,29 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE ADM1Reactions "The reactions between the components considered" = 
+ENUM
+{
+  decay_aa,
+  decay_ac,
+  decay_c4,
+  decay_fa,
+  decay_h2,
+  decay_pro,
+  decay_su,
+  dis,
+  hyd_ch,
+  hyd_li,
+  hyd_pr,
+  uptake_aa,
+  uptake_ac,
+  uptake_bu,
+  uptake_fa,
+  uptake_h2,
+  uptake_pro,
+  uptake_su,
+  uptake_va,
+  transfer_co2,
+  transfer_h2,
+  transfer_ch4
+};
+

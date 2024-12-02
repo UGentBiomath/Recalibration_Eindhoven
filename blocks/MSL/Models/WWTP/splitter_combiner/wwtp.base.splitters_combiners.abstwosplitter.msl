@@ -1,0 +1,113 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:58$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_SPLITTERS_COMBINERS_ABSTWOSPLITTER
+#define WWTP_BASE_SPLITTERS_COMBINERS_ABSTWOSPLITTER
+
+CLASS AbsTwoSplitter (* icon = "two_flow_splitter" *)
+"absolute two way splitter"
+
+// Dividing a flow in two flows.  
+
+EXTENDS AbsTwoSplitter_Base WITH
+{:
+  comments <- "A model for an absolute splitter into two flows";
+
+  interface <-
+  { 
+    OBJ PumpingEnergy (* terminal = "out_3" *)"Pumping energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ PumpingPower (* terminal = "out_3" *) "Pumping power" : Real := {: causality <- "COUT"; unit <- "kWh/d"; group <- "Energy" :};
+  };
+
+  parameters <- 
+  { 
+    // PUMPING ENERGY
+    OBJ F_Energy_FlowRate "Conversion factor Energy needed/Pump flow rate" : EnergyForPumping := {: value <- 0.04 ; group <- "Energy":};
+  };
+  
+  state <-
+  {
+    // PUMPING ENERGY
+    OBJ Integ_PE (* hidden = "1" *)"Integral Pumping energy" : ElectricalEnergy ;
+  };
+  
+  initial <-
+  {
+    state.Integ_PE = 0.0 ;
+  };
+  
+  equations <-
+  {
+    // PUMPING ENERGY
+    //(EURE 26/07/2019) [kWh/m3] * [m3/d] = [kWh/d]
+  interface.PumpingPower = parameters.F_Energy_FlowRate * state.Q_Out2_Actual ;
+    DERIV(state.Integ_PE,[independent.t])=  state.Q_Out2_Actual;
+    interface.PumpingEnergy = parameters.F_Energy_FlowRate * state.Integ_PE ;
+  }; 
+
+:};
+
+
+
+CLASS AbsTwoSplitter_Base (* icon = "two_flow_splitter"; is_default = "true" *) "Base class for an absolute two-way splitter"
+EXTENDS WWTPAtomicModelWithoutVolume WITH
+{:
+  comments <- "Base class for an absolute two way splitter";
+
+  interface <-
+  { 
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InWWTPTerminal := {: causality <- "CIN" ; group <- "Influent" :};
+    OBJ Outflow1 (* terminal = "out_1" *) "Outflow1" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 1" :};
+    OBJ Outflow2 (* terminal = "out_2" *) "Outflow2" : OutWWTPTerminal := {: causality <- "COUT" ; group <- "Effluent 2" :};
+    OBJ Q_Out2 (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Desired flow rate (outflow #2)" : FlowRate := {: causality <- "CIN" ; value <- 50; group <- "Operational" :};
+    // new 2016: necessary to link to new pump models for accurate energy calculations
+    OBJ Q_Op1 (* terminal = "out_3" *) "Actual operating flow rate no.1" : FlowRate := {: causality <- "COUT"; group <- "Operational" :};
+    OBJ Q_Op2 (* terminal = "out_3" *) "Actual operating flow rate no.2" : FlowRate := {: causality <- "COUT"; group <- "Operational" :};
+  };
+
+  state <-
+  {
+    OBJ Q_Out1 (* is_favorite = "1" *) "Outflow1 rate" : FlowRate := {: group <- "Operational" :};
+    OBJ f_Out2 (* hidden = "1" *) "Fraction of the influent flux going to outflow2" : Fraction ;
+    OBJ Q_Out2_Actual (* is_favorite = "1" *) "Help variable for outflow2 rate" : FlowRate := {: group <- "Operational" :};
+  };
+  
+  equations <-
+  {
+    state.Q_Out1 = IF(interface.Q_Out2 > state.Q_In) THEN 0.0
+      ELSE state.Q_In - state.Q_Out2_Actual ;
+    
+    state.Q_Out2_Actual = IF(interface.Q_Out2 > state.Q_In) THEN state.Q_In
+      ELSE interface.Q_Out2;
+    
+    state.f_Out2 = IF (state.Q_In == 0) THEN 0.0
+      ELSE state.Q_Out2_Actual / state.Q_In ;
+    
+    {FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}:
+      interface.Outflow1[Comp_Index] = - state.InFluxPerComponent[Comp_Index] * (1 - state.f_Out2) ;};
+    
+    {FOREACH Comp_Index IN {IndexOfSolvent .. NrOfComponents}:
+      interface.Outflow2[Comp_Index] = - state.InFluxPerComponent[Comp_Index] * state.f_Out2 ;};
+
+    // new 2016: necessary to link to new pump models for accurate energy calculations
+    interface.Q_Op1 = state.Q_Out1 ;
+    interface.Q_Op2 = state.Q_Out2_Actual ;
+  }; 
+
+:};
+
+
+#endif // WWTP_BASE_SPLITTERS_ABSTWOSPLITTER

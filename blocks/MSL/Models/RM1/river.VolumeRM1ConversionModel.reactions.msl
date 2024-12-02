@@ -1,0 +1,21 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE RWQMReactions "The reactions between the components considered" = 
+ENUM
+{
+  Reaeration,
+  MacroO2,
+  SedO2,
+  OxiBOD1,
+  OxiBOD2,
+  ResuspensionBOD1,
+  ResuspensionBOD2,
+  ResuspensionNH4,
+  Nitrification,
+  DegradationBODs,
+  OxiBOD1p,
+  OxiBOD2p,
+  ResuspensionBOD1p,
+  ResuspensionBOD2p
+};
+

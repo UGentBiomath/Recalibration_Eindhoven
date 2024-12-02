@@ -1,0 +1,4 @@
+#include "BSM1_OL_ASM1.msl"
+
+OBJ _BSM1_OL_ASM1_ : BSM1_OL_ASM1;
+

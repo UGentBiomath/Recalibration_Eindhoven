@@ -1,0 +1,12 @@
+
+#if (defined ASM1Temp || defined ASMG1 || defined ASM2dModTemp || defined IUWS1 || defined IUWS2)
+
+TYPE ADM1IonComponents = ENUM { S_ac_ion, S_bu_ion, S_pro_ion, S_va_ion, S_hco3_ion, S_nh3 };
+
+TYPE ADM1IonReactions = ENUM {dissociation_va, dissociation_bu, dissociation_pro, dissociation_ac, hco3_co2, ammonia_production, };
+
+OBJ ADM1NrOfIonComponents : Integer := Cardinality(ADM1IonComponents);
+
+CLASS ADM1IonConcentrationVector = kmolConcentration[ADM1NrOfIonComponents;];
+
+#endif //ASM1Temp

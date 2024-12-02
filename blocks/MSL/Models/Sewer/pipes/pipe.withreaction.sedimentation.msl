@@ -1,0 +1,137 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_PIPES_PIPEWITHREACTIONSEDIMENTATION
+#define SEWER_PIPES_PIPEWITHREACTIONSEDIMENTATION
+
+CLASS Pipe_wReaction_Sedimentation (* icon = "pipe" *) // 2016 (* icon = "Tank" *)
+"A circular pipe with sedimentation and reactions. Outflow is calculated by using the outflow-volume relationship for circular pipes"
+SPECIALISES CoupledModelType :=
+{:
+
+  comments <- "A circular pipe with sedimentation and reactions. Outflow is calculated by using the outflow-volume relationship for circular pipes";
+
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InSewTerminal := {: causality <- "CIN"; group <- "Inflow" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow": OutSewTerminal := {: causality <- "COUT"; group <- "Outflow" :};
+    // Temp_system -> Temp, Temp_airwater -> T_aw
+    OBJ Temp (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "System temperature" : CelsiusTemperature := {: value <- 20.0; causality <- "CIN" ; group <- "Operational" :};
+//    OBJ T_aw (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Temperature at air/water interface" : CelsiusTemperature := {: value <- 20.0; causality <- "CIN" ; group <- "Operational" :};
+  };
+
+  parameters <-
+  {
+    // favorite and group: missing
+//    OBJ aerobic_switch "Aerobic (1) vs. anoxic (0) conditions": Integer := {: value <- 1; interval  <- {: lowerBound <- 0; upperBound <- 1 :}; group <- "Kinetics" :};  
+    // f_OC_SS -> f_OC_sewer, Temp_Kla -> TRef_Kla
+//    OBJ f_OC_sewer "Organic carbon content of suspended solids": Fraction := {: value <- 0.37 ; group <- "System" :} ;
+    OBJ TRef_Kla "Temperature at which Kla is measured" : CelsiusTemperature := {: group <- "System" :};
+    // value_pH -> pH_sewer
+//    OBJ pH_sewer "pH of the system": pH := {:value <- 7.0; group <- "System" :};
+    // this entire block has to do with reactions which are not included in the pipe-model
+    OBJ C0_NH4 (*  *) "Background concentration for ammonia" : Concentration := {: value <- 0; group <- "Kinetics"; :};
+    OBJ C0_PO4 (*  *) "Background concentration for phosphate" : Concentration := {: value <- 0; group <- "Kinetics"; :};
+    OBJ C0_SCOD (*  *) "Background concentration for soluble COD" : Concentration := {: value <- 0; group <- "Kinetics"; :};
+    OBJ C0_XCOD (*  *) "Background concentration for particulate COD" : Concentration := {: value <- 0; group <- "Kinetics"; :};
+    OBJ k_NH4 (*  *) "First order removal of ammonia" : ProcessRate := {: value <- 0.001; group <- "Kinetics"; :};
+    OBJ k_PO4 (*  *) "First order removal of phosphate" : ProcessRate := {: value <- 0.001; group <- "Kinetics"; :};
+    OBJ k_SCOD (*  *) "First order removal of soluble COD" : ProcessRate := {: value <- 0.001; group <- "Kinetics"; :};
+    OBJ k_XCOD (*  *) "First order removal of particulate COD" : ProcessRate := {: value <- 0.001; group <- "Kinetics"; :};
+    // n -> n_Kla
+//    OBJ n_Kla "Exponent for re-areation (1 film model, 0.5 surface renewal model, 0.66 or 0.5 for Deacon's model)" : Real := {: value <- 1.0 ; group <- "Aeration" :};
+    OBJ slp "Bottom slope in steady flow" : Real := {: value <- 0.003 ; group <- "Hydraulic" :};
+    OBJ D "Diameter" : Length := {: value <- 0.3; group <- "Geometry" :};
+    OBJ L "Length" : Length := {: value <- 1.0; group <- "Geometry" :};
+    OBJ ks "Pipe Roughness" : Length := {: value <- 0.0015 ; group <- "Hydraulic":};
+    OBJ a "Slope in the volume-outflow relationship above Vfull": Real := {: value <- 1.0; group <- "Hydraulic":};
+    OBJ Qdwf_max "Maximum dry weather flow": FlowRate := {: value <- 0.15; group <- "Hydraulic" :};
+    // MeanSedTSSMass -> TSSmean
+    OBJ TSSmean "Mean TSS sediment mass in the sewer": Mass := {: value <- 0; group <- "Sedimentation" :};
+    OBJ kstar "Deposition rate" : Time := {: value <- 10.0; group <- "Sedimentation" :};
+    OBJ kextra "Flow-mass recession constant(resuspension)" : Time := {: value <- 15.0; group <- "Sedimentation" :};
+    OBJ b1 "Flow influence on sedimentation" : Concentration := {: value <- 1000.0; group <- "Sedimentation" :};
+    OBJ bmax "Flow-mass influence on resuspension constant" : Concentration := {: value <- 30.0; group <- "Sedimentation" :};
+    OBJ H_Min (* hidden = "1" *) "Minimal water level to avoid numerical problems" : Length := {: value <- 0.01 :};
+  };
+
+  sub_models <-
+  {
+    OBJ Pipe : Pipe_Circular_wReaction_Sedimentation ; //based on Pipe-model
+    OBJ Sediment : Tank_wReaction_Accumulation ; //based on Sediment-model
+  };
+
+  coupling <-
+  {
+    // parameters coupling
+//(EURE 29/06/2015) Mantis 3283    sub_models.Pipe.parameters.aerobic_switch.value := parameters.aerobic_switch.value,
+//(EURE 29/06/2015) Mantis 3283    sub_models.Sediment.parameters.aerobic_switch.value := parameters.aerobic_switch.value,
+//(EURE 29/06/2015) Mantis 3284    sub_models.Pipe.parameters.f_OC_sewer.value := parameters.f_OC_sewer.value,
+//(EURE 29/06/2015) Mantis 3284    sub_models.Sediment.parameters.f_OC_sewer.value := parameters.f_OC_sewer.value,
+    sub_models.Pipe.parameters.TRef_Kla.value := parameters.TRef_Kla.value,
+    //sub_models.Sediment.parameters.Temp_Kla.value := parameters.Temp_Kla.value,   // No Kla in sediment 
+//(EURE 29/06/2015) Mantis 3285    sub_models.Pipe.parameters.pH_sewer.value := parameters.pH_sewer.value,
+//(EURE 29/06/2015) Mantis 3285    sub_models.Sediment.parameters.pH_sewer.value := parameters.pH_sewer.value,
+  
+    sub_models.Sediment.parameters.C0_XCOD.value := parameters.C0_XCOD.value,
+    sub_models.Sediment.parameters.C0_SCOD.value := parameters.C0_SCOD.value,
+    sub_models.Sediment.parameters.C0_NH4.value := parameters.C0_NH4.value,
+    sub_models.Sediment.parameters.C0_PO4.value := parameters.C0_PO4.value,
+    sub_models.Sediment.parameters.k_XCOD.value := parameters.k_XCOD.value,
+    sub_models.Sediment.parameters.k_SCOD.value := parameters.k_SCOD.value,
+    sub_models.Sediment.parameters.k_NH4.value := parameters.k_NH4.value,
+    sub_models.Sediment.parameters.k_PO4.value := parameters.k_PO4.value,
+    sub_models.Pipe.parameters.C0_XCOD.value := parameters.C0_XCOD.value,
+    sub_models.Pipe.parameters.C0_SCOD.value := parameters.C0_SCOD.value,
+    sub_models.Pipe.parameters.C0_NH4.value := parameters.C0_NH4.value,
+    sub_models.Pipe.parameters.C0_PO4.value := parameters.C0_PO4.value,
+    sub_models.Pipe.parameters.k_XCOD.value := parameters.k_XCOD.value,
+    sub_models.Pipe.parameters.k_SCOD.value := parameters.k_SCOD.value,
+    sub_models.Pipe.parameters.k_NH4.value := parameters.k_NH4.value,
+    sub_models.Pipe.parameters.k_PO4.value := parameters.k_PO4.value,
+
+//(EURE 29/06/2015) Mantis 3286    sub_models.Pipe.parameters.n_Kla.value := parameters.n_Kla.value,
+    sub_models.Pipe.parameters.slp.value := parameters.slp.value,
+    sub_models.Pipe.parameters.D.value := parameters.D.value,
+    sub_models.Pipe.parameters.L.value := parameters.L.value,
+    sub_models.Sediment.parameters.W.value := parameters.D.value,
+    sub_models.Sediment.parameters.L.value := parameters.L.value,
+    sub_models.Pipe.parameters.ks.value := parameters.ks.value,
+    sub_models.Pipe.parameters.a.value := parameters.a.value,
+    sub_models.Pipe.parameters.Qdwf_max.value := parameters.Qdwf_max.value,
+    sub_models.Pipe.parameters.TSSmean.value := parameters.TSSmean.value,
+    sub_models.Pipe.parameters.kstar.value := parameters.kstar.value,
+    sub_models.Pipe.parameters.kextra.value := parameters.kextra.value,
+    sub_models.Pipe.parameters.b1.value := parameters.b1.value,
+    sub_models.Pipe.parameters.bmax.value := parameters.bmax.value,
+    sub_models.Pipe.parameters.H_Min.value := parameters.H_Min.value,
+  
+    connect (interface.Inflow, sub_models.Pipe.interface.Inflow),
+    connect (interface.Temp, sub_models.Pipe.interface.Temp),
+    connect (interface.Temp, sub_models.Sediment.interface.Temp),
+//    connect (interface.T_aw, sub_models.Pipe.interface.T_aw),
+    connect (sub_models.Pipe.interface.Outflow,	interface.Outflow),
+    connect (sub_models.Pipe.interface.F_Sed, sub_models.Sediment.interface.Inflow),
+    connect (sub_models.Pipe.interface.r_Res, sub_models.Sediment.interface.r_Res),
+//(EURE 29/06/2015) Mantis 3281    connect (sub_models.Sediment.interface.Outflow, sub_models.Pipe.interface.ResuspendedFlow),
+    connect (sub_models.Sediment.interface.M_Sed, sub_models.Pipe.interface.M_Sed),
+  };
+
+:};
+
+
+#endif // SEWER_PIPES_PIPEWITHREACTIONSEDIMENTATION

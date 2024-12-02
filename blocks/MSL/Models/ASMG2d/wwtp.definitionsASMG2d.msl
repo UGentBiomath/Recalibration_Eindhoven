@@ -1,0 +1,42 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+TYPE Components "The components considered" = 
+ENUM
+{
+  H2O,
+  S_I,
+  S_O,
+  S_NO3,
+  S_NO2,
+  S_NO,
+  S_N2O,
+  S_N2,
+  S_F,
+  S_A,
+  S_PO,
+  S_NH,
+  S_ALK,
+  X_I,
+  X_S,
+  X_H,
+  X_PAO,
+  X_PP,
+  X_PHA,
+  X_BA1,
+  X_BA2,
+  X_TSS,
+  X_MEOH,
+  X_MEP
+};
+
+#define StandardCategoryModels
+OBJ IndexOfSolvent "Index of the solvent in the component vector" : Integer := 1;
+#define SolublesPresent
+OBJ IndexOfFirstSolubleComponent "Index of the first soluble component in the component vector" : Integer := 2;
+OBJ IndexOfLastSolubleComponent "Index of the last soluble component in the component vector" : Integer := 13;
+#define ParticulatesPresent
+OBJ IndexOfFirstParticulateComponent "Index of the first particulate component in the component vector" : Integer := 14;
+OBJ IndexOfLastParticulateComponent "Index of the last particulate component in the component vector" : Integer := 24;
+#define UseTSSComponent
+OBJ IndexOfTSSComponent "Index of the TSS component in the component vector" : Integer := 22;
+

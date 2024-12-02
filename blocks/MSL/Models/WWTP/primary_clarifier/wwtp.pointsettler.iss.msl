@@ -1,0 +1,92 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 7. august 2019 09:34:12$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_POINTSETTLER_ISS
+#define WWTP_POINTSETTLER_ISS
+
+
+#if (defined ASM2dM)
+
+CLASS PointSettler_ISS (* icon = "primary_clarifier" *) "Point-settler model for primary clarifier, with separate %removal efficiency for ISS and organic TSS"
+EXTENDS PointSettler_Base WITH
+{:
+
+  comments <- "Point-settler model for primary clarifier, with separate %removal efficiency for ISS and organic TSS" ;
+  
+  interface <-
+  {
+    // manipulated variables
+    OBJ r_tss (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "TSS removal efficiency" : Fraction := {: causality <- "CIN" ; value <- 0.4 ; group <- "Operation" :};
+    OBJ r_iss (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "ISS removal efficiency" : Fraction := {: causality <- "CIN" ; value <- 0.5 ; group <- "Operation" :};
+  };
+  
+  parameters <- 
+  { 
+    OBJ i_TSS_BM "TSS to biomass ratio for X_H, X_PAO, X_AUT" : ConversionFactor := {: value <- 0.9; group <- "Composition parameters"; :};
+    OBJ i_TSS_XC_B "TSS to XC_B ratio" : ConversionFactor := {: value <- 0.75; group <- "Composition parameters"; :};
+    OBJ i_TSS_X_U "TSS to X_U ratio" : ConversionFactor := {: value <- 0.75; group <- "Composition parameters"; :};
+  };
+
+  state <-
+  {
+    OBJ Help_r_tss (* hidden = "1" *) "TSS removal efficiency" : Fraction ;
+    OBJ Help_r_iss (* hidden = "1" *) "ISS removal efficiency" : Fraction ;
+  };
+
+  equations <-
+  {
+    state.Help_r_tss = IF (state.Q_Under_Actual > 0) THEN interface.r_tss ELSE 1.0 ;
+    state.Help_r_iss = IF (state.Q_Under_Actual > 0) THEN interface.r_iss ELSE 1.0 ;
+
+// ........... THIS IS CRUCIAL .................
+    {FOREACH Comp_Index IN {X_U .. X_MEP}:
+      interface.Outflow[Comp_Index] = - state.InFluxPerComponent[Comp_Index] * state.f_Out * (1 - state.Help_r_tss) ; };   
+// qst eqn sopra e' sbagliata: rimoz. deve essere in TSS units, qui e' COD units !!!
+
+      interface.Outflow[X_U_Ig] = - state.InFluxPerComponent[X_U_Ig] * state.f_Out * (1 - state.Help_r_iss) ;   
+// ~~~ END ~~~ 
+    
+    state.Help_X_In = interface.Inflow[X_U] * parameters.i_TSS_X_U + interface.Inflow[XC_B] * parameters.i_TSS_XC_B +
+      (interface.Inflow[X_OHO] + interface.Inflow[X_PAO] + interface.Inflow[X_ANO]) * parameters.i_TSS_BM +
+      interface.Inflow[X_PAO_PP] * 3.23 + interface.Inflow[X_PAO_Stor] * 0.6 + interface.Inflow[X_MEOH] * 1.0 +
+      interface.Inflow[X_MEP] * 1.0 + interface.Inflow[X_U_Ig] * 1.0 ;
+    
+    state.X_In = IF (state.Q_In <= 0) THEN 0.0 ELSE state.Help_X_In / state.Q_In ;
+    
+    state.Help_X_Out = - (interface.Outflow[X_U] * parameters.i_TSS_X_U + interface.Outflow[XC_B] * parameters.i_TSS_XC_B +
+      (interface.Outflow[X_OHO] + interface.Outflow[X_PAO] + interface.Outflow[X_ANO]) * parameters.i_TSS_BM +
+      interface.Outflow[X_PAO_PP] * 3.23 + interface.Outflow[X_PAO_Stor] * 0.6 + interface.Outflow[X_MEOH] * 1.0 +
+      interface.Outflow[X_MEP] * 1.0 + interface.Outflow[X_U_Ig] * 1.0) ;
+    
+    state.X_Out = IF (state.Q_In <= interface.Q_Under) THEN 0.0 ELSE state.Help_X_Out / (state.Q_In - interface.Q_Under) ;
+    
+    state.Help_X_Under = - (interface.Underflow[X_U] * parameters.i_TSS_X_U + interface.Underflow[XC_B] * parameters.i_TSS_XC_B +
+      (interface.Underflow[X_OHO] + interface.Underflow[X_PAO] + interface.Underflow[X_ANO]) * parameters.i_TSS_BM +
+      interface.Underflow[X_PAO_PP] * 3.23 + interface.Underflow[X_PAO_Stor] * 0.6 + interface.Underflow[X_MEOH] * 1.0 +
+      interface.Underflow[X_MEP] * 1.0 + interface.Underflow[X_U_Ig] * 1.0) ;
+    
+    state.X_Under = IF (state.Q_In <= interface.Q_Under) THEN
+      IF (state.Q_In <= 0) THEN 0.0 ELSE state.Help_X_Under / state.Q_In
+      ELSE IF (interface.Q_Under <= 0) THEN 0.0 ELSE state.Help_X_Under / interface.Q_Under ;
+  };
+  
+:};
+
+
+#endif // ASM2dM
+
+
+#endif // WWTP_POINTSETTLER_ISS

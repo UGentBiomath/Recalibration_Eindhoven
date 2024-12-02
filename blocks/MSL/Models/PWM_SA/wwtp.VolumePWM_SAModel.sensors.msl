@@ -1,0 +1,24 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    interface.DO = state.C[S_O];
+    interface.Dissolved_N = interface.NH4_N + interface.NO3_N;
+    interface.InorgSS = state.C[X_PAO_PP] + state.C[X_Str_NH4] + state.C[X_Str_K] + state.C[X_ACP] + state.C[X_ISS] + (state.C[X_OHO] + state.C[X_PAO] + state.C[X_ANO] + state.C[X_AD] + state.C[X_AC] + state.C[X_AM] + state.C[X_HM]) * parameters.ISS_BM;
+    interface.Kla_ASU = state.Kla_Actual;
+    interface.NH4_N = state.C[S_NH] * 14.007 / 18.0386;
+    interface.NO3_N = state.C[S_NOx] * 14.007 / 62.004;
+    interface.OUR_ASU = IF (state.V == 0) THEN 0 ELSE - (state.ConversionTermPerComponent[S_O] / state.V) + parameters.Stoichiometry[Aeration][S_O] * state.Kinetics[Aeration];
+    interface.OrthoP = state.C[S_PO4] * 30.974 / 94.97;
+    interface.ParticulateCOD = state.COD[X_U_Inf] + state.COD[X_B_Org] + state.COD[X_PAO_Stor] + state.COD[X_OHO] + state.COD[X_ANO] + state.COD[X_PAO] + state.COD[X_AD] + state.COD[X_AC] + state.COD[X_AM] + state.COD[X_HM] + state.COD[X_U_Org];
+    interface.Particulate_P = SUMOVER Comp_Index IN 
+{ 
+IndexOfFirstParticulateComponent .. IndexOfLastParticulateComponent } : (parameters.alpha_P_[Comp_Index] * state.C[Comp_Index]);
+    interface.SolubleCOD = state.COD[S_U] + state.COD[S_F] + state.COD[S_VFA] + state.COD[S_Glu] + state.COD[S_Pr];
+    interface.Soluble_P = SUMOVER Comp_Index IN 
+{ 
+IndexOfFirstSolubleComponent .. IndexOfLastSolubleComponent } : (parameters.alpha_P_[Comp_Index] * state.C[Comp_Index]);
+    interface.TSS = interface.VSS + interface.InorgSS;
+    interface.TotalCOD = interface.SolubleCOD + interface.ParticulateCOD;
+    interface.Total_P = interface.Soluble_P + interface.Particulate_P;
+    interface.VSS = state.C[X_U_Inf] + state.C[X_B_Org] + state.C[X_PAO_Stor] + state.C[X_OHO] + state.C[X_ANO] + state.C[X_PAO] + state.C[X_AD] + state.C[X_AC] + state.C[X_AM] + state.C[X_HM] + state.C[X_U_Org];
+    interface.V_ASU = state.V;
+

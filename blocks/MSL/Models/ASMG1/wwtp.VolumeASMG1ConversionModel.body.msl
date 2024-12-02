@@ -1,0 +1,103 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+  interface <-
+  {
+    #include "ASMG1/wwtp.VolumeASMG1Model.interface.msl"
+  };
+
+  parameters <-
+  {
+    #include "ASMG1/wwtp.VolumeASMG1ConversionModel.parameters.msl"
+  };
+
+  state <-
+  {
+    #include "ASMG1/wwtp.VolumeASMG1ConversionModel.state.msl"
+  };
+
+  initial <-
+  {
+    // Params
+
+
+    // StateVars
+
+
+    // Extra
+
+
+    // Stoichiometry
+
+    #include "ASMG1/wwtp.VolumeASMG1ConversionModel.stoichiometry.msl"
+  };
+
+  equations <-
+  {
+    // StateVars
+
+    state.FA_inhi10 = parameters.K_I10FA / (parameters.K_I10FA + state.S_FA);
+    state.FA_inhibi9 = state.S_FA / (parameters.K_FA + state.S_FA + pow(state.S_FA, 2) / parameters.K_I9FA);
+    state.FNA_inhi10 = state.S_FNA / (parameters.K_FNA + state.S_FNA + pow(state.S_FNA, 2) / parameters.K_I10FNA);
+    state.FNA_inhi9 = parameters.K_I9FNA / (parameters.K_I9FNA + state.S_FNA);
+    state.FluxN2O_gas = - state.Kla_N2O * ((parameters.P_N2O_air * 28 / parameters.H_N2O) - state.C[S_N2O]) * state.V;
+    state.FluxN2_gas = - state.Kla_N2 * ((parameters.P_N2_air * 28 / parameters.H_N2) - state.C[S_N2]) * state.V;
+    state.FluxNO_gas = - state.Kla_NO * ((parameters.P_NO_air * 14 / parameters.H_NO) - state.C[S_NO]) * state.V;
+    state.K_A = exp(- (2300.000000 / (273.15 + state.Temp_Actual)));
+    state.Kb_Kw = exp((6344.000000 / (273.15 + state.Temp_Actual)));
+    state.Kla_Actual_Temp = state.Kla_Actual * pow(parameters.theta_kla, state.Temp_Actual - parameters.Temp_Ref);
+    state.Kla_N2 = pow(parameters.D_N2, 0.5) / pow(parameters.D_N2O, 0.5) * state.Kla_N2O;
+    state.Kla_N2O = (parameters.KlaN2O_anoxic * parameters.a_KlaN2O) + ((1 - parameters.a_KlaN2O) * (pow(parameters.D_N2O, 0.5) / pow(parameters.D_O2, 0.5) * state.Kla_Actual_Temp));
+    state.Kla_NO = pow(parameters.D_NO, 0.5) / pow(parameters.D_N2O, 0.5) * state.Kla_N2O;
+    state.Monod_N2O = state.C[S_N2O] / (parameters.K_N2O + state.C[S_N2O]);
+    state.Monod_NO = state.C[S_NO] / (parameters.K_NO + state.C[S_NO] + (pow(state.C[S_NO], 2) / parameters.K_I4NO));
+    state.Monod_NO2 = state.C[S_NO2] / (parameters.K_NO2 + state.C[S_NO2]);
+    state.Monod_NO3 = state.C[S_NO3] / (parameters.K_NO3 + state.C[S_NO3]);
+    state.Monod_OA1 = state.C[S_O] / (parameters.K_OA1 + state.C[S_O]);
+    state.Monod_OA2 = state.C[S_O] / (parameters.K_OA2 + state.C[S_O]);
+    state.Monod_SS2 = state.C[S_S] / (state.C[S_S] + parameters.K_S2);
+    state.Monod_SS3 = state.C[S_S] / (state.C[S_S] + parameters.K_S3);
+    state.Monod_SS4 = state.C[S_S] / (state.C[S_S] + parameters.K_S4);
+    state.Monod_SS5 = state.C[S_S] / (state.C[S_S] + parameters.K_S5);
+    state.NO_inhi3 = parameters.K_I3NO / (parameters.K_I3NO + state.C[S_NO]);
+    state.NO_inhi5 = parameters.K_I5NO / (parameters.K_I5NO + state.C[S_NO]);
+    state.OH2_inhi = parameters.K_OH2 / (parameters.K_OH2 + state.C[S_O]);
+    state.OH3_inhi = parameters.K_OH3 / (parameters.K_OH3 + state.C[S_O]);
+    state.OH4_inhi = parameters.K_OH4 / (parameters.K_OH4 + state.C[S_O]);
+    state.OH5_inhi = parameters.K_OH5 / (parameters.K_OH5 + state.C[S_O]);
+    state.SO_Comp_AOBden1 = state.C[S_O] / (parameters.K_SO_AOBden1 + (1 - 2 * pow((parameters.K_SO_AOBden1 / parameters.K_IO_AOBden1), 0.5)) * state.C[S_O] + (pow(state.C[S_O], 2.000000) / parameters.K_IO_AOBden1));
+    state.SO_Comp_AOBden2 = state.C[S_O] / (parameters.K_SO_AOBden2 + (1 - 2 * pow((parameters.K_SO_AOBden2 / parameters.K_IO_AOBden2), 0.5)) * state.C[S_O] + (pow(state.C[S_O], 2.000000) / parameters.K_IO_AOBden2));
+    state.S_FA = state.C[S_NH] * pow(10, parameters.pH_tank) / (state.Kb_Kw + pow(10.000000, parameters.pH_tank));
+    state.S_FNA = state.C[S_NO2] * 1.000000 / (1.000000 + state.K_A * pow(10, parameters.pH_tank));
+    state.S_NOx = state.C[S_NO3] + state.C[S_NO2] + state.C[S_NO] + state.C[S_N2O];
+    state.S_O_Saturation = parameters.switch_S_O_Sat * (14.65 - 0.41 * state.Temp_Actual + 0.00799 * pow(state.Temp_Actual, 2) - 7.78e-005 * pow(state.Temp_Actual, 3)) + (1.000000 - parameters.switch_S_O_Sat) * 290326 * exp(- 66.7354 + 87.4755 / ((state.Temp_Actual + 273.15) / 100.000000) + 24.4526 * log((state.Temp_Actual + 273.15) / 100.000000));
+    state.X_TSS = (state.C[X_BH] + state.C[X_BA1] + state.C[X_BA2] + state.C[X_I] + state.C[X_S] + state.C[X_P]) * parameters.F_TSS_COD;
+    state.b_A1_Temp = parameters.b_A1 * pow(parameters.theta_b_A1, state.Temp_Actual - parameters.Temp_Ref);
+    state.b_A2_Temp = parameters.b_A2 * pow(parameters.theta_b_A2, state.Temp_Actual - parameters.Temp_Ref);
+    state.b_H_Temp = parameters.b_H * pow(parameters.theta_b_H, state.Temp_Actual - parameters.Temp_Ref);
+    state.k_a_Temp = parameters.k_a * pow(parameters.theta_k_a, state.Temp_Actual - parameters.Temp_Ref);
+    state.k_h_Temp = parameters.k_h * pow(parameters.theta_k_h, state.Temp_Actual - parameters.Temp_Ref);
+    state.mu_A1_Temp = pow((parameters.b_Ratkowsky_mu_A1 * (state.Temp_Actual - parameters.Tmin_Ratkowsky_mu_A1) * (1.000000 - exp(parameters.c_Ratkowsky_mu_A1 * (state.Temp_Actual - parameters.Tmax_Ratkowsky_mu_A1)))), 2);
+    state.mu_A2_Temp = pow((parameters.b_Ratkowsky_mu_A2 * (state.Temp_Actual - parameters.Tmin_Ratkowsky_mu_A2) * (1.000000 - exp(parameters.c_Ratkowsky_mu_A2 * (state.Temp_Actual - parameters.Tmax_Ratkowsky_mu_A2)))), 2);
+    state.mu_H_Temp = pow((parameters.b_Ratkowsky_mu_H * (state.Temp_Actual - parameters.Tmin_Ratkowsky_mu_H) * (1.000000 - exp(parameters.c_Ratkowsky_mu_H * (state.Temp_Actual - parameters.Tmax_Ratkowsky_mu_H)))), 2);
+    state.rate01 = state.mu_H_Temp * state.C[X_BH] * (state.C[S_S] / (parameters.K_S1 + state.C[S_S])) * (state.C[S_O] / (parameters.K_OH1 + state.C[S_O]));
+    state.rate02 = state.mu_H_Temp * parameters.n_g2 * state.C[X_BH] * state.Monod_SS2 * state.Monod_NO3 * state.OH2_inhi;
+    state.rate03 = state.mu_H_Temp * parameters.n_g3 * state.C[X_BH] * state.Monod_SS3 * state.Monod_NO2 * state.OH3_inhi * state.NO_inhi3;
+    state.rate04 = state.mu_H_Temp * parameters.n_g4 * state.C[X_BH] * state.Monod_SS4 * state.Monod_NO * state.OH4_inhi;
+    state.rate05 = state.mu_H_Temp * parameters.n_g5 * state.C[X_BH] * state.Monod_SS5 * state.Monod_N2O * state.OH5_inhi * state.NO_inhi5;
+    state.rate07 = state.mu_A1_Temp * state.C[X_BA1] * state.FA_inhibi9 * state.Monod_OA1 * state.FNA_inhi9;
+    state.rate08 = state.mu_A2_Temp * state.C[X_BA2] * state.FNA_inhi10 * state.Monod_OA2 * state.FA_inhi10;
+    state.rate09 = state.b_A1_Temp * state.C[X_BA1];
+    state.rate10 = state.b_A2_Temp * state.C[X_BA2];
+
+    // Extra
+
+
+    // Kinetics
+
+    #include "ASMG1/wwtp.VolumeASMG1ConversionModel.kinetics.msl"
+
+    // InterfaceVars
+
+    #include "ASMG1/wwtp.VolumeASMG1Model.sensors.msl"
+  };
+

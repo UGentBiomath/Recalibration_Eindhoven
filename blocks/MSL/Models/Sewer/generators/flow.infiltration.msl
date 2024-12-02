@@ -1,0 +1,54 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:28$
+ *
+ ******************************************************************************/
+
+#ifndef SEWER_GENERATORS_FLOW_INFILTRATION
+#define SEWER_GENERATORS_FLOW_INFILTRATION
+
+// was InfiltrationFlow in W2014
+CLASS InfiltrationFlow_NoPollution (* icon = "Connector" *)//generator
+" .. .. "
+EXTENDS InfiltrationFlow_Base WITH
+{:
+
+  equations <-
+  { 
+    state.Help_Flow = state.Q_Infiltration ;
+    
+    state.Help_Pollution = 0.0 ;
+  };
+
+:};
+
+
+// ====
+// New models, version 2017
+// ====
+
+CLASS InfiltrationFlow2 (* class = "generator" *) "Infiltration flow generator"
+EXTENDS SewGenerator_Infiltration WITH
+{:
+
+  comments <- "Infiltration flow generator";
+  
+  equations <-
+  { 
+    state.Help_Flow = state.Tot_Inf ; //add noise
+  };
+
+:};
+
+
+#endif // SEWER_GENERATORS_FLOW_INFILTRATION

@@ -1,0 +1,68 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+  interface <-
+  {
+    #include "RM1/river.VolumeRM1Model.interface.msl"
+  };
+
+  parameters <-
+  {
+    #include "RM1/river.VolumeRM1ConversionModel.parameters.msl"
+  };
+
+  state <-
+  {
+    #include "RM1/river.VolumeRM1ConversionModel.state.msl"
+  };
+
+  initial <-
+  {
+    // Params
+
+
+    // StateVars
+
+
+    // Extra
+
+
+    // Stoichiometry
+
+    #include "RM1/river.VolumeRM1ConversionModel.stoichiometry.msl"
+  };
+
+  equations <-
+  {
+    // StateVars
+
+    state.Help_KL20 = parameters.V_KL * pow((state.vel_water/3600/24),0.67) * pow(state.d, -0.85);
+    state.Help_T_water = state.Temp_Actual + (parameters.alpha_T - state.Temp_Actual) / parameters.beta_T;
+    state.KL_20 = IF (state.Help_KL20 < parameters.KL_Min) THEN parameters.KL_Min ELSE state.Help_KL20;
+    state.KL_T = state.KL_20 * pow(parameters.Theta_KL,(state.T_Water - 20));
+    state.K_N_T = parameters.K_N * pow(parameters.Theta_N,(state.T_Water-20));
+    state.Kd1_T = parameters.Kd1 * pow(parameters.Theta_Kd, (state.T_Water-20));
+    state.Kd2_T = parameters.Kd2 * pow(parameters.Theta_Kd,(state.T_Water-20));
+    state.S_O_Saturation = 14.652 - 0.41022 * state.T_Water + 0.007991 * pow(state.T_Water,2.0) - 0.000077774 * pow(state.T_Water,3.0);
+    state.T_Water = IF (state.Help_T_water > 0.0) THEN state.Help_T_water ELSE 0.0;
+    state.rate_BODs = state.C[BODs] * parameters.K_BODs * pow(parameters.Theta_Sed,(state.T_Water-20)) * state.C[O2] / (state.C[O2] + parameters.KS_O2);
+    state.rate_MacroO2 = (parameters.K_ProdO2 * state.I0_Actual - parameters.K_RespO2) * parameters.MB / state.d * pow(parameters.Theta_M,(state.T_Water-20));
+    state.rate_Nitrif = 4.57 * state.K_N_T * state.C[NH4] * state.C[O2] / (state.C[O2] + parameters.K_NO2);
+    state.rate_OxiBOD1 = - state.Kd1_T * state.C[O2] / (state.C[O2] + parameters.K_O2) * state.C[BOD1];
+    state.rate_OxiBOD1p = parameters.Kd1 * pow(parameters.Theta_Kd,(state.T_Water-20)) * state.C[BOD1p] * state.C[O2] / (state.C[O2] + parameters.K_O2);
+    state.rate_OxiBOD2 = - state.Kd2_T * state.C[O2] / (state.C[O2] + parameters.K_O2) * state.C[BOD2];
+    state.rate_OxiBOD2p = parameters.Kd2 * pow(parameters.Theta_Kd,(state.T_Water-20)) * state.C[BOD2p] * state.C[O2] / (state.C[O2] + parameters.K_O2);
+    state.rate_Reaer = (state.KL_T / state.d) * (state.S_O_Saturation - state.C[O2]);
+    state.rate_SedO2 = (parameters.K_SedO2 / state.d) * pow(parameters.Theta_Sed,(state.T_Water-20)) * state.C[O2] / (state.C[O2] + parameters.KS_O2);
+
+    // Extra
+
+
+    // Kinetics
+
+    #include "RM1/river.VolumeRM1ConversionModel.kinetics.msl"
+
+    // InterfaceVars
+
+    #include "RM1/river.VolumeRM1Model.sensors.msl"
+  };
+

@@ -1,0 +1,92 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 1. december 2016 22:11:49$
+ *
+ ******************************************************************************/
+
+ 
+#ifndef PRIMARYCLARIFIER_CEPT_PRIMARYCLARIFIER_CEPT_TAKACS
+#define PRIMARYCLARIFIER_CEPT_PRIMARYCLARIFIER_CEPT_TAKACS
+
+
+#if (defined ASM1Temp)
+
+ CLASS CEPT_Takacs
+ (* icon = "primary_clarifier" *)
+ EXTENDS PST_Takacs_PropagateSolubles_Base WITH
+{:
+
+   parameters <- 
+   {     
+    OBJ v0_min "Minimum value of the maximum theoretical settling velocity" : Velocity := {: value <- 100 ; group <- "Settling" :};
+    OBJ v0_max "Maximum value of the maximum theoretical settling velocity" : Velocity := {: value <- 300 ; group <- "Settling" :};
+    OBJ exp_v0 "Hill exponent for v0" : Real := {: value <- 1 ; group <- "Settling" :};
+    OBJ K_alum_v0 "Hill saturation constant for v0" : Concentration := {: value <- 30 ; group <- "Settling" :};
+    OBJ f_ns_min "Minimum value of the non-settleable fraction" : Fraction := {: value <- 0.2 ; group <- "Settling" :};
+    OBJ f_ns_max "Maximum value of the non-settleable fraction" : Fraction := {: value <- 0.4 ; group <- "Settling" :};
+    OBJ exp_f_ns "Hill exponent for f_ns" : Real := {: value <- 1 ; group <- "Settling" :};
+    OBJ K_alum_f_ns "Hill saturation constant for v0" : Concentration := {: value <- 30 ; group <- "Settling" :};
+   };
+
+   state <-
+   {
+	  OBJ v0 (* hidden = "1" *) "Maximum theoretical settling velocity" : LayerVelocityVector := {: group <- "Settling" :};
+	  OBJ f_ns "Non-settleable fraction" : Fraction := {: group <- "Settling" :};
+	  OBJ S_ALK_Inlet "Incoming concentration of S_ALK" : Concentration := {: group <- "Concentration" :};
+    OBJ v0_P (* hidden = "1" *) "Correction term for non-settleables" : LayerVelocityVector ;
+    OBJ v0_H (* hidden = "1" *) "Correction term for non-settleables" : LayerVelocityVector ;
+   };
+
+  equations <-
+   {
+	 //calculation of initial concentration of S_ALK
+	 	state.S_ALK_Inlet = IF(state.Q_In == 0)
+	 		THEN 0
+	 		ELSE state.InFluxPerComponent[S_ALK] / state.Q_In ;	 
+ 
+	 //Variation of f_ns
+	     {
+	   state.f_ns =
+       parameters.f_ns_max - (parameters.f_ns_max - parameters.f_ns_min)*
+	 											( pow(state.S_ALK_Layer[1] , parameters.exp_f_ns) / ( pow(parameters.K_alum_f_ns , parameters.exp_f_ns) + pow(state.S_ALK_Layer[1] , parameters.exp_f_ns))) ;
+    };
+
+    state.X_Min = IF (state.Q_In == 0)
+      THEN state.f_ns * state.SolidConcentration 
+      ELSE state.f_ns * state.SolidFlux_In / state.Q_In ;
+
+	 //v0
+	 { FOREACH Layer_Index IN {1 .. NrOfLayers}:
+		 	     state.v0[Layer_Index] =	parameters.v0_min + (parameters.v0_max - parameters.v0_min)*
+	 																		( pow(state.S_ALK_Layer[Layer_Index] , parameters.exp_v0) /
+	 																					( pow(parameters.K_alum_v0 , parameters.exp_v0) + pow(state.S_ALK_Layer[Layer_Index] , parameters.exp_v0))) ;
+	  };
+
+	 //v0_P
+	 { FOREACH Layer_Index IN {1 .. NrOfLayers}:
+		 	     state.v0_P[Layer_Index] =	state.v0[Layer_Index] * exp(parameters.r_P * state.X_Min);
+	  };	
+
+	 //v0_H
+	 { FOREACH Layer_Index IN {1 .. NrOfLayers}:
+						state.v0_H[Layer_Index] =  state.v0[Layer_Index] * exp(parameters.r_H * state.X_Min); 
+	  };	 
+
+   };
+
+:};
+
+#endif //ASM1Temp
+
+
+#endif // PRIMARYCLARIFIER_CEPT_PRIMARYCLARIFIER_CEPT_TAKACS

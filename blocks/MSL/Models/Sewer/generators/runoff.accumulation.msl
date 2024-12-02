@@ -1,0 +1,159 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:28$
+ *
+ ******************************************************************************/
+ 
+#ifndef SEWER_GENERATORS_RUNOFF_ACCUMULATION
+#define SEWER_GENERATORS_RUNOFF_ACCUMULATION
+
+ 
+CLASS Runoff_Accumulation (* icon = "generator" *)
+"A run off calculator for basins with accumulation and wash-off"
+EXTENDS Runoff_Base WITH
+{:
+
+  interface <-
+  {
+    OBJ Accumulation (* terminal = "in_1" *) "Data for pollutants accumulation" : Kosim1SurfaceFlux := {: causality <- "CIN"; group <- "Inflow" :};
+  };
+
+  parameters <-
+  {
+    OBJ PerviousFraction "Fraction of the catchment that is pervious" : Fraction := {: value <- 0.8; group <- "Catchment":};
+    //
+    // Pervious areas
+    OBJ MaxRunoff_P "Maximum runoff coefficient for pervious areas" : Fraction := {: value <- 0.3; group <- "Catchment - Pervious area" :};
+    OBJ MaxWettingLosses_P "Wetting and interception losses for pervious areas" : Rainfall := {: value <- 5 ; group <- "Catchment - Pervious area" :} ;
+    OBJ MaxDepressionStorage_P "Maximum depression storage for pervious areas" : Rainfall := {: value <- 3.5; group <- "Catchment - Pervious area" :};
+    OBJ MaxInfiltration "Initial infiltration capacity" : RainfallIntensity := {: value <- 1440; group <- "Catchment - Pervious area" :};  
+    OBJ MinInfiltration "Minimum infiltration capacity" : RainfallIntensity := {: value <- 69; group <- "Catchment - Pervious area" :};
+    OBJ ReducingFactor (* hidden = "1" *) "Reduction of the interception max depending on season" : MonthlyYearlyPattern :=
+      [{: value <- 0.1 :}, {: value <- 0.1 :}, {: value <- 0.3 :}, {: value <- 0.7 :}, {: value <- 1 :}, {: value <- 1 :},
+      {: value <- 1 :}, {: value <- 1 :}, {: value <- 1 :}, {: value <- 0.7 :}, {: value <- 0.3 :}, {: value <- 0.1 :} ;];
+    OBJ k "Degeneration rate of infiltration capacity during wet phase" : Rate := {: value <- 72; group <- "Catchment - Pervious area" :}; 
+    OBJ k_D "Regeneration constant of infiltration capacity during dry phase" : Rate := {: value <- 0.432; group <- "Catchment - Pervious area" :} ;
+    OBJ DailyEvaporation "Mean evaporation per day in the year" : RainfallIntensity := {: value <- 1.8; group <- "Catchment" :}; 
+    //
+    //Accumulation and wash-off
+    OBJ opt_AccumulWash "Surface accumulation and washoff (1=active)" : Integer := {: value <- 1; group <- "Catchment"; interval  <- {: lowerBound <- 0; upperBound <- 1 :}; :}; 
+    OBJ opt_AccumulWashInput "Input for surface accumulation and washoff, parameters if = 1, interface if = 0" : Integer := {: value <- 1; group <- "Catchment"; interval  <- {: lowerBound <- 0; upperBound <- 1 :}; :};
+    OBJ AccumulFixed "Data for pollutants accumulation - fixed" : Kosim1SurfaceFlux :=
+      [{: value <- 0 :}, {: value <- 0.1 :},{: value <- 0.1 :},{: value <- 1.0 :},{: value <- 10.0 :},{: value <- 5.0 :};];
+    OBJ Ke "Wash-off rate" : SpecificAreaVolume := {: value <- 180; group <- "Catchment" :}; 
+  };
+
+  state <- 
+  {
+    OBJ WettingLosses_P "Actual wetting losses for pervious areas" : Rainfall := {: value <- 1; group <- "Catchment - Pervious area" :};
+    OBJ NetRainfall_P "Net rainfall (after substraction of wetting losses on pervious areas)" : RainfallIntensity := {: group <- "Catchment - Pervious area" :};
+    OBJ Runoff_P "MISSING DESCRIPTION": RainfallIntensity := {: group <- "Catchment - Pervious area" :};
+    OBJ Q_Per "Flow rate from the pervious areas " : FlowRate := {: group <- "Catchment - Pervious area" :};
+    OBJ FillingDepression_P "Filling degree of the depression storage pervious" : Fraction := {: value <- 1; group <- "Catchment - Pervious area":};
+    OBJ InfiltrationCapacity "Infiltration capacity on pervious areas" : Rate := {: value <- 1; group <- "Catchment - Pervious area" :}; 
+    OBJ M_acc "Accumulated matter at the surface" : Kosim1MassVector :=
+      [{: value <- 1000000 :},	{: value <- 2000 :}, {: value <- 500 :}, {: value <- 2000 :},
+      {: value <- 10000 :}, {: value <- 20000 :};];
+    //
+    OBJ Help_NetRain (* hidden = "1" *) "Rainfall after substraction of wetting and interception losses on pervious areas" : RainfallIntensity := {: group <- "Catchment - Pervious area" :}; 
+    OBJ InfiltrationCapacityChange (* hidden = "1" *) "MISSING DESCRIPTION": Real ;   
+    OBJ FillingChangeRatePer (* hidden = "1" *) "Rate of change in depression storage filling degree" : Rate := {: group <- "Catchment" :};
+    OBJ WettLossPerChange (* hidden = "1" *) "Rate of change in wetting loss" : RainfallIntensity := {: group <- "Catchment" :};
+    OBJ Day (* hidden = "1" *) "Day no." : Time;
+    OBJ Month (* hidden = "1" *) "Month no." : Integer;
+    OBJ Month_help (* hidden = "1" *) "Month no." : Integer;
+    OBJ Help_M_acc (* hidden = "1" *) "Change in accumulated matter at the surface" : Real[Kosim1NrOfComponents;];
+  };
+
+  equations <-
+  {
+    // Calculate the month to be used for wetting and interception in pervious areas
+    state.Day = floor(independent.t);
+    // W2016
+    // state.Month = ceil(state.Day/30.5);
+    // W2017
+    state.Month_help = ceil(state.Day/30.5);
+    state.Month = IF (state.Month_help < 12) THEN state.Month_help 
+      ELSE IF (fmod(state.Month_help,12) == 0) THEN 12
+      ELSE fmod(state.Month_help,12) ;
+    // end W2017
+    //
+    // Run-off volume (cf Q_Imp in Runoff_Flux)
+    state.Q_Imp = (1 - parameters.PerviousFraction) * state.Runoff * parameters.TotalArea / 1000;
+    //
+    // Accumulation and wash-off
+    {FOREACH Comp_Index IN {Kosim1IndexOfFirstSolubleComponent .. Kosim1IndexOfLastParticulateComponent}:
+      DERIV (state.M_acc[Comp_Index],[independent.t])= state.Help_M_acc[Comp_Index] ;};
+    
+    {FOREACH Comp_Index IN {Kosim1IndexOfFirstSolubleComponent .. Kosim1IndexOfLastParticulateComponent}:
+      state.Help_M_acc[Comp_Index] =  IF (parameters.opt_AccumulWashInput == 1)
+        THEN parameters.AccumulFixed[Comp_Index] * (parameters.TotalArea / 10000) * 1000 * (1 - parameters.PerviousFraction) - parameters.Ke * interface.Rain * state.M_acc[Comp_Index]
+          ELSE interface.Accumulation[Comp_Index] * ( parameters.TotalArea / 10000 ) * 1000 * (1 - parameters.PerviousFraction) - parameters.Ke * interface.Rain * state.M_acc[Comp_Index]; };
+    //
+    // Pervious areas 
+    // Wetting and Interception losses
+    state.WettLossPerChange = IF (interface.Rain > 0) THEN
+      IF (state.WettingLosses_P >= parameters.ReducingFactor[state.Month] * parameters.MaxWettingLosses_P) THEN 0
+        ELSE interface.Rain
+      ELSE IF (state.WettingLosses_P > 0) THEN - interface.Evaporation
+        ELSE 0 ;
+    //
+    // remaining rain after wetting and interception
+    DERIV(state.WettingLosses_P,[independent.t]) = state.WettLossPerChange ;
+    
+    state.Help_NetRain = IF (interface.Rain > 0) THEN
+      interface.Rain - state.WettLossPerChange
+      ELSE 0 ;
+    //
+    // infiltration into soil
+    DERIV(state.InfiltrationCapacity, [independent.t]) = state.InfiltrationCapacityChange ;
+      //begin of change 2
+      state.InfiltrationCapacityChange = (- parameters.k * (state.InfiltrationCapacity - parameters.MinInfiltration)) *
+        MSLUGetMin2(1,state.Help_NetRain/state.InfiltrationCapacity) + (parameters.k_D * (interface.Evaporation / parameters.DailyEvaporation ) *
+        (parameters.MaxInfiltration - state.InfiltrationCapacity))* (1- MSLUGetMin2(1,state.Help_NetRain/state.InfiltrationCapacity));
+      //end of change 2
+    //
+    // water left after interception, wetting and infiltration 
+    state.NetRainfall_P = IF (state.Help_NetRain > state.InfiltrationCapacity) THEN
+      state.Help_NetRain - state.InfiltrationCapacity
+        ELSE 0 ;
+    //
+    // Depression filling
+    state.FillingChangeRatePer = IF (state.NetRainfall_P > 0) THEN 
+      state.NetRainfall_P * (1 - state.FillingDepression_P)
+        ELSE - (interface.Evaporation * state.FillingDepression_P) ; 
+    
+    DERIV(state.FillingDepression_P,[independent.t]) = state.FillingChangeRatePer ;
+    //
+    // Remaining runoff water
+    state.Runoff_P = IF (state.NetRainfall_P > 0) THEN
+      parameters.MaxRunoff_P * (state.NetRainfall_P - parameters.MaxDepressionStorage_P * state.FillingChangeRatePer)
+        ELSE 0 ;
+    //
+    // Outflow volume	   
+    state.Q_Per = state.Runoff_P * parameters.TotalArea * parameters.PerviousFraction / 1000 ;
+    
+    interface.Outflow[H2O] = - (state.Q_Imp + state.Q_Per) / parameters.SewSpecificVolume[H2O];
+    
+    {FOREACH Comp_Index IN {Kosim1IndexOfFirstParticulateComponent .. Kosim1IndexOfLastParticulateComponent}: 
+      interface.Outflow[Comp_Index] = IF (parameters.opt_AccumulWash == 1) THEN
+        IF (interface.Rain > 0) THEN -parameters.Ke * interface.Rain * state.M_acc[Comp_Index]
+          ELSE 0
+        // THIS PART IS SAME AS ONLY IMPERVIOUS 
+        ELSE - state.Q_Imp * parameters.ConcImp[Comp_Index] ; };
+  };
+
+:};
+
+
+#endif //SEWER_GENERATORS_RUNOFF_ACCUMULATION

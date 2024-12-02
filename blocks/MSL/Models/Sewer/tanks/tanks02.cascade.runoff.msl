@@ -1,0 +1,73 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:30$
+ *
+ ******************************************************************************/
+ 
+
+#ifndef SEWER_TANKS_TANKS02_CASCADE_RUNOFF
+#define SEWER_TANKS_TANKS02_CASCADE_RUNOFF
+
+
+CLASS Tanks02_Cascade_Runoff (* icon = "Tank" *)
+"A 2-tank-in-series buffer tank with linear expression for outflow"
+EXTENDS Base_Cascade_Runoff WITH
+{:
+
+  coupling <-
+  { 
+   // sub-model coupling
+   connect(sub_models.Tank2.interface.Outflow, interface.Outflow),
+  };
+
+:};
+
+
+CLASS Base_Cascade_Runoff SPECIALISES CoupledModelType :=
+{:
+
+  interface <-
+  { 
+   OBJ Inflow (* terminal = "in_1" *) "Inflow" : InSewTerminal := {: causality <- "CIN"; group <- "Inflow" :};
+   OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutSewTerminal := {: causality <- "COUT"; group <- "Outflow" :};
+  };
+
+  parameters <-
+  { 
+   OBJ k (* is_favorite = "1" *) "Reservoir time constant" : Time := {: value <- 0.0056 ; group <- "Hydraulics" :};
+   OBJ m (* is_favorite = "1" *) "Exponent (1 = linearity)" : Real := {:value <- 1.0 ; group <- "Hydraulics" :};
+  };
+
+  sub_models <-
+  { 
+   OBJ Tank1 : Tank_Runoff,
+   OBJ Tank2 : Tank_Runoff,
+  }; 
+
+  coupling <-
+  { 
+   // parameter coupling
+   sub_models.Tank1.parameters.k.value := parameters.k.value,
+   sub_models.Tank2.parameters.k.value := parameters.k.value,
+   sub_models.Tank1.parameters.m.value := parameters.m.value,
+   sub_models.Tank2.parameters.m.value := parameters.m.value,
+   // sub-model coupling
+   connect(interface.Inflow, sub_models.Tank1.interface.Inflow),
+   connect(sub_models.Tank1.interface.Outflow, sub_models.Tank2.interface.Inflow),
+//   connect(sub_models.Tank2.interface.Outflow, interface.Outflow1),
+  };
+
+:};
+ 
+ 
+ #endif //SEWER_TANKS_TANKS02_CASCADE_RUNOFF

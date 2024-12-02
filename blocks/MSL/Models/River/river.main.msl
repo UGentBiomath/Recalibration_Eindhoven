@@ -1,0 +1,38 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:25$
+ *
+ ******************************************************************************/
+
+
+#ifndef RIVER_MAIN
+#define RIVER_MAIN
+
+
+#include "River/river.general.msl"
+#include "River/river.definitions.msl"
+#include "River/river.reactions.msl"
+
+#if (defined ASM2dModTemp || defined IUWS1 || defined IUWS2)
+
+#include "River/river.base.msl"
+
+#include "River/river.splitters_combiners.msl"
+#include "River/river_stretch/river.varvolume_duflow.msl"
+#include "River/river.generators.msl"
+#include "River/river.aeration.msl"
+
+#endif //IUWS2
+
+
+#endif //RIVER_MAIN

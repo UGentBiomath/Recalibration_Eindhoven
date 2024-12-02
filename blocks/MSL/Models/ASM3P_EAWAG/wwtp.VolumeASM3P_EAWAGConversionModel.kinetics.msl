@@ -1,0 +1,27 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    state.Kinetics[Aeration] = state.Kla_Actual * (state.S_O_Saturation - state.C[S_O]);
+    state.Kinetics[P01_Hydrolysis] = state.rate01;
+    state.Kinetics[P02_AerStorageOfXSTO] = state.rate02;
+    state.Kinetics[P03_AnoxStorageOfXSTO] = state.rate03;
+    state.Kinetics[P04_AerGrowthOfXH] = state.rate04;
+    state.Kinetics[P05_AnoxGrowthOfXH] = state.rate05;
+    state.Kinetics[P06_AerEndogRespOfXH] = state.rate06;
+    state.Kinetics[P07_AnoxEndogRespOfXH] = state.rate07;
+    state.Kinetics[P08_AerRespOfXSTO] = state.rate08;
+    state.Kinetics[P09_AnoxRespOfXSTO] = state.rate09;
+    state.Kinetics[P10_Nitrification] = state.rate10;
+    state.Kinetics[P11_AerEndogRespOfXA] = state.rate11;
+    state.Kinetics[P12_AnoxEndogRespOfXA] = state.rate12;
+    state.Kinetics[PP01_StorageOfXPHA] = state.rateP01;
+    state.Kinetics[PP02_AerStorageOfXPP] = state.rateP02;
+    state.Kinetics[PP03_AnoxStorageOfXPP] = state.rateP03;
+    state.Kinetics[PP04_AerGrowthOfXPAO] = state.rateP04;
+    state.Kinetics[PP05_AnoxGrowthOfXPAO] = state.rateP05;
+    state.Kinetics[PP06_AerEndogRespOfXPAO] = state.rateP06;
+    state.Kinetics[PP07_AnoxEndogRespOfXPAO] = state.rateP07;
+    state.Kinetics[PP08_AerLysisOfXPP] = state.rateP08;
+    state.Kinetics[PP09_AnoxLysisOfXPP] = state.rateP09;
+    state.Kinetics[PP10_AerRespOfXPHA] = state.rateP10;
+    state.Kinetics[PP11_AnoxRespOfXPHA] = state.rateP11;
+

@@ -1,0 +1,112 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:29$
+ *
+ ******************************************************************************/
+
+
+#ifndef SEWER_TANKS_STORMTANK_FIRSTFLUSH
+#define SEWER_TANKS_STORMTANK_FIRSTFLUSH
+
+
+CLASS StormTank_FirstFlush (* icon = "Tank" *)
+".."
+EXTENDS StormTank_FirstFlush_Base WITH
+{:
+ 
+  comments <- "..";
+
+  sub_models <-
+  {
+    OBJ Split : SewAbsTwoSplitter ;
+    OBJ Tank : StormTank_NoOverflow ;
+  };
+/* (26/02/2015)  
+  equations <-
+  {
+   sub_models.Split.state.Q_Out2_Help = IF (sub_models.Tank.state.V > sub_models.Tank.parameters.Vmax) THEN
+      sub_models.Split.state.Q_In - sub_models.Split.state.state.Q_Out1
+      ELSE 0 ;
+  };
+*/
+  coupling <-
+  {
+    sub_models.Split.parameters.Q_Out2 := parameters.Q_Max,
+    sub_models.Tank.parameters.Qmax_Tank:= parameters.Q_Max,
+    
+    connect(interface.Inflow, sub_models.Split.interface.Inflow),
+    connect(sub_models.Split.interface.Outflow1, interface.Outflow2),
+    connect(sub_models.Split.interface.Outflow2, sub_models.Tank.interface.Inflow),
+    connect(sub_models.Tank.interface.Outflow1, interface.Outflow1)
+  };
+
+:};
+
+
+CLASS StormTank_FirstFlush_Offline
+(* icon = "Tank" *)
+"A tank with weir overflow, which gets filled when the flow is higher than the maximum outflow"
+EXTENDS StormTank_FirstFlush_Base WITH
+{:
+
+  comments <- "A tank with weir overflow, which gets filled when the flow is higher than the maximum outflow";
+  
+  sub_models <-
+  {
+    OBJ Split1 : SewAbsTwoSplitter ;
+    OBJ Split2 : SewAbsTwoSplitter ;
+    OBJ Tank : StormTank_Simple ;
+    OBJ Combi1 : SewTwoCombiner ;
+    OBJ Combi2 : SewTwoCombiner ;
+  };
+  
+  coupling <-
+  {
+    sub_models.Split1.parameters.Q_Out2 := parameters.Q_Max,
+    sub_models.Split2.parameters.Q_Out2 := parameters.Q_Max,
+    sub_models.Tank.parameters.Qmax_Tank:= parameters.Q_Max,
+    
+    connect(interface.Inflow, sub_models.Split1.interface.Inflow),
+    connect(sub_models.Split1.interface.Outflow1, sub_models.Combi2.interface.Inflow1),
+    connect(sub_models.Split1.interface.Outflow2, sub_models.Combi1.interface.Inflow1),
+    connect(sub_models.Combi2.interface.Outflow, sub_models.Tank.interface.Inflow),
+    connect(sub_models.Tank.interface.Outflow1, sub_models.Combi1.interface.Inflow2),
+    connect(sub_models.Tank.interface.Outflow2, interface.Outflow2),
+    connect(sub_models.Combi1.interface.Outflow, sub_models.Split2.interface.Inflow),
+    connect(sub_models.Split2.interface.Outflow1, sub_models.Combi2.interface.Inflow2),
+    connect(sub_models.Split2.interface.Outflow2, interface.Outflow1)
+  };
+
+:};
+
+
+CLASS StormTank_FirstFlush_Base SPECIALISES CoupledModelType :=
+{:
+ 
+  interface <-
+  {
+    OBJ Inflow (* terminal = "in_1" *) "Inflow" : InSewTerminal := {: causality <- "CIN"; group <- "Inflow" :},
+    OBJ Outflow1 (* terminal = "out_1" *) "Outflow 1" : OutSewTerminal := {: causality <- "COUT"; group <- "Outflow" :},
+    OBJ Outflow2 (* terminal = "out_2" *) "Outflow 2" : OutSewTerminal := {: causality <- "COUT"; group <- "Outflow" :},
+  };
+  
+  parameters <-
+  {
+    // Qmax -> Q_Max
+    OBJ Q_Max "Outflow pumping rate" : FlowRate := {: group <- "Hydraulic" :} ; 
+  };
+ 
+ :};
+
+
+#endif // SEWER_TANKS_STORMTANK_FIRSTFLUSH

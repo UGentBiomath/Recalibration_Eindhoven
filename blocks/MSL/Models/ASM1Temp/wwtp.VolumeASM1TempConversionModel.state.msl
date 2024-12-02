@@ -1,0 +1,12 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    OBJ K_X_Temp (* *) "K_X at the system temperature" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ S_O_Saturation (* *) "Oxygen saturation concentration" : Concentration := {: unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ X_TSS (* *) "Total suspended solids" : Concentration := {: unit <- "g/m3"; value <- 0.0; interval <- {: lowerBound <- 0.000000; upperBound <- +INF; :}; group <- "Concentration"; :};
+    OBJ b_A_Temp (* *) "b_A at the system temperature" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ b_H_Temp (* *) "b_H at the system temperature" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ k_a_Temp (* *) "k_a at the system temperature" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ k_h_Temp (* *) "k_h at the system temperature" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ mu_A_Temp (* *) "mu_A at the system temperature" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+    OBJ mu_H_Temp (* *) "mu_H at the system temperature" : Real := {: value <- 0.0; interval <- {: lowerBound <- -INF; upperBound <- +INF; :}; group <- "Kinetic"; :};
+

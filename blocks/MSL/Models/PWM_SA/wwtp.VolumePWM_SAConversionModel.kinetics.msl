@@ -1,0 +1,27 @@
+// AUTOMATICALLY GENERATED - DO NOT MODIFY
+
+    state.Kinetics[ASCO2evol] = state.CO2_A_rate;
+    state.Kinetics[AerGrowthOnSa] = parameters.mu_OHO_max * state.S_A_MonodTerm * ((state.C[S_VFA]) / (state.C[S_F] + state.C[S_VFA])) * (state.S_O_MonodTerm * state.S_NH_MonodTerm * state.S_PO_MonodTerm * state.S_ALK_MonodTerm) * state.C[X_OHO];
+    state.Kinetics[AerGrowthOnSf] = parameters.mu_OHO_max * state.S_F_MonodTerm * ((state.C[S_F]) / (state.C[S_F] + state.C[S_VFA])) * (state.S_O_MonodTerm * state.S_NH_MonodTerm * state.S_PO_MonodTerm * state.S_ALK_MonodTerm) * state.C[X_OHO];
+    state.Kinetics[AerGrowthOnXPHA] = parameters.mu_PAO * state.S_O_MonodTerm * state.S_NH_MonodTerm * state.S_ALK_MonodTerm * state.S_PO_MonodTerm * state.X_PHA_MonodTerm * state.C[X_PAO];
+    state.Kinetics[Aeration] = state.Kla_Actual * (parameters.S_O_Sat - state.C[S_O]);
+    state.Kinetics[AnGrowthOnSaDenitrif] = parameters.mu_OHO_max * parameters.n_NO_Het * state.S_A_MonodTerm * ((state.C[S_VFA]) / (state.C[S_F] + state.C[S_VFA])) * (state.S_O_InhibitionTerm * state.S_NO_MonodTerm * state.S_NH_MonodTerm * state.S_PO_MonodTerm * state.S_ALK_MonodTerm) * state.C[X_OHO];
+    state.Kinetics[AnGrowthOnSfDenitrif] = parameters.mu_OHO_max * parameters.n_NO_Het * state.S_F_MonodTerm * ((state.C[S_F]) / (state.C[S_F] + state.C[S_VFA])) * (state.S_O_InhibitionTerm * state.S_NO_MonodTerm * state.S_NH_MonodTerm * state.S_PO_MonodTerm * state.S_ALK_MonodTerm) * state.C[X_OHO];
+    state.Kinetics[CaP_diss] = state.K_cap * state.Driver_cap;
+    state.Kinetics[Cal_diss] = state.K_cal * state.Driver_cal;
+    state.Kinetics[Fermentation] = parameters.Q_OHO_F_VFA_ferm * (state.C[S_F] / (parameters.K_S_F_OHO_ferm * (parameters.MW_[S_F] / (8 * parameters.gam_f)) + state.C[S_F])) * (state.S_O_InhibitionTerm * state.S_NO_InhibitionTerm * state.S_ALK_MonodTerm) * state.C[X_OHO];
+    state.Kinetics[GrowthOfAuto] = parameters.mu_ANO * (state.C[S_O] / (state.C[S_O] + parameters.K_O2_ANO)) * (state.C[S_NH] / (state.C[S_NH] + parameters.K_S_NH_ANO * 18.0386 / 14.007)) * state.S_PO_MonodTerm * (state.C[S_CO3] / (state.C[S_CO3] + parameters.K_S_ALK_ANO * 60.008)) * state.C[X_ANO];
+    state.Kinetics[LysisOfAuto] = parameters.b_ANO * state.C[X_ANO];
+    state.Kinetics[LysisOfHetero] = parameters.b_OHO * state.C[X_OHO];
+    state.Kinetics[LysisOfXPAO] = parameters.b_PAO * state.C[X_PAO] * state.S_ALK_MonodTerm;
+    state.Kinetics[LysisOfXPHA] = parameters.b_PHA * state.C[X_PAO_Stor] * state.S_ALK_MonodTerm;
+    state.Kinetics[LysisOfXPP] = parameters.b_PP * state.C[X_PAO_PP] * state.S_ALK_MonodTerm;
+    state.Kinetics[Mag_diss] = state.K_mag * state.Driver_mag;
+    state.Kinetics[MgKP_diss] = state.K_mgkp * state.Driver_mgkp;
+    state.Kinetics[Newb_diss] = state.K_newb * state.Driver_newb;
+    state.Kinetics[StorageOfXPHA] = IF (state.C[X_PAO_PP] <= 0.0 ) THEN 0.0 ELSE parameters.Q_PAO_PP_PHAstor * state.S_A_MonodTerm * state.S_ALK_MonodTerm * (state.C[X_PAO_PP]) / (parameters.KS_fPP_PAO_PHAstor * (parameters.MW_[X_PAO_PP] * (8 * parameters.gam_o)) / (30.974 * parameters.MW_[X_PAO]) + state.C[X_PAO_PP] / (state.C[X_PAO]));
+    state.Kinetics[StorageOfXPP] = parameters.Q_PAO_PO4_PPstor * state.S_O_MonodTerm * state.C[S_PO4] / (state.C[S_PO4] + parameters.K_S_PO4_PAO_PPstor * 94.97 / 30.974) * state.S_ALK_MonodTerm * state.X_PHA_MonodTerm * (parameters.K_MAX_fPP_PAO - (state.C[X_PAO_PP] / state.C[X_PAO])) / ((parameters.K_I_PP_PAO * (101.2 / 30.974)) + (parameters.K_MAX_fPP_PAO - state.C[X_PAO_PP] / state.C[X_PAO])) * state.C[X_PAO];
+    state.Kinetics[Struvite_diss] = state.K_stru * state.Driver_Str;
+    state.Kinetics[XB_InfHydrol] = state.HydrolysisRateConst * state.X_S_MonodTerm * state.C[X_OHO] * state.NPA_MonodTerm;
+    state.Kinetics[XB_OrgHydrol] = state.HydrolysisRateConst * state.XOrg_S_MonodTerm * state.C[X_OHO];
+

@@ -1,0 +1,93 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 15:21:59$
+ *
+ ******************************************************************************/
+
+ 
+#ifndef IUWS_CONVERTORS
+#define IUWS_CONVERTORS
+
+
+CLASS Convertors_WWTP_Base "Base class for WWTP convertor models"
+SPECIALISES PhysicalDAEModelType :=
+{:
+ 
+  parameters <-
+  {
+   OBJ WWTPSpecificVolume (* hidden = "1" *) "The specific volumes (= 1/density) of the components" : SpecificVolumeVector ;
+  };
+
+  independent <-
+  {
+   OBJ t "Time"  : Time := {: group <- "Time" :}; 
+  };
+
+  initial <-
+  {
+   parameters.WWTPSpecificVolume[IndexOfSolvent] := 0.000001 ;
+  };
+
+:};
+
+
+CLASS Convertors_Sewer_Base "Base class for sewer convertor models"
+SPECIALISES PhysicalDAEModelType :=
+{:
+ 
+  parameters <-
+  {
+   OBJ SewSpecificVolume (* hidden = "1" *) "The specific volumes (= 1/density) of the components" : SpecificVolume[Kosim1NrOfComponents;];
+  };
+
+  independent <-
+  {
+   OBJ t "Time"  : Time := {: group <- "Time" :}; 
+  };
+
+  initial <-
+  {
+   parameters.SewSpecificVolume[H2O] := 0.000001;
+  };
+
+:};
+
+
+CLASS Convertors_River_Base "Base class for river convertor models"
+SPECIALISES PhysicalDAEModelType :=
+{:
+ 
+  parameters <-
+  {
+   OBJ RivSpecificVolume (* hidden = "1" *) "The specific volumes (= 1/density) of the components" : SpecificVolume[RWQMNrOfComponents;];
+  };
+
+  independent <-
+  {
+   OBJ t "Time"  : Time := {: group <- "Time" :}; 
+  };
+
+  initial <-
+  {
+   parameters.RivSpecificVolume[H2O] := 0.000001;
+  };
+
+:};
+
+
+#include "Convertors/iuws.wwtp.msl"
+#include "Convertors/iuws.sewer.msl"
+#include "Convertors/iuws.river.msl"
+
+ 
+#endif // IUWS_CONVERTORS

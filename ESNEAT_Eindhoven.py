@@ -17,17 +17,19 @@ import matplotlib.pyplot as plt
 import psutil
 
 #west file
-folder = "C:/Users/cgomezco/Downloads/EHV_WWTP_WITH_CONTROL_CM_T1"
+folder = "/path/to/model"
 scenarios = folder+"/scenarios/"
-filename = 'Eindhoven.Dynamic.ObjEval.Exp.xml'
-generation = 2
+filename = 'BSM1_OL_ASM1.Dynamic.ObjEval.Exp.xml'
+generation = 200
 #Real data
-real = pd.read_csv(folder+"/RealData_T1.csv")
+real = pd.read_csv(folder+"/path/to/RealData.csv")
 #Param
-param_eind = pd.read_csv(folder+"/Param_Eind.csv", header=None)
+param_eind = pd.read_csv(folder+"/Path/to/patameters.csv", header=None)
 
+# Relevant inputs for the model
 inputs = [0.96835528545816, 0.142986647789243, 0, 0.534423211974549, 0.768241598357242, 1, 0.431242981325574, 0.000764284049311295, 0.960183985023809, 0.342508146329742, 0.00324987920021324, 0.806062112627477, 1.25786423845298, 0.147764900619868]
 
+#Objective function
 def objective_func(ts1, ts2, w1 = 0.1, w2 = 1.0):
     # Ensure both time series have the same length
     if len(ts1) != len(ts2):
@@ -39,6 +41,7 @@ def objective_func(ts1, ts2, w1 = 0.1, w2 = 1.0):
     # Final reward function (negative of the loss)
     return -(w1 * distance + w2 * avg_alignment)
 
+# Individual tested for each parameter set
 def eval_genome(genome, config):
     net = neat.nn.FeedForwardNetwork.create(genome, config)
     output = net.activate(inputs)
@@ -74,7 +77,7 @@ def eval_genome(genome, config):
     new_text = []
     for line in text:
         if filename in line:
-            new_text.append('texec "'+current_folder+'/Eindhoven.Dynamic.ObjEval.Exp.xml"\n')
+            new_text.append('texec "'+current_folder+'/BSM1_OL_ASM1.Dynamic.ObjEval.Exp.xml"\n')
         elif "TITLE" in line:
             new_text.append('TITLE window'+str(genome.key)+'\n')
         else:
@@ -106,8 +109,8 @@ def eval_genome(genome, config):
                 child.kill()
             parent.kill()
     
-    if os.path.isfile(current_folder+"/EHV_Output_Mod.txt"):
-        sim = pd.read_csv(current_folder+"/EHV_Output_Mod.txt", sep="\t")
+    if os.path.isfile(current_folder+"/Output_Mod.txt"):
+        sim = pd.read_csv(current_folder+"/Output_Mod.txt", sep="\t")
         sim.drop(0, inplace=True, axis=0)
         sim.drop('#.t', inplace=True, axis=1)
         sim = sim.astype(float)
@@ -142,6 +145,7 @@ def eval_genome(genome, config):
         shutil.rmtree(current_folder)
     return return_val
 
+#ESNEAT run Function
 def run(config_file):
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
@@ -196,7 +200,7 @@ def run(config_file):
     new_text = []
     for line in text:
         if filename in line:
-            new_text.append('texec "'+current_folder+'/Eindhoven.Dynamic.ObjEval.Exp.xml"\n')
+            new_text.append('texec "'+current_folder+'/BSM1_OL_ASM1.Dynamic.ObjEval.Exp.xml"\n')
         elif "TITLE" in line:
             new_text.append('TITLE window'+"Final"+'\n')
         else:
@@ -228,12 +232,11 @@ def run(config_file):
                 child.kill()
             parent.kill() 
      
-    if os.path.isfile(current_folder+"/EHV_Output_Mod.txt"):
-        sim = pd.read_csv(current_folder+"/EHV_Output_Mod.txt", sep="\t")
+    if os.path.isfile(current_folder+"/Output_Mod.txt"):
+        sim = pd.read_csv(current_folder+"/Output_Mod.txt", sep="\t")
         sim.drop(0, inplace=True, axis=0)
         sim.drop('#.t', inplace=True, axis=1)
         sim = sim.astype(float)
-        sim[".OUT_B.TSS"] = sim[".OUT_B.TSS"].div(1000)
         #Delete first 2 days during dynamic adjust
         
         # Create a common time grid based on the minimum and maximum of all time series
@@ -272,7 +275,7 @@ def run(config_file):
             plt.savefig(current_folder+'/RealVsSim_'+column+'.png')
             plt.show()
     else:
-        raise ValueError("%s isn't a file!" % current_folder+"/EHV_Output_Mod.txt")
+        raise ValueError("%s isn't a file!" % current_folder+"/Output_Mod.txt")
     
 if __name__ == '__main__':
     config_path =folder+'/config-feedforward.txt'

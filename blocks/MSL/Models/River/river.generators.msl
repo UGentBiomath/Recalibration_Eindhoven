@@ -1,0 +1,71 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 2. december 2016 14:37:25$
+ *
+ ******************************************************************************/
+
+#ifndef RIVER_GENERATORS
+#define RIVER_GENERATORS
+
+#if (defined ASM2dModTemp || defined IUWS1)
+
+CLASS Duflow_Simple (* icon = "River_input" *)
+"A generator model for simple Duflow" SPECIALISES PhysicalDAEModelType :=
+{:
+
+  interface <-
+  { 
+    OBJ Rain (* terminal = "in_1"; is_favorite = "1" *) "Rainfall" : Velocity := {: causality <- "CIN"; group <- "Inflow" :};
+    OBJ NH4_In (* terminal = "in_1"; manip = "1"; is_favorite = "1" *) "NH4 concentration" : Concentration := {: causality <- "CIN"; value <- 0.05; group <- "Inflow" :};
+    OBJ Outflow (* terminal = "out_1" *) "Outflow" : OutRiverTerminal := {: causality <- "COUT"; group <- "Outflow" :};
+  };
+  
+  parameters <-
+  { 
+    OBJ Surface (* is_favorite = "1" *) : Area := {: value <- 10000; group <- "River" :};
+    OBJ BOD1_In (* is_favorite = "1" *) : Concentration := {: value <- 3.0; group <- "Quality" :};
+    OBJ BOD2_In (* is_favorite = "1" *) : Concentration := {: value <- 1.0; group <- "Quality" :};
+    OBJ O2_In (* is_favorite = "1" *) : Concentration := {: value <- 9.0; group <- "Quality" :};
+    OBJ BOD1p_In (* is_favorite = "1" *) : Concentration := {: value <- 0.01; group <- "Quality" :};
+    OBJ BOD2p_In (* is_favorite = "1" *) : Concentration := {: value <- 0.01; group <- "Quality" :};
+    OBJ BODs_In (* is_favorite = "1" *) : Concentration := {: value <- 0.01; group <- "Quality" :};
+  };
+  
+  state <-
+  { 
+    OBJ Q (* is_favorite = "1" *) "Flow rate" : FlowRate := {: group <- "River" :};
+  };
+  
+  independent <-
+  { 
+    OBJ t "Time": Time ;
+  };
+  
+  equations <-
+  { 
+    state.Q = - interface.Outflow[H2O] / 1000000;
+    interface.Outflow[H2O] = - interface.Rain * parameters.Surface * 1000000;
+    interface.Outflow[O2] = - parameters.O2_In * state.Q;
+    interface.Outflow[BOD1] = - parameters.BOD1_In * state.Q;
+    interface.Outflow[BOD2] = - parameters.BOD2_In * state.Q;
+    interface.Outflow[BOD1p] = - parameters.BOD1p_In * state.Q;
+    interface.Outflow[BOD2p] = - parameters.BOD2p_In * state.Q;
+    interface.Outflow[BODs] = - parameters.BODs_In * state.Q;
+    interface.Outflow[NH4] = - interface.NH4_In * state.Q;
+  };
+
+:};
+
+#endif // ASM2dModTemp, IUWS1
+
+#endif //RIVER_GENERATORS

@@ -1,0 +1,87 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:55$
+ *
+ ******************************************************************************/
+
+
+#ifndef WWTP_MAIN
+#define WWTP_MAIN
+
+
+#include "WWTP/wwtp.general.msl"
+
+#include "WWTP/wwtp.definitions.msl"
+#include "WWTP/wwtp.reactions.msl"
+
+#include "WWTP/wwtp.base.msl"
+// Level 1
+#include "WWTP/wwtp.base.splitters_combiners.msl"
+#include "WWTP/wwtp.base.buffertanks.msl"
+#include "WWTP/wwtp.base.activated_sludge_units.msl"
+#include "WWTP/wwtp.n_tanks.msl"
+#include "WWTP/wwtp.SBR.msl"
+#include "WWTP/wwtp.base.SBR.msl"
+#include "WWTP/wwtp.base.CFCD.msl"
+#include "WWTP/wwtp.base.CFID.msl"
+#include "WWTP/wwtp.base.clarifier.msl"
+#include "WWTP/wwtp.base.primary_clarifier.msl"
+#include "WWTP/wwtp.base.secondary_clarifier.msl"
+#include "WWTP/wwtp.base.sand_filter.msl"
+#include "WWTP/wwtp.base.anaerobic_digestion.msl"
+#include "WWTP/wwtp.base.sensors.msl"
+#include "WWTP/wwtp.base.controllers.msl"
+#include "WWTP/wwtp.base.timers.msl"
+#include "WWTP/wwtp.base.loopbreaker.msl"
+#include "WWTP/wwtp.base.process_calculator.msl"
+#include "WWTP/wwtp.base.evaluator.msl"
+//
+// New models, versions 3.7.5 & 3.7.6
+#include "WWTP/wwtp.base.dosing_units.msl"
+#include "WWTP/wwtp.base.sludge_dewatering.msl"
+#if (defined ASM1Temp || defined ASM2dModTemp || defined ASM2dM || defined ASM3Temp || defined ASM3P_EAWAG || defined IUWS1 || defined IUWS2)
+#include "WWTP/wwtp.base.biofilms.msl"
+#endif
+#if (defined ASM1Temp || defined ASM2dModTemp || defined ASM3Temp || defined ASM3P_EAWAG || defined IUWS1 || defined IUWS2)
+#include "WWTP/wwtp.base.internal_membrane.msl"
+#endif
+#include "WWTP/wwtp.base.ADM1.msl"
+//
+// New models, version 2012
+#include "WWTP/wwtp.base.data_treatment.msl"
+#include "WWTP/wwtp.aeration.msl"
+//
+// New models, version 2014
+#include "WWTP/wwtp.base.samplers.msl"
+#include "WWTP/wwtp.base.UCTAD.msl"
+//
+// New models, version 2016
+#include "WWTP/wwtp.transformers.msl"
+#include "WWTP/primary_clarifier/CEPT/wwtp.cept.msl"
+#if (defined ASM1Temp || defined ASM1_AN || defined ASM2dModTemp || defined ASM3P_EAWAG || defined ASM3Temp || defined ASMG1 || defined ASMG2d || defined ASM2dM)
+#include "WWTP/wwtp.base.oxidation_ditch.msl"
+#endif
+//
+// New models, version 2019
+#include "WWTP/filter/wwtp.filter.rauch.msl"
+#include "WWTP/wwtp.base.disinfection.msl"
+
+#include "WWTP/wwtp.fractionators.msl"
+#include "WWTP/wwtp.base.pumps.msl"
+//
+// A-stage model
+#include "WWTP/activated_sludge_unit/wwtp.ASU.AStage.msl"
+#include "WWTP/splitter_combiner/wwtp.Astage.splitters.combiners.msl"
+#include "WWTP/secondary_clarifier/wwtp.clarifier.AStage.pointsettler.msl"
+
+#endif //WWTP_MAIN

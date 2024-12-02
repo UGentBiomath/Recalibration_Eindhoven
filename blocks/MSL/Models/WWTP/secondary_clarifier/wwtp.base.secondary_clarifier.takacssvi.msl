@@ -1,0 +1,81 @@
+/*******************************************************************************
+ *
+ * Tornado - Advanced Kernel for Modeling and Virtual Experimentation
+ * (c) Copyright 2004-2011 DHI
+ *
+ * This file is provided under the terms of a license and may not be
+ * distributed and/or modified except where allowed by that license.
+ *
+ * This file is provided as is with no warranty of any kind, including the
+ * warranty of design, merchantability and fitness for a particular purpose.
+ *
+ * $Revision: 1$
+ * $Date: 30. september 2019 12:19:58$
+ *
+ ******************************************************************************/
+
+#ifndef WWTP_BASE_SECONDARY_CLARIFIER_TAKACS_SVI
+#define WWTP_BASE_SECONDARY_CLARIFIER_TAKACS_SVI
+
+#ifdef StandardCategoryModels
+
+// This model was developed by Takacs et al. (1991).
+// The clarifier is divided in 10 horizontal layers
+// (a discretion of the underlying partial differential equations)
+// and the mass balance is calculated for each layer. 
+// The novelty of this model 
+// is the fact that an expression is proposed for the settling velocity v_S 
+// which is valid for both the thickening and the clarification zone. 
+// 
+// Literature : 
+// Takacs I., Patry G.G. & Nolasco D. (1991).
+//      A dynamic model of the thickening/clarification process. Wat. Res., 25, 1263-1271.
+// Daigger, G.T. and Roper, R.E. (1985).
+//      The relationship between SVI and activated sludge settling characteristics. J.WPCF 57(8), 859-866.
+
+CLASS Takacs_SVI (* icon = "secondary_clarifier"; is_default = "true" *) "Layered clarifier model by Takacs"
+EXTENDS SettlingTank_TakacsSVI WITH
+{:
+  comments <- "A model for a secondary settler by Takacs";
+  
+  interface <-
+  { 
+    OBJ f_ns (* terminal = "in_2"; manip = "1"; is_favorite = "1" *) "Non-settleable fraction of suspended solids" :
+      Fraction := {: causality <- "CIN" ; value <- 0.00228 ; group <- "Settling" :};
+    OBJ TSS(* terminal = "out_3" *) "Total suspended solids concentration" : Concentration := {: causality <- "COUT" ; group <- "Measurement data" :};
+    OBJ V_Clarifier (* terminal = "out_3" *)"Volume measurement data" : Volume := {: causality <- "COUT" ; group <- "Measurement data" :};
+    OBJ PumpingEnergy (* terminal = "out_3" *)"Pumping energy" : ElectricalEnergy := {: causality <- "COUT"; group <- "Energy" :};
+    OBJ PumpingPower (* terminal = "out_3" *) "Pumping power" : Real := {: causality <- "COUT"; unit <- "kWh/d" ; group <- "Energy" :};
+  };
+  
+  parameters <- 
+  {     
+    OBJ F_Energy_FlowRate "Conversion factor Energy needed/Pump flow rate" : EnergyForPumping := {: value <- 0.04 ; group <- "Energy":};
+  };
+  
+  state <-
+  {
+    OBJ DS "Dry Solid content of the secondary sludge" : Real := {: unit <- "%"; group <- "Settling" :};
+  };
+
+  equations <-
+  {
+    state.Help_f_ns = interface.f_ns ;
+    state.DS = state.X_Under / 10000 ;
+
+    // PUMPING ENERGY
+    //(EURE 26/07/2019) [kWh/m3] * [m3/d] = [kWh/d]
+  interface.PumpingPower = parameters.F_Energy_FlowRate * state.Q_Under_Actual ;
+    DERIV(state.Integ_PE,[independent.t])=  state.Q_Under_Actual;
+    interface.PumpingEnergy = parameters.F_Energy_FlowRate * state.Integ_PE ;
+    //
+    interface.TSS = state.SolidConcentration;
+    interface.V_Clarifier = parameters.A * parameters.H;  
+  };
+
+:};
+
+#endif // StandardCategoryModels
+
+#endif // WWTP_BASE_SECONDARY_CLARIFIER_TAKACSSVI
+
