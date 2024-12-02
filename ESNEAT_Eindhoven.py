@@ -150,7 +150,7 @@ def run(config_file):
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          config_file)
     #Restore checkpoint
-    #p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-57')
+    #p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-99')
     #Excecute
     p = neat.Population(config)
     p.add_reporter(neat.StdOutReporter(True))
