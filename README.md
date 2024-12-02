@@ -53,11 +53,6 @@ To run this project, you will need the following:
    git clone https://github.com/your-repo-url/Recalibration_Eindhoven.git
    cd Recalibration_Eindhoven
    ```
-2. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
 ---
 
 ## Usage
@@ -105,7 +100,7 @@ Contributions are welcome! If you'd like to contribute, please send your suggest
 ---
 
 ## License
-This project is licensed under the **GPL-3.0 License**. Refer to the `LICENSE` file for more details on usage restrictions and permissions.
+This project is licensed under the **MIT License**. Refer to the `LICENSE` file for more details on usage restrictions and permissions.
 
 ---
 
